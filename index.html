@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resilience Continuum</title>
+    <!-- Updated to Red Hat Display -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        .header {
+            text-align: center;
+            padding: 40px 20px;
+            background-color: #ffffff;
+        }
+
+        .header h1 {
+            font-family: 'Red Hat Display', sans-serif;
+            font-weight: 700;
+            font-size: 2.5rem;
+            color: #666666;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-family: 'Red Hat Display', sans-serif;
+            font-weight: 400;
+            font-size: 1.1rem;
+            color: #808080;
+        }
+
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .gallery-item {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1/1;
+            overflow: hidden;
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .gallery-item:hover img {
+            transform: scale(1.05);
+        }
+
+        /* Responsive layout */
+        @media screen and (max-width: 1024px) {
+            .gallery {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media screen and (max-width: 768px) {
+            .gallery {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media screen and (max-width: 480px) {
+            .gallery {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Resilience Continuum</h1>
+        <p>Art, data visualization, and health</p>
+    </div>
+    <div class="gallery">
+        <div class="gallery-item">
+            <img src="Website/CroppedImagesForWebsite1.23.25/babysquare500.png" alt="Baby">
+        </div>
+        <div class="gallery-item">
+            <img src="Website/CroppedImagesForWebsite1.23.25/covidsquare.png" alt="Covid">
+        </div>
+        <div class="gallery-item">
+            <img src="Website/CroppedImagesForWebsite1.23.25/marssquare.png" alt="Mars">
+        </div>
+        <div class="gallery-item">
+            <img src="Website/CroppedImagesForWebsite1.23.25/nobelsquare.png" alt="Nobel">
+        </div>
+        <div class="gallery-item">
+            <img src="Website/CroppedImagesForWebsite1.23.25/ppesquare.png" alt="PPE">
+        </div>
+        <div class="gallery-item">
+            <img src="Website/CroppedImagesForWebsite1.23.25/whalesquare.png" alt="Portfolio item 2">
+        </div>
+        <!-- Add more gallery items as needed -->
+    </div>
+</body>
+</html>
