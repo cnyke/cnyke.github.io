@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Octopus Observations</title>
+    <meta charset="utf-8" />
+    
+    <!-- Leaflet CSS and JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- Add in head section, after other CSS links -->
+    <link href="https://fonts.googleapis.com/css2?family=Silkscreen&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+        }
+        #map {
+            width: 100%;
+            height: 100vh;
+        }
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            background: white;
+            padding: 10px 20px;
+            border-radius: 4px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            min-width: 300px;
+        }
+        .year-slider {
+            flex-grow: 1;
+            margin: 0 10px;
+        }
+        button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            background: #0078A8;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #005c82;
+        }
+        
+        .info-container {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 4px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 800px;
+            width: 90%;
+        }
+        
+        .title {
+            font-family: 'Silkscreen', cursive;
+            font-size: 24px;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .description {
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 16px;
+            line-height: 1.5;
+            color: #444;
+            margin: 0;
+        }
+        
+        .info-container a {
+            color: #0078A8;
+            text-decoration: none;
+        }
+        
+        .info-container a:hover {
+            text-decoration: underline;
+        }
+        
+        .info-toggle {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            background: #0078A8;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .info-toggle:hover {
+            background: #005c82;
+        }
+        
+        .info-container.hidden {
+            display: none;
+        }
+        
+        .species-popup .leaflet-popup-content-wrapper {
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 12px;
+            border-radius: 4px;
+            padding: 4px 8px;
+        }
+        
+        .species-popup .leaflet-popup-tip-container {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <div class="controls">
+        <span id="yearDisplay">Year: </span>
+        <input type="range" id="yearSlider" class="year-slider">
+        <button id="playButton">Play</button>
+        <button id="resetButton">Reset</button>
+    </div>
+
+    <!-- Add before the closing body tag, after the controls div -->
+    <div class="info-container">
+        <h1 class="title">Octopus Observations</h1>
+        <p class="description">
+            This visualization shows the global distribution of octopus sightings from 1970 to present day. 
+            Each dot represents a documented octopus observation in the Global Biodiversity Information Facility (GBIF), where colors represent different species. Hover over a dot to see the species name. 
+            Use the slider or play button to explore how octopus sightings have changed over time.
+        </p>
+        <p class="description">GBIF.org (20 January 2025) GBIF Occurrence Download <a href="https://doi.org/10.15468/dl.v9ctjg" target="_blank">https://doi.org/10.15468/dl.v9ctjg</a></p>
+    </div>
+
+    <!-- Add the toggle button -->
+    <button class="info-toggle" id="infoToggle">Hide Info</button>
+
+    <script>
+        // Initialize map with a minimal style
+        const map = L.map('map').setView([0, 0], 2);
+        
+        // Add a minimal tile layer
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '©OpenStreetMap, ©CartoDB'
+        }).addTo(map);
+
+        let data = [];
+        let years = [];
+        let markers = L.layerGroup().addTo(map);
+        let isPlaying = false;
+        let currentYearIndex = 0;
+        let speciesColors = new Map();
+        let colorPalette = [
+            '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEEAD',
+            '#D4A5A5', '#9B59B6', '#3498DB', '#E67E22', '#1ABC9C'
+        ];
+
+        // Function to get color for a species
+        function getSpeciesColor(species) {
+            if (!speciesColors.has(species)) {
+                speciesColors.set(species, colorPalette[speciesColors.size % colorPalette.length]);
+            }
+            return speciesColors.get(species);
+        }
+
+        // Load and parse the CSV file
+        fetch('OctopusGBIF.csv')
+            .then(response => response.text())
+            .then(csvText => {
+                const rows = csvText.split('\n');
+                const headers = rows[0].split('\t');
+                
+                // Find column indices
+                const dateIndex = headers.indexOf('eventDate');
+                const latIndex = headers.indexOf('decimalLatitude');
+                const lonIndex = headers.indexOf('decimalLongitude');
+                const speciesIndex = headers.indexOf('species');
+
+                // Process data
+                for (let i = 1; i < rows.length; i++) {
+                    try {
+                        const columns = rows[i].split('\t');
+                        if (columns.length <= 1) continue; // Skip empty rows
+                        
+                        const lat = parseFloat(columns[latIndex]);
+                        const lon = parseFloat(columns[lonIndex]);
+                        const date = new Date(columns[dateIndex]);
+                        const year = date.getFullYear();
+                        
+                        // Skip if coordinates or year are invalid
+                        if (isNaN(lat) || isNaN(lon) || isNaN(year) || 
+                            lat === 0 || lon === 0 || // Skip 0,0 coordinates
+                            !columns[dateIndex] || !columns[latIndex] || !columns[lonIndex]) {
+                            continue;
+                        }
+
+                        data.push({
+                            year: year,
+                            lat: lat,
+                            lon: lon,
+                            species: columns[speciesIndex] || 'Unknown'
+                        });
+                        
+                        if (!years.includes(year)) {
+                            years.push(year);
+                        }
+                    } catch (error) {
+                        console.log(`Skipping row ${i} due to error:`, error);
+                        continue;
+                    }
+                }
+                
+                years.sort((a, b) => a - b);
+                console.log("Original years:", years);
+                
+                // Create a continuous sequence of years
+                const startYear = years[0];
+                const endYear = years[years.length - 1];
+                years = [];
+                for (let year = startYear; year <= endYear; year++) {
+                    years.push(year);
+                }
+                console.log("Sequential years:", years);
+                
+                // Initialize slider after data is loaded
+                const yearSlider = document.getElementById('yearSlider');
+                yearSlider.min = years[0];
+                yearSlider.max = years[years.length - 1];
+                yearSlider.value = years[0];
+                yearSlider.step = 1;
+                
+                // Add event listener for the slider
+                yearSlider.addEventListener('change', function() {
+                    const selectedYear = parseInt(this.value);
+                    currentYearIndex = years.indexOf(selectedYear);
+                    updateMap(selectedYear);
+                    if (isPlaying) {
+                        isPlaying = false;
+                        document.getElementById('playButton').textContent = 'Play';
+                    }
+                });
+
+                // Add input event for real-time updates while sliding
+                yearSlider.addEventListener('input', function() {
+                    const selectedYear = parseInt(this.value);
+                    document.getElementById('yearDisplay').textContent = `Year: ${selectedYear}`;
+                });
+
+                if (years.length > 0) {
+                    updateMap(years[0]);
+                }
+            });
+
+        function updateMap(year) {
+            const oldMarkers = markers;
+            markers = L.layerGroup().addTo(map);
+
+            // Update the slider position when map updates
+            const yearSlider = document.getElementById('yearSlider');
+            yearSlider.value = year;
+            document.getElementById('yearDisplay').textContent = `Year: ${year}`;
+
+            data.forEach(point => {
+                if (point.year === year) {
+                    const color = getSpeciesColor(point.species);
+                    const marker = L.circleMarker([point.lat, point.lon], {
+                        radius: 4,
+                        color: color,
+                        fillColor: color,
+                        fillOpacity: 0,
+                        weight: 1
+                    }).addTo(markers);
+                    
+                    // Add popup with species name
+                    marker.bindPopup(point.species || 'Unknown species', {
+                        offset: [0, -2],
+                        closeButton: false,
+                        className: 'species-popup'
+                    });
+                    
+                    // Show popup on hover
+                    marker.on('mouseover', function(e) {
+                        this.openPopup();
+                    });
+                    marker.on('mouseout', function(e) {
+                        this.closePopup();
+                    });
+                    
+                    setTimeout(() => {
+                        marker.setStyle({ fillOpacity: 0.7 });
+                    }, 10);
+                }
+            });
+        }
+
+        function resetMap() {
+            // Stop animation if playing
+            isPlaying = false;
+            document.getElementById('playButton').textContent = 'Play';
+            
+            // Reset to first year
+            currentYearIndex = 0;
+            const firstYear = years[0];
+            
+            // Reset slider
+            const yearSlider = document.getElementById('yearSlider');
+            yearSlider.value = firstYear;
+            document.getElementById('yearDisplay').textContent = `Year: ${firstYear}`;
+            
+            // Clear all markers from the map
+            if (markers) {
+                map.removeLayer(markers);
+            }
+            markers = L.layerGroup().addTo(map);
+
+            // Force clear any remaining markers
+            map.eachLayer((layer) => {
+                if (layer instanceof L.CircleMarker) {
+                    map.removeLayer(layer);
+                }
+            });
+        }
+
+        function playAnimation() {
+            if (!isPlaying) return;
+            
+            currentYearIndex = (currentYearIndex + 1);
+            
+            // Check if we've reached the end
+            if (currentYearIndex >= years.length) {
+                // Just stop the animation
+                isPlaying = false;
+                document.getElementById('playButton').textContent = 'Play';
+                return;
+            }
+            
+            updateMap(years[currentYearIndex]);
+            setTimeout(playAnimation, 500);
+        }
+
+        document.getElementById('playButton').addEventListener('click', function() {
+            if (isPlaying) {
+                isPlaying = false;
+                this.textContent = 'Play';
+            } else {
+                isPlaying = true;
+                this.textContent = 'Pause';
+                playAnimation();
+            }
+        });
+
+        // Make sure the reset button is properly connected
+        document.getElementById('resetButton').addEventListener('click', function() {
+            resetMap();
+        });
+
+        // Add toggle functionality
+        const infoToggle = document.getElementById('infoToggle');
+        const infoContainer = document.querySelector('.info-container');
+        
+        infoToggle.addEventListener('click', function() {
+            infoContainer.classList.toggle('hidden');
+            infoToggle.textContent = infoContainer.classList.contains('hidden') ? 'Show Info' : 'Hide Info';
+        });
+    </script>
+</body>
+</html>
