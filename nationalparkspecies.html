@@ -120,18 +120,18 @@
     </div>
 
     <script>
-        // Update margin and sizing
-        const margin = {top: 50, right: 25, bottom: 40, left: 25};
+        // Update margin to have more top and bottom space
+        const margin = {top: 80, right: 25, bottom: 80, left: 25};
         
-        // Update width and height calculations
+        // Update the getVisualizationDimensions function to increase minimum height
         function getVisualizationDimensions() {
-            const minHeight = 400; // Minimum height for mobile
+            const minHeight = 600; // Increased from 400 to 600
             let width = Math.min(window.innerWidth - 50, 1200); // Max width of 1200px
-            let height = Math.max(window.innerHeight * 0.6, minHeight); // At least 60% of viewport height
+            let height = Math.max(window.innerHeight * 0.7, minHeight); // Increased from 0.6 to 0.7
             
             if (window.innerWidth <= 768) {
-                width = window.innerWidth - 40; // Smaller margins on mobile
-                height = minHeight;
+                width = window.innerWidth - 40;
+                height = minHeight; // Mobile will still get the increased minimum height
             }
             
             return { width, height };
@@ -248,8 +248,8 @@
                 
                 // Create force simulation with optimized parameters
                 const simulation = d3.forceSimulation(parkData)
-                    .force("x", d3.forceX(width / 2).strength(0.05))
-                    .force("y", d3.forceY(height / 2).strength(0.05))
+                    .force("x", d3.forceX(width / 2).strength(0.1))
+                    .force("y", d3.forceY(height / 2).strength(0.1))
                     .force("collide", d3.forceCollide().radius(3))
                     .force("charge", d3.forceManyBody().strength(-1))
                     .force("cluster", forceCluster())
@@ -271,6 +271,23 @@
                             .attr("opacity", 1)
                             .attr("r", 4);
                         
+                        const tooltipWidth = 200; // Approximate width of tooltip
+                        const tooltipHeight = 100; // Approximate height of tooltip
+                        
+                        // Calculate position, keeping tooltip within viewport
+                        let left = event.pageX + 10;
+                        let top = event.pageY - 28;
+                        
+                        // Adjust if tooltip would extend beyond right edge
+                        if (left + tooltipWidth > window.innerWidth) {
+                            left = event.pageX - tooltipWidth - 10;
+                        }
+                        
+                        // Adjust if tooltip would extend beyond bottom edge
+                        if (top + tooltipHeight > window.innerHeight) {
+                            top = event.pageY - tooltipHeight - 10;
+                        }
+                        
                         tooltip
                             .style("opacity", 0.9)
                             .html(`
@@ -279,8 +296,8 @@
                                 Family: ${d.Family}<br/>
                                 Scientific Name: ${d["Scientific Name"]}
                             `)
-                            .style("left", (event.pageX + 10) + "px")
-                            .style("top", (event.pageY - 28) + "px");
+                            .style("left", left + "px")
+                            .style("top", top + "px");
                     })
                     .on("mouseout", function() {
                         d3.select(this)
