@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acadia Species Observations</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+        }
+        .tooltip {
+            position: absolute;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            pointer-events: none;
+            font-size: 12px;
+            font-family: Helvetica, Arial, sans-serif;
+            box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.1);
+        }
+        .legend {
+            font-size: 12px;
+            font-family: Helvetica, Arial, sans-serif;
+        }
+        #parkSelector {
+            margin: 20px 20px 5px 25px;
+            padding: 5px;
+            font-size: 14px;
+            font-family: Helvetica, Arial, sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <select id="parkSelector"></select>
+    <div id="visualization"></div>
+
+    <script>
+        // Reduce the right margin to minimum
+        const margin = {top: 30, right: 25, bottom: 40, left: 25};  // reduced from 80 to 40
+
+        // Adjust width calculation to match
+        let width = window.innerWidth - 100;  // reduced from 140 to 100
+        let height = window.innerHeight - 160;
+
+        // Create a global color scale
+        let globalColorScale;
+        let allCategories;
+
+        // Update legend container position to be closer
+        d3.select("body")
+            .insert("div", "#visualization")
+            .attr("id", "legendContainer")
+            .style("position", "absolute")
+            .style("right", "10px")
+            .style("top", "50px");
+
+        // Update description container with clickable link
+        d3.select("body")
+            .insert("div", "#visualization")
+            .attr("id", "descriptionContainer")
+            .style("position", "absolute")
+            .style("left", "35px")
+            .style("top", "70px")
+            .style("width", "280px")
+            .style("font-family", "Helvetica, Arial, sans-serif")
+            .style("font-size", "14px")
+            .html("This data visualization shows the biodiversity in national parks around the United States. Each cluster of circles represents a category of animal, plant, or fungi. Use the dropdown to explore different national parks, and hover over the circles to see what species were observed in each national park. National Park Service and Larion, A. (2017). Biodiversity in National Parks. Retrieved 9/2/2023 from <a href='https://www.kaggle.com/datasets/nationalparkservice/park-biodiversity/discussion/27921' target='_blank'>Kaggle</a>.");
+
+        // Function to create the legend once
+        function createLegend() {
+            const itemsPerColumn = Math.ceil(allCategories.length / 2);
+            const columnWidth = 150;  // width for each column
+
+            const legendSvg = d3.select("#legendContainer")
+                .append("svg")
+                .attr("width", columnWidth * 2)  // double width for two columns
+                .attr("height", itemsPerColumn * 20 + 10);  // height based on items per column
+
+            const legend = legendSvg.append("g")
+                .attr("class", "legend")
+                .attr("transform", "translate(10,10)");
+
+            legend.selectAll("rect")
+                .data(allCategories)
+                .join("rect")
+                .attr("x", (d, i) => Math.floor(i / itemsPerColumn) * columnWidth)  // x position based on column
+                .attr("y", (d, i) => (i % itemsPerColumn) * 20)  // y position wraps within column
+                .attr("width", 10)
+                .attr("height", 10)
+                .attr("fill", d => globalColorScale(d));
+
+            legend.selectAll("text")
+                .data(allCategories)
+                .join("text")
+                .attr("x", (d, i) => Math.floor(i / itemsPerColumn) * columnWidth + 15)  // text position based on column
+                .attr("y", (d, i) => (i % itemsPerColumn) * 20 + 9)  // text wraps within column
+                .text(d => d);
+        }
+
+        // Function to create visualization for a specific park
+        function createVisualization(parkName, containerId) {
+            // Clear previous visualization
+            d3.select(containerId).html("");
+
+            // Create SVG container
+            const svg = d3.select(containerId)
+                .append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", `translate(${margin.left},${margin.top})`);
+
+            // Create tooltip div
+            const tooltip = d3.select("body")
+                .append("div")
+                .attr("class", "tooltip")
+                .style("opacity", 0);
+
+            // Load and process the data
+            d3.csv("species.csv").then(function(data) {
+                // Filter for specific park data
+                const parkData = data.filter(d => d["Park Name"] === parkName);
+                console.log(`${parkName} data:`, parkData);
+                console.log(`Number of ${parkName} observations:`, parkData.length);
+                
+                // Create force simulation
+                const simulation = d3.forceSimulation(parkData)
+                    .force("x", d3.forceX(width / 2).strength(0.01))
+                    .force("y", d3.forceY(height / 2).strength(0.01))
+                    .force("collide", d3.forceCollide().radius(2.5))
+                    .force("charge", d3.forceManyBody().strength(-2))
+                    .force("cluster", forceCluster());
+                
+                // Create nodes
+                const nodes = svg.selectAll("circle")
+                    .data(parkData)
+                    .join("circle")
+                    .attr("r", 2)
+                    .attr("fill", d => globalColorScale(d.Category))
+                    .attr("opacity", 0.8)
+                    .on("mouseover", function(event, d) {
+                        d3.select(this)
+                            .attr("opacity", 1)
+                            .attr("r", 4);
+                        
+                        tooltip.transition()
+                            .duration(200)
+                            .style("opacity", .9);
+                        tooltip.html(`
+                            <strong>${d["Common Names"]}</strong><br/>
+                            Order: ${d.Order}<br/>
+                            Family: ${d.Family}<br/>
+                            Scientific Name: ${d["Scientific Name"]}
+                        `)
+                            .style("left", (event.pageX + 10) + "px")
+                            .style("top", (event.pageY - 28) + "px");
+                    })
+                    .on("mouseout", function() {
+                        d3.select(this)
+                            .attr("opacity", 0.8)
+                            .attr("r", 2);
+                        
+                        tooltip.transition()
+                            .duration(500)
+                            .style("opacity", 0);
+                    });
+
+                // Update node positions on each tick
+                simulation.on("tick", () => {
+                    nodes
+                        .attr("cx", d => Math.max(0, Math.min(width, d.x)))
+                        .attr("cy", d => Math.max(0, Math.min(height, d.y)));
+                });
+
+                // Add title
+                svg.append("text")
+                    .attr("x", width / 2)
+                    .attr("y", -15)  // moved up to make room for second line
+                    .attr("text-anchor", "middle")
+                    .style("font-size", "16px")
+                    .style("font-family", "Helvetica, Arial, sans-serif")
+                    .style("font-weight", "bold")
+                    .text("Species Observations in");  // first line
+
+                svg.append("text")
+                    .attr("x", width / 2)
+                    .attr("y", 10)  // second line position
+                    .attr("text-anchor", "middle")
+                    .style("font-size", "16px")
+                    .style("font-family", "Helvetica, Arial, sans-serif")
+                    .style("font-weight", "bold")
+                    .text(`${parkName}`);  // second line
+
+                // Custom force to cluster by category
+                function forceCluster() {
+                    const centers = {};
+                    allCategories.forEach((category, i) => {
+                        centers[category] = {
+                            x: width * (i + 1) / (allCategories.length + 2),
+                            y: height / 2
+                        };
+                    });
+
+                    return function force(alpha) {
+                        parkData.forEach(d => {
+                            const center = centers[d.Category];
+                            d.vx += (center.x - d.x) * alpha * 0.3;
+                            d.vy += (center.y - d.y) * alpha * 0.3;
+                        });
+                    };
+                }
+            }).catch(error => {
+                console.error(`Error loading or processing data for ${parkName}:`, error);
+            });
+        }
+
+        // Modify the data loading section
+        d3.csv("species.csv").then(function(data) {
+            // Get all unique categories from the entire dataset
+            allCategories = [...new Set(data.map(d => d.Category))].sort();
+            
+            // Create global color scale
+            globalColorScale = d3.scaleOrdinal()
+                .domain(allCategories)
+                .range(d3.schemeCategory10);
+
+            // Create the legend once
+            createLegend();
+
+            // Get unique park names
+            const parks = [...new Set(data.map(d => d["Park Name"]))].sort();
+            
+            // Populate dropdown
+            const selector = d3.select("#parkSelector")
+                .on("change", function() {
+                    d3.select("#visualization").html("");
+                    createVisualization(this.value, "#visualization");
+                });
+
+            selector.selectAll("option")
+                .data(parks)
+                .join("option")
+                .attr("value", d => d)
+                .text(d => d);
+
+            // Create initial visualization with first park
+            createVisualization(parks[0], "#visualization");
+        }).catch(error => {
+            console.error("Error loading data:", error);
+        });
+
+        // Update window resize handler with new width calculation
+        window.addEventListener('resize', function() {
+            width = window.innerWidth - 100;  // match the new width calculation
+            height = window.innerHeight - 160;
+            const currentPark = d3.select("#parkSelector").property("value");
+            d3.select("#visualization").html("");
+            createVisualization(currentPark, "#visualization");
+        });
+    </script>
+</body>
+</html>
