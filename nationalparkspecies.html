@@ -217,8 +217,17 @@
             return force;
         }
 
+        // Add a flag to track if visualization is in progress
+        let isVisualizationInProgress = false;
+
         // Function to create visualization for a specific park
         function createVisualization(parkName, containerId) {
+            // Prevent multiple simultaneous visualizations
+            if (isVisualizationInProgress) {
+                return;
+            }
+            isVisualizationInProgress = true;
+
             // Clear previous visualization and tooltip
             d3.select(containerId).html("");
             d3.selectAll(".tooltip").remove();
@@ -318,14 +327,18 @@
                         .attr("cy", d => Math.max(0, Math.min(height, d.y)));
                 });
 
-                // Stop simulation after 2 seconds
-                setTimeout(() => simulation.stop(), 2000);
+                // Release the flag when simulation is complete
+                setTimeout(() => {
+                    simulation.stop();
+                    isVisualizationInProgress = false;
+                }, 2000);
 
                 // Update the page title
                 d3.select(".title h1")
                     .text(`Species Observations in ${parkName}`);
             }).catch(error => {
                 console.error(`Error loading or processing data for ${parkName}:`, error);
+                isVisualizationInProgress = false; // Release flag if there's an error
             });
         }
 
@@ -348,8 +361,10 @@
             // Populate dropdown
             const selector = d3.select("#parkSelector")
                 .on("change", function() {
-                    d3.select("#visualization").html("");
-                    createVisualization(this.value, "#visualization");
+                    if (!isVisualizationInProgress) {
+                        d3.select("#visualization").html("");
+                        createVisualization(this.value, "#visualization");
+                    }
                 });
 
             selector.selectAll("option")
