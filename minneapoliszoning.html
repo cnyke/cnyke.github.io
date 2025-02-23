@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minneapolis Zoning</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1 {
+            font-family: Helvetica, Arial, sans-serif;
+        }
+        
+        #map {
+            height: 600px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        
+        .legend {
+            font-family: Helvetica, Arial, sans-serif;
+            line-height: 1.5;
+        }
+        
+        .leaflet-popup-content {
+            font-family: Helvetica, Arial, sans-serif;
+        }
+
+        .description {
+            font-family: Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px 0;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>Minneapolis Zoning</h1>
+    <div id="map"></div>
+    <div class="description">
+        <h2>About This Map</h2>
+        <p>This interactive map displays the current zoning districts across Minneapolis. Zoning regulations determine how land can be used and developed throughout the city. Each color represents a different zoning category, from residential areas to commercial districts and mixed use developments.</p>
+        <p>Click on any colored area to see detailed information about its zoning designation, including the specific land use type and area measurements. Use the legend in the bottom right corner to identify different zoning categories.</p>
+        <p>Open Data Minneapolis. (2025). Planning Primary Zoning. Retrieved 2/22/2025 from <a href="https://opendata.minneapolismn.gov/datasets/5dd8138c953a4555b17caf44d777c5fb_0/explore?location=44.991174%2C-93.292685%2C12.96">Open Data Minneapolis</a>.</p>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- PapaParse for CSV parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+
+    <script>
+        // Initialize the map centered on Minneapolis
+        const map = L.map('map').setView([44.9778, -93.2650], 12);
+
+        // Replace the OpenStreetMap tile layer with CartoDB's Positron
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            subdomains: 'abcd',
+            maxZoom: 20
+        }).addTo(map);
+
+        // Function to get color based on land use
+        function getColorForLandUse(landUse) {
+            // Clean the input string
+            const baseType = landUse
+                .replace(/[0-9]/g, '')     // Remove numbers
+                .replace(/["']/g, '')       // Remove quotes
+                .replace(/[–—-]/g, '')      // Remove various types of dashes
+                .replace(/\s+/g, ' ')      // Normalize spaces
+                .trim()                    // Remove leading/trailing whitespace
+                .normalize();              // Normalize Unicode characters
+            
+            // Handle downtown variations
+            if (baseType.startsWith('Downtown')) {
+                return '#FFB300'; // Vivid Gold for all downtown types
+            }
+            
+            const colorMap = {
+                'Transportation': '#4287f5', // Bright Blue
+                'Urban Neighborhood': '#3F51B5', // Indigo (swapped)
+                'Community Mixed Use': '#00BFA5', // Teal
+                'Production Mixed Use': '#8BC34A', // Light Green
+                'Corridor Mixed Use': '#FF9800', // Orange
+                'Destination Mixed Use': '#9C27B0', // Purple
+                'Public, Office, and Institutional': '#03A9F4', // Light Blue
+                'Neighborhood Mixed Use': '#E91E63', // Pink
+                'Parks and Open Space': '#4CAF50', // Green
+                'Production and Processing': '#FF6B6B', // Warm Red (swapped)
+                'Commercial': '#F44336', // Red
+                'Residence': '#2196F3', // Blue
+                'Institutional': '#795548', // Brown
+                'Residence and Institutional': '#FF5722', // Deep Orange
+                'Residence Office and Services': '#009688', // Teal
+                'Residence Goods and Services': '#673AB7', // Deep Purple
+            };
+            
+            return colorMap[baseType] || '#808080'; // Default gray if land use not found
+        }
+
+        // Function to style each feature
+        function style(feature) {
+            return {
+                fillColor: getColorForLandUse(feature.properties.Land_Use),
+                weight: 1,
+                opacity: 1,
+                color: '#666',
+                fillOpacity: 0.7
+            };
+        }
+
+        // Load GeoJSON data
+        fetch('Planning_Primary_Zoning.geojson')
+            .then(response => {
+                console.log('Fetch response received');
+                return response.json();
+            })
+            .then(data => {
+                console.log('GeoJSON data loaded:', data);
+                if (!data || !data.features) {
+                    console.error('Invalid GeoJSON data structure');
+                    return;
+                }
+                console.log('First feature properties:', data.features[0].properties);
+
+                // Add GeoJSON layer with styling
+                L.geoJSON(data, {
+                    style: style,
+                    onEachFeature: function(feature, layer) {
+                        layer.bindPopup(`
+                            <strong>Land Use:</strong> ${feature.properties.Land_Use}<br>
+                            <strong>Area:</strong> ${(feature.properties.Shape__Area / 10000).toFixed(2)} hectares<br>
+                            <strong>Perimeter:</strong> ${(feature.properties.Shape__Length / 1000).toFixed(2)} km
+                        `);
+                    }
+                }).addTo(map);
+
+                // Add a legend
+                const legend = L.control({position: 'bottomright'});
+                legend.onAdd = function(map) {
+                    const div = L.DomUtil.create('div', 'legend');
+                    div.style.backgroundColor = 'white';
+                    div.style.padding = '10px';
+                    div.style.borderRadius = '5px';
+                    div.innerHTML = '<h4>Land Use Types</h4>';
+                    
+                    // Get unique land use types
+                    const landUseTypes = [...new Set(data.features.map(f => f.properties.Land_Use))];
+                    
+                    landUseTypes.forEach(landUse => {
+                        div.innerHTML += `
+                            <div>
+                                <span style="background:${getColorForLandUse(landUse)}; 
+                                           width: 20px; 
+                                           height: 20px; 
+                                           display: inline-block;
+                                           margin-right: 5px;"></span>
+                                ${landUse}
+                            </div>`;
+                    });
+                    
+                    return div;
+                };
+                legend.addTo(map);
+            })
+            .catch(error => {
+                console.error('Error loading GeoJSON:', error);
+            });
+    </script>
+</body>
+</html>
