@@ -26,12 +26,12 @@
         }
         #scatter-plot {
             width: 100%;
-            height: calc(100vh - 70px);  /* Reduced from 80px to 70px */
+            height: calc(100vh - 200px);  /* Reduced height to make room for info box */
             min-height: 500px;
-            position: relative;  /* Added for positioning context */
+            position: relative;
         }
         .title {
-            font-family: 'Silkscreen', cursive;
+            font-family: Helvetica, Arial, sans-serif;  /* Changed from 'Silkscreen' to Helvetica */
             text-align: center;
             font-size: 24px;
             margin-top: 20px;
@@ -44,11 +44,8 @@
             text-align: center;
             color: #666;
             padding: 10px;
-            position: absolute;
-            bottom: -25px;  /* Changed from -30px to -25px */
-            left: 0;
-            width: 100%;
-            background-color: white;  /* Optional: ensures text is readable */
+            margin: 0 60px 40px 60px;  /* Added side margins to match info-box */
+            background-color: white;
         }
 
         /* Add a container to manage the layout */
@@ -57,15 +54,34 @@
             width: 100%;
             padding-bottom: 25px;  /* Reduced from 30px to 25px */
         }
+
+        .info-box {
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 14px;
+            line-height: 1.5;
+            margin: 20px 60px 20px 60px;  /* Reduced bottom margin */
+            padding: 15px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        /* Adjust legend position to make room for info box */
+        .legend-container {
+            position: absolute;
+            right: 15px;
+            top: 10px;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
     </style>
 </head>
 <body>
     <h1 class="title">Exoplanet Discoveries</h1>
     <div class="visualization-container">
         <div id="scatter-plot"></div>
-        <div class="citation">
-            This research has made use of the NASA Exoplanet Archive, which is operated by the California Institute of Technology, under contract with the National Aeronautics and Space Administration under the Exoplanet Exploration Program.
-        </div>
     </div>
 
     <script>
@@ -132,7 +148,7 @@
                 .attr("fill", "black")
                 .style("text-anchor", "middle")
                 .style("font-size", "14px")
-                .text("Distance (Light-years)");
+                .text("Distance from Earth (Light-years)");
 
             // Add X gridlines
             svg.append("g")
@@ -180,27 +196,86 @@
                         .style("opacity", 0);
                 });
 
-            // Add legend
+            // Add discovery method legend with title
             const methods = [...new Set(data.map(d => d.discoverymethod))];
-            const legend = svg.append("g")
-                .attr("font-family", "sans-serif")
-                .attr("font-size", 10)
-                .attr("text-anchor", "start")
-                .selectAll("g")
+            const legendGroup = svg.append("g")
+                .attr("class", "legend-container")
+                .attr("transform", `translate(${width + 30}, 5)`);
+
+            // Add legend title
+            legendGroup.append("text")
+                .attr("x", 0)
+                .attr("y", 0)
+                .attr("font-family", "Helvetica, Arial, sans-serif")
+                .attr("font-size", 12)
+                .attr("font-weight", "bold")
+                .text("Discovery Method");
+
+            // Add legend items
+            const legendItems = legendGroup.selectAll(".legend-item")
                 .data(methods)
                 .join("g")
-                .attr("transform", (d, i) => `translate(${width + 15},${i * 20 + 5})`);
+                .attr("class", "legend-item")
+                .attr("transform", (d, i) => `translate(0, ${i * 20 + 20})`);
 
-            legend.append("circle")
+            legendItems.append("circle")
                 .attr("r", 6)
                 .attr("fill", d => colorScale(d))
                 .attr("opacity", 0.4);
 
-            legend.append("text")
+            legendItems.append("text")
                 .attr("x", 15)
                 .attr("y", 3)
+                .attr("font-family", "Helvetica, Arial, sans-serif")
+                .attr("font-size", 10)
                 .text(d => d);
+
+            // Add size legend
+            const sizeLegendGroup = svg.append("g")
+                .attr("class", "size-legend")
+                .attr("transform", `translate(${width + 30}, ${methods.length * 20 + 50})`);
+
+            // Add size legend title
+            sizeLegendGroup.append("text")
+                .attr("x", 0)
+                .attr("y", 0)
+                .attr("font-family", "Helvetica, Arial, sans-serif")
+                .attr("font-size", 12)
+                .attr("font-weight", "bold")
+                .text("Planet Size");
+
+            // Create size legend circles with specified range
+            const sizeLegendData = [10, 100, 1000, 10000];  // Masses in Earth masses
+            const sizeLegendItems = sizeLegendGroup.selectAll(".size-legend-item")
+                .data(sizeLegendData)
+                .join("g")
+                .attr("class", "size-legend-item")
+                .attr("transform", (d, i) => `translate(0, ${i * 25 + 20})`);
+
+            sizeLegendItems.append("circle")
+                .attr("r", d => rScale(d))
+                .attr("fill", "#666")
+                .attr("opacity", 0.4);
+
+            sizeLegendItems.append("text")
+                .attr("x", 25)
+                .attr("y", 3)
+                .attr("font-family", "Helvetica, Arial, sans-serif")
+                .attr("font-size", 10)
+                .text(d => `${d} Earth masses`);
         }
+
+        // Add info box and citation outside of scatter plot
+        const infoBox = d3.select(".visualization-container")
+            .append("div")
+            .attr("class", "info-box")
+            .html("Exoplanets are planets orbiting stars that are not our sun. They help us understand possible environments for other forms of life. This visualization shows how exoplanet detection has changed since scientists discovered the first planets orbiting other star systems in the past few decades. Color represents the method of detection, and size represents the mass of the planet. As detection methods have become more sensitive, we are able to detect exoplanets farther and farther, especially via the transit method (light dims as exoplanets pass in front of their star) or the microlensing method (where light from extrasolar stars and planets is bent due to gravity of objects in space).");
+
+        // Add citation after info box
+        d3.select(".visualization-container")
+            .append("div")
+            .attr("class", "citation")
+            .html("This research has made use of the NASA Exoplanet Archive, which is operated by the California Institute of Technology, under contract with the National Aeronautics and Space Administration under the Exoplanet Exploration Program.");
 
         // Load data and create initial visualization
         d3.csv("CaltechExoplanetArchive.csv").then(function(data) {
