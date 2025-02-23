@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Exoplanet Discoveries</title>
+    <link href="https://fonts.googleapis.com/css2?family=Silkscreen&display=swap" rel="stylesheet">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        .tooltip {
+            position: absolute;
+            background-color: white;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            pointer-events: none;
+            font-size: 12px;
+            font-family: Helvetica, Arial, sans-serif;
+        }
+        #scatter-plot {
+            width: 100%;
+            height: calc(100vh - 70px);  /* Reduced from 80px to 70px */
+            min-height: 500px;
+            position: relative;  /* Added for positioning context */
+        }
+        .title {
+            font-family: 'Silkscreen', cursive;
+            text-align: center;
+            font-size: 24px;
+            margin-top: 20px;
+            margin-bottom: 1px;
+            height: 40px;  /* Fixed height for title */
+        }
+        .citation {
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 10px;
+            text-align: center;
+            color: #666;
+            padding: 10px;
+            position: absolute;
+            bottom: -25px;  /* Changed from -30px to -25px */
+            left: 0;
+            width: 100%;
+            background-color: white;  /* Optional: ensures text is readable */
+        }
+
+        /* Add a container to manage the layout */
+        .visualization-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 25px;  /* Reduced from 30px to 25px */
+        }
+    </style>
+</head>
+<body>
+    <h1 class="title">Exoplanet Discoveries</h1>
+    <div class="visualization-container">
+        <div id="scatter-plot"></div>
+        <div class="citation">
+            This research has made use of the NASA Exoplanet Archive, which is operated by the California Institute of Technology, under contract with the National Aeronautics and Space Administration under the Exoplanet Exploration Program.
+        </div>
+    </div>
+
+    <script>
+        // Adjust margins
+        const margin = {top: 40, right: 180, bottom: 50, left: 60};  // Reduced bottom margin from 60 to 50
+
+        // Function to create/update the visualization
+        function createVisualization(data) {
+            // Clear existing SVG
+            d3.select("#scatter-plot").select("svg").remove();
+
+            // Get current dimensions with minimum width to accommodate legend
+            const container = d3.select("#scatter-plot").node();
+            const width = Math.max(container.getBoundingClientRect().width - margin.left - margin.right, 700);  // Increased minimum width from 600 to 700
+            const height = Math.max(container.getBoundingClientRect().height - margin.top - margin.bottom, 400);
+
+            // Create SVG container
+            const svg = d3.select("#scatter-plot")
+                .append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", `translate(${margin.left},${margin.top})`);
+
+            // Create tooltip div
+            const tooltip = d3.select("body").append("div")
+                .attr("class", "tooltip")
+                .style("opacity", 0);
+
+            // Create scales
+            const xScale = d3.scaleLinear()
+                .domain([d3.min(data, d => d.disc_year), d3.max(data, d => d.disc_year)])
+                .range([0, width]);
+
+            const yScale = d3.scaleLinear()
+                .domain([0, d3.max(data, d => d.sy_dist * 3.26156)])  // Convert parsecs to light-years
+                .range([height, 0]);
+
+            const rScale = d3.scaleSqrt()
+                .domain([0, d3.max(data, d => d.pl_masse)])
+                .range([3, 20]);
+
+            const colorScale = d3.scaleOrdinal(d3.schemePaired);
+
+            // Add X axis
+            svg.append("g")
+                .attr("transform", `translate(0,${height})`)
+                .call(d3.axisBottom(xScale).tickFormat(d3.format("d")))
+                    .append("text")
+                    .attr("x", width/2)
+                    .attr("y", 40)
+                    .attr("fill", "black")
+                    .style("text-anchor", "middle")
+                    .style("font-size", "14px")
+                    .text("Discovery Year");
+
+            // Add Y axis
+            svg.append("g")
+                .call(d3.axisLeft(yScale))
+                .append("text")
+                .attr("transform", "rotate(-90)")
+                .attr("y", -50)
+                .attr("x", -height/2)
+                .attr("fill", "black")
+                .style("text-anchor", "middle")
+                .style("font-size", "14px")
+                .text("Distance (Light-years)");
+
+            // Add X gridlines
+            svg.append("g")
+                .attr("class", "grid")
+                .attr("transform", `translate(0,${height})`)
+                .style("opacity", 0.1)
+                .call(d3.axisBottom(xScale)
+                    .tickSize(-height)
+                    .tickFormat("")
+                );
+
+            // Add Y gridlines
+            svg.append("g")
+                .attr("class", "grid")
+                .style("opacity", 0.1)
+                .call(d3.axisLeft(yScale)
+                    .tickSize(-width)
+                    .tickFormat("")
+                );
+
+            // Add dots
+            svg.selectAll("circle")
+                .data(data)
+                .join("circle")
+                .attr("cx", d => xScale(d.disc_year))
+                .attr("cy", d => yScale(d.sy_dist * 3.26156))
+                .attr("r", d => rScale(d.pl_masse))
+                .style("fill", d => colorScale(d.discoverymethod))
+                .style("opacity", 0.4)
+                .on("mouseover", function(event, d) {
+                    tooltip.transition()
+                        .duration(200)
+                        .style("opacity", .9);
+                    tooltip.html(`Planet: ${d.pl_name}<br/>
+                                Year: ${d.disc_year}<br/>
+                                Distance: ${(d.sy_dist * 3.26156).toFixed(2)} light-years<br/>
+                                Mass: ${d.pl_masse.toFixed(2)} Earth masses<br/>
+                                Method: ${d.discoverymethod}`)
+                        .style("left", (event.pageX + 10) + "px")
+                        .style("top", (event.pageY - 28) + "px");
+                })
+                .on("mouseout", function(d) {
+                    tooltip.transition()
+                        .duration(500)
+                        .style("opacity", 0);
+                });
+
+            // Add legend
+            const methods = [...new Set(data.map(d => d.discoverymethod))];
+            const legend = svg.append("g")
+                .attr("font-family", "sans-serif")
+                .attr("font-size", 10)
+                .attr("text-anchor", "start")
+                .selectAll("g")
+                .data(methods)
+                .join("g")
+                .attr("transform", (d, i) => `translate(${width + 15},${i * 20 + 5})`);
+
+            legend.append("circle")
+                .attr("r", 6)
+                .attr("fill", d => colorScale(d))
+                .attr("opacity", 0.4);
+
+            legend.append("text")
+                .attr("x", 15)
+                .attr("y", 3)
+                .text(d => d);
+        }
+
+        // Load data and create initial visualization
+        d3.csv("CaltechExoplanetArchive.csv").then(function(data) {
+            // Convert string values to numbers
+            data.forEach(d => {
+                d.disc_year = +d.disc_year;
+                d.sy_dist = +d.sy_dist;
+                d.pl_masse = +d.pl_masse;
+            });
+
+            // Create initial visualization
+            createVisualization(data);
+
+            // Add resize event listener
+            window.addEventListener('resize', () => {
+                createVisualization(data);
+            });
+        });
+    </script>
+</body>
+</html>
