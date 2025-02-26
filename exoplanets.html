@@ -72,38 +72,41 @@
             right: 15px;
             top: 10px;
             background-color: rgba(255, 255, 255, 0.9);
-            padding: 10px;
+            padding: 15px;
             border-radius: 4px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             max-width: 200px;
         }
 
-        /* Add media queries for mobile responsiveness */
+        /* Update media queries for mobile responsiveness */
         @media screen and (max-width: 768px) {
             .legend-container {
                 position: static;
-                margin: 10px auto;
+                margin: 20px auto;
                 max-width: 100%;
+                padding: 20px;
             }
 
             .info-box {
                 margin: 20px 20px;
-                font-size: 12px;
+                font-size: 14px;  /* Increased from 12px */
+                padding: 20px;
             }
 
             .citation {
                 margin: 0 20px 40px 20px;
-                font-size: 9px;
+                font-size: 12px;  /* Increased from 9px */
+                padding: 15px;
             }
 
             #scatter-plot {
-                height: calc(100vh - 300px);
+                height: calc(100vh - 400px);  /* Increased space for legend */
             }
         }
     </style>
 </head>
 <body>
-    <h1 class="title">Exoplanet Discoveries</h1>
+    <h1 class="title">Exoplanet Discoveries V2</h1>
     <div class="visualization-container">
         <div id="scatter-plot"></div>
     </div>
@@ -225,62 +228,62 @@
             const legendGroup = svg.append("g")
                 .attr("class", "legend-container")
                 .attr("transform", isMobile ? 
-                    `translate(10, ${height + margin.bottom - 10})` : 
+                    `translate(10, ${height + margin.bottom + 10})` : 
                     `translate(${width + 30}, 5)`);
 
-            // Add legend title
+            // Add legend title with larger font
             legendGroup.append("text")
                 .attr("x", 0)
                 .attr("y", 0)
                 .attr("font-family", "Helvetica, Arial, sans-serif")
-                .attr("font-size", 12)
+                .attr("font-size", isMobile ? 14 : 12)  /* Increased mobile size */
                 .attr("font-weight", "bold")
                 .text("Discovery Method");
 
-            // Add legend items
+            // Add legend items with increased spacing
             const methods = [...new Set(data.map(d => d.discoverymethod))];
             const legendItems = legendGroup.selectAll(".legend-item")
                 .data(methods)
                 .join("g")
                 .attr("class", "legend-item")
-                .attr("transform", (d, i) => `translate(0, ${i * 20 + 20})`);
+                .attr("transform", (d, i) => `translate(0, ${i * (isMobile ? 25 : 20) + 25})`);  /* Increased spacing */
 
             legendItems.append("circle")
-                .attr("r", 6)
+                .attr("r", isMobile ? 8 : 6)  /* Larger circles on mobile */
                 .attr("fill", d => colorScale(d))
                 .attr("opacity", 0.4);
 
-            // Make legend text more compact on mobile
+            // Make legend text more legible
             legendItems.append("text")
-                .attr("x", 15)
-                .attr("y", 3)
+                .attr("x", isMobile ? 20 : 15)
+                .attr("y", 4)
                 .attr("font-family", "Helvetica, Arial, sans-serif")
-                .attr("font-size", isMobile ? 9 : 10)
+                .attr("font-size", isMobile ? 13 : 10)  /* Increased from 9/10 */
                 .text(d => d);
 
-            // Update size legend position for mobile
+            // Update size legend position and styling
             const sizeLegendGroup = svg.append("g")
                 .attr("class", "size-legend")
                 .attr("transform", isMobile ?
-                    `translate(${width/2}, ${height + margin.bottom + methods.length * 20 + 20})` :
+                    `translate(${width/2}, ${height + margin.bottom + methods.length * 25 + 40})` :
                     `translate(${width + 30}, ${methods.length * 20 + 50})`);
 
-            // Add size legend title
+            // Add size legend title with larger font
             sizeLegendGroup.append("text")
                 .attr("x", 0)
                 .attr("y", 0)
                 .attr("font-family", "Helvetica, Arial, sans-serif")
-                .attr("font-size", 12)
+                .attr("font-size", isMobile ? 14 : 12)  /* Increased mobile size */
                 .attr("font-weight", "bold")
                 .text("Planet Size");
 
-            // Create size legend circles with specified range
-            const sizeLegendData = [10, 100, 1000, 10000];  // Masses in Earth masses
+            // Create size legend circles with increased spacing
+            const sizeLegendData = [10, 100, 1000, 10000];
             const sizeLegendItems = sizeLegendGroup.selectAll(".size-legend-item")
                 .data(sizeLegendData)
                 .join("g")
                 .attr("class", "size-legend-item")
-                .attr("transform", (d, i) => `translate(0, ${i * 25 + 20})`);
+                .attr("transform", (d, i) => `translate(0, ${i * (isMobile ? 30 : 25) + 25})`);  /* Increased spacing */
 
             sizeLegendItems.append("circle")
                 .attr("r", d => rScale(d))
@@ -288,10 +291,10 @@
                 .attr("opacity", 0.4);
 
             sizeLegendItems.append("text")
-                .attr("x", 25)
-                .attr("y", 3)
+                .attr("x", 30)
+                .attr("y", 4)
                 .attr("font-family", "Helvetica, Arial, sans-serif")
-                .attr("font-size", 10)
+                .attr("font-size", isMobile ? 13 : 10)  /* Increased from 10 */
                 .text(d => `${d} Earth masses`);
         }
 
