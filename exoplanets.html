@@ -77,36 +77,66 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             max-width: 200px;
         }
+        
+        /* Add styles for legends when they appear below the graph */
+        .below-graph-legends {
+            position: static;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 30px;
+            padding: 15px;
+            clear: both; /* Prevent overlap with other elements */
+        }
 
         /* Update media queries for mobile responsiveness */
         @media screen and (max-width: 768px) {
             .legend-container {
                 position: static;
-                margin: 20px auto;
+                margin: 10px auto;
                 max-width: 100%;
                 padding: 20px;
             }
 
             .info-box {
                 margin: 20px 20px;
-                font-size: 14px;  /* Increased from 12px */
+                font-size: 16px;
                 padding: 20px;
+                line-height: 1.6;
+                clear: both; /* Prevent overlap with graph */
             }
 
             .citation {
                 margin: 0 20px 40px 20px;
-                font-size: 12px;  /* Increased from 9px */
+                font-size: 14px;
                 padding: 15px;
+                line-height: 1.5;
+                clear: both; /* Prevent overlap with other elements */
             }
 
             #scatter-plot {
-                height: calc(100vh - 400px);  /* Increased space for legend */
+                height: 450px; /* Fixed height instead of calc to prevent resizing issues */
+                min-height: 400px;
+                margin-bottom: 20px; /* Add space below the graph */
+                overflow: visible; /* Allow legends to flow outside if needed */
+            }
+            
+            .title {
+                font-size: 20px;
+                margin-bottom: 10px;
+            }
+            
+            .visualization-container {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
             }
         }
     </style>
 </head>
 <body>
-    <h1 class="title">Exoplanet Discoveries V2</h1>
+    <h1 class="title">Exoplanet Discoveries</h1>
     <div class="visualization-container">
         <div id="scatter-plot"></div>
     </div>
@@ -117,21 +147,29 @@
 
         // Function to create/update the visualization
         function createVisualization(data) {
-            // Clear existing SVG
+            // Clear existing SVG and legends
             d3.select("#scatter-plot").select("svg").remove();
+            d3.select(".below-graph-legends").remove();
 
             // Get current dimensions with minimum width to accommodate legend
             const container = d3.select("#scatter-plot").node();
-            const width = Math.max(container.getBoundingClientRect().width - margin.left - margin.right, 700);  // Increased minimum width from 600 to 700
+            const width = Math.max(container.getBoundingClientRect().width - margin.left - margin.right, 500);
             const height = Math.max(container.getBoundingClientRect().height - margin.top - margin.bottom, 400);
+            
+            // Check if we're in mobile/small screen mode
+            const isMobile = window.innerWidth <= 768;
 
-            // Create SVG container
+            // Adjust margins for mobile
+            const mobileMargin = {top: 30, right: 30, bottom: 50, left: 60};
+            const activeMargin = isMobile ? mobileMargin : margin;
+
+            // Create SVG container with adjusted dimensions
             const svg = d3.select("#scatter-plot")
                 .append("svg")
-                .attr("width", width + margin.left + margin.right)
-                .attr("height", height + margin.top + margin.bottom)
+                .attr("width", width + activeMargin.left + activeMargin.right)
+                .attr("height", height + activeMargin.top + activeMargin.bottom)
                 .append("g")
-                .attr("transform", `translate(${margin.left},${margin.top})`);
+                .attr("transform", `translate(${activeMargin.left},${activeMargin.top})`);
 
             // Create tooltip div
             const tooltip = d3.select("body").append("div")
@@ -223,79 +261,167 @@
                         .style("opacity", 0);
                 });
 
-            // Update legend position based on screen size
-            const isMobile = window.innerWidth <= 768;
-            const legendGroup = svg.append("g")
-                .attr("class", "legend-container")
-                .attr("transform", isMobile ? 
-                    `translate(10, ${height + margin.bottom + 10})` : 
-                    `translate(${width + 30}, 5)`);
-
-            // Add legend title with larger font
-            legendGroup.append("text")
-                .attr("x", 0)
-                .attr("y", 0)
-                .attr("font-family", "Helvetica, Arial, sans-serif")
-                .attr("font-size", isMobile ? 14 : 12)  /* Increased mobile size */
-                .attr("font-weight", "bold")
-                .text("Discovery Method");
-
-            // Add legend items with increased spacing
-            const methods = [...new Set(data.map(d => d.discoverymethod))];
-            const legendItems = legendGroup.selectAll(".legend-item")
-                .data(methods)
-                .join("g")
-                .attr("class", "legend-item")
-                .attr("transform", (d, i) => `translate(0, ${i * (isMobile ? 25 : 20) + 25})`);  /* Increased spacing */
-
-            legendItems.append("circle")
-                .attr("r", isMobile ? 8 : 6)  /* Larger circles on mobile */
-                .attr("fill", d => colorScale(d))
-                .attr("opacity", 0.4);
-
-            // Make legend text more legible
-            legendItems.append("text")
-                .attr("x", isMobile ? 20 : 15)
-                .attr("y", 4)
-                .attr("font-family", "Helvetica, Arial, sans-serif")
-                .attr("font-size", isMobile ? 13 : 10)  /* Increased from 9/10 */
-                .text(d => d);
-
-            // Update size legend position and styling
-            const sizeLegendGroup = svg.append("g")
-                .attr("class", "size-legend")
-                .attr("transform", isMobile ?
-                    `translate(${width/2}, ${height + margin.bottom + methods.length * 25 + 40})` :
-                    `translate(${width + 30}, ${methods.length * 20 + 50})`);
-
-            // Add size legend title with larger font
-            sizeLegendGroup.append("text")
-                .attr("x", 0)
-                .attr("y", 0)
-                .attr("font-family", "Helvetica, Arial, sans-serif")
-                .attr("font-size", isMobile ? 14 : 12)  /* Increased mobile size */
-                .attr("font-weight", "bold")
-                .text("Planet Size");
-
-            // Create size legend circles with increased spacing
-            const sizeLegendData = [10, 100, 1000, 10000];
-            const sizeLegendItems = sizeLegendGroup.selectAll(".size-legend-item")
-                .data(sizeLegendData)
-                .join("g")
-                .attr("class", "size-legend-item")
-                .attr("transform", (d, i) => `translate(0, ${i * (isMobile ? 30 : 25) + 25})`);  /* Increased spacing */
-
-            sizeLegendItems.append("circle")
-                .attr("r", d => rScale(d))
-                .attr("fill", "#666")
-                .attr("opacity", 0.4);
-
-            sizeLegendItems.append("text")
-                .attr("x", 30)
-                .attr("y", 4)
-                .attr("font-family", "Helvetica, Arial, sans-serif")
-                .attr("font-size", isMobile ? 13 : 10)  /* Increased from 10 */
-                .text(d => `${d} Earth masses`);
+            // Create legends based on screen size
+            if (isMobile) {
+                // Create a container for legends below the graph but before info box
+                // First, remove any existing legends
+                d3.select(".below-graph-legends").remove();
+                
+                // Insert legends after scatter plot but before info-box
+                const belowGraphLegends = d3.select(".visualization-container")
+                    .insert("div", ".info-box")  // Insert before info-box
+                    .attr("class", "below-graph-legends")
+                    .style("margin-top", "20px")
+                    .style("margin-bottom", "20px")  // Add margin below legends
+                    .style("width", "100%")
+                    .style("display", "flex")
+                    .style("flex-direction", "column")
+                    .style("align-items", "center");
+                
+                // Add discovery method legend
+                const methodLegend = belowGraphLegends.append("div")
+                    .style("margin-bottom", "30px")
+                    .style("background-color", "rgba(255, 255, 255, 0.9)")
+                    .style("padding", "15px")
+                    .style("border-radius", "4px")
+                    .style("box-shadow", "0 1px 3px rgba(0,0,0,0.1)")
+                    .style("width", "90%")
+                    .style("max-width", "400px");
+                
+                methodLegend.append("h3")
+                    .style("font-family", "Helvetica, Arial, sans-serif")
+                    .style("font-size", "18px")
+                    .style("margin-top", "0")
+                    .style("margin-bottom", "15px")
+                    .text("Discovery Method");
+                
+                const methods = [...new Set(data.map(d => d.discoverymethod))];
+                methods.forEach(method => {
+                    const item = methodLegend.append("div")
+                        .style("display", "flex")
+                        .style("align-items", "center")
+                        .style("margin-bottom", "12px");
+                    
+                    item.append("div")
+                        .style("width", "16px")
+                        .style("height", "16px")
+                        .style("border-radius", "50%")
+                        .style("background-color", colorScale(method))
+                        .style("opacity", "0.4")
+                        .style("margin-right", "12px");
+                    
+                    item.append("span")
+                        .style("font-family", "Helvetica, Arial, sans-serif")
+                        .style("font-size", "16px")
+                        .text(method);
+                });
+                
+                // Add planet size legend
+                const sizeLegend = belowGraphLegends.append("div")
+                    .style("background-color", "rgba(255, 255, 255, 0.9)")
+                    .style("padding", "15px")
+                    .style("border-radius", "4px")
+                    .style("box-shadow", "0 1px 3px rgba(0,0,0,0.1)")
+                    .style("width", "90%")
+                    .style("max-width", "400px");
+                
+                sizeLegend.append("h3")
+                    .style("font-family", "Helvetica, Arial, sans-serif")
+                    .style("font-size", "18px")
+                    .style("margin-top", "0")
+                    .style("margin-bottom", "15px")
+                    .text("Planet Size");
+                
+                const sizeLegendData = [10, 100, 1000, 10000];
+                
+                // Create SVG for size circles
+                const sizeSvg = sizeLegend.append("svg")
+                    .attr("width", "100%")
+                    .attr("height", sizeLegendData.length * 40 + 10);
+                
+                sizeLegendData.forEach((size, i) => {
+                    const g = sizeSvg.append("g")
+                        .attr("transform", `translate(30, ${i * 40 + 20})`);
+                    
+                    g.append("circle")
+                        .attr("r", rScale(size))
+                        .attr("fill", "#666")
+                        .attr("opacity", 0.4);
+                    
+                    g.append("text")
+                        .attr("x", 40)
+                        .attr("y", 5)
+                        .attr("font-family", "Helvetica, Arial, sans-serif")
+                        .attr("font-size", "16px")
+                        .text(`${size} Earth masses`);
+                });
+            } else {
+                // Desktop legends (inside SVG)
+                // Add legend title with larger font
+                const legendGroup = svg.append("g")
+                    .attr("class", "legend-container")
+                    .attr("transform", `translate(${width + 30}, 5)`);
+                
+                legendGroup.append("text")
+                    .attr("x", 0)
+                    .attr("y", 0)
+                    .attr("font-family", "Helvetica, Arial, sans-serif")
+                    .attr("font-size", 12)
+                    .attr("font-weight", "bold")
+                    .text("Discovery Method");
+                
+                // Add legend items
+                const methods = [...new Set(data.map(d => d.discoverymethod))];
+                const legendItems = legendGroup.selectAll(".legend-item")
+                    .data(methods)
+                    .join("g")
+                    .attr("class", "legend-item")
+                    .attr("transform", (d, i) => `translate(0, ${i * 20 + 25})`);
+                
+                legendItems.append("circle")
+                    .attr("r", 6)
+                    .attr("fill", d => colorScale(d))
+                    .attr("opacity", 0.4);
+                
+                legendItems.append("text")
+                    .attr("x", 15)
+                    .attr("y", 4)
+                    .attr("font-family", "Helvetica, Arial, sans-serif")
+                    .attr("font-size", 10)
+                    .text(d => d);
+                
+                // Size legend
+                const sizeLegendGroup = svg.append("g")
+                    .attr("class", "size-legend")
+                    .attr("transform", `translate(${width + 30}, ${methods.length * 20 + 50})`);
+                
+                sizeLegendGroup.append("text")
+                    .attr("x", 0)
+                    .attr("y", 0)
+                    .attr("font-family", "Helvetica, Arial, sans-serif")
+                    .attr("font-size", 12)
+                    .attr("font-weight", "bold")
+                    .text("Planet Size");
+                
+                const sizeLegendData = [10, 100, 1000, 10000];
+                const sizeLegendItems = sizeLegendGroup.selectAll(".size-legend-item")
+                    .data(sizeLegendData)
+                    .join("g")
+                    .attr("class", "size-legend-item")
+                    .attr("transform", (d, i) => `translate(0, ${i * 25 + 25})`);
+                
+                sizeLegendItems.append("circle")
+                    .attr("r", d => rScale(d))
+                    .attr("fill", "#666")
+                    .attr("opacity", 0.4);
+                
+                sizeLegendItems.append("text")
+                    .attr("x", 30)
+                    .attr("y", 4)
+                    .attr("font-family", "Helvetica, Arial, sans-serif")
+                    .attr("font-size", 10)
+                    .text(d => `${d} Earth masses`);
+            }
         }
 
         // Add info box and citation outside of scatter plot
