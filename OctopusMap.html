@@ -36,26 +36,38 @@
             transform: translateX(-50%);
             z-index: 1000;
             background: white;
-            padding: 10px 20px;
+            padding: 8px 15px;
             border-radius: 4px;
             box-shadow: 0 2px 6px rgba(0,0,0,0.1);
             display: flex;
             align-items: center;
-            gap: 15px;
-            min-width: 300px;
+            gap: 8px;
+            width: auto;
+            max-width: 95%;
+            flex-wrap: nowrap;
+            white-space: nowrap;
+        }
+        #yearDisplay {
+            font-size: 14px;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
         .year-slider {
-            flex-grow: 1;
-            margin: 0 10px;
+            width: 120px;
+            flex-shrink: 1;
+            flex-grow: 0;
+            margin: 0;
         }
         button {
-            padding: 8px 16px;
+            padding: 5px 10px;
             border: none;
             border-radius: 4px;
             background: #0078A8;
             color: white;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 13px;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
         button:hover {
             background: #005c82;
@@ -100,19 +112,7 @@
             text-decoration: underline;
         }
         
-        .info-toggle {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            z-index: 1000;
-            padding: 8px 16px;
-            border: none;
-            border-radius: 4px;
-            background: #0078A8;
-            color: white;
-            cursor: pointer;
-            font-size: 14px;
-        }
+      
         
         .info-toggle:hover {
             background: #005c82;
@@ -143,6 +143,7 @@
         <input type="range" id="yearSlider" class="year-slider">
         <button id="playButton">Play</button>
         <button id="resetButton">Reset</button>
+        <button class="info-toggle" id="infoToggle">Hide Info</button>
     </div>
 
     <!-- Add before the closing body tag, after the controls div -->
@@ -155,9 +156,6 @@
         </p>
         <p class="description">GBIF.org (20 January 2025) GBIF Occurrence Download <a href="https://doi.org/10.15468/dl.v9ctjg" target="_blank">https://doi.org/10.15468/dl.v9ctjg</a></p>
     </div>
-
-    <!-- Add the toggle button -->
-    <button class="info-toggle" id="infoToggle">Hide Info</button>
 
     <script>
         // Initialize map with a minimal style
@@ -211,10 +209,11 @@
                         const date = new Date(columns[dateIndex]);
                         const year = date.getFullYear();
                         
-                        // Skip if coordinates or year are invalid
+                        // Skip if coordinates or year are invalid or outside our range (2000-2025)
                         if (isNaN(lat) || isNaN(lon) || isNaN(year) || 
                             lat === 0 || lon === 0 || // Skip 0,0 coordinates
-                            !columns[dateIndex] || !columns[latIndex] || !columns[lonIndex]) {
+                            !columns[dateIndex] || !columns[latIndex] || !columns[lonIndex] ||
+                            year < 2000 || year > 2025) { // Filter for years 2000-2025 only
                             continue;
                         }
 
@@ -237,20 +236,18 @@
                 years.sort((a, b) => a - b);
                 console.log("Original years:", years);
                 
-                // Create a continuous sequence of years
-                const startYear = years[0];
-                const endYear = years[years.length - 1];
+                // Create a continuous sequence of years from 2000 to 2025
                 years = [];
-                for (let year = startYear; year <= endYear; year++) {
+                for (let year = 2000; year <= 2025; year++) {
                     years.push(year);
                 }
                 console.log("Sequential years:", years);
                 
                 // Initialize slider after data is loaded
                 const yearSlider = document.getElementById('yearSlider');
-                yearSlider.min = years[0];
-                yearSlider.max = years[years.length - 1];
-                yearSlider.value = years[0];
+                yearSlider.min = 2000;  // Set minimum to 2000
+                yearSlider.max = 2025;  // Set maximum to 2025
+                yearSlider.value = 2000;  // Start at 2000
                 yearSlider.step = 1;
                 
                 // Add event listener for the slider
@@ -271,7 +268,7 @@
                 });
 
                 if (years.length > 0) {
-                    updateMap(years[0]);
+                    updateMap(2000);  // Start with year 2000
                 }
             });
 
@@ -322,9 +319,9 @@
             isPlaying = false;
             document.getElementById('playButton').textContent = 'Play';
             
-            // Reset to first year
+            // Reset to first year (2000)
             currentYearIndex = 0;
-            const firstYear = years[0];
+            const firstYear = 2000;
             
             // Reset slider
             const yearSlider = document.getElementById('yearSlider');
