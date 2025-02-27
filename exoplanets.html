@@ -133,10 +133,41 @@
                 align-items: center;
             }
         }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            font-size: 16px; /* Base font size */
+        }
+        
+        /* Add responsive text sizing for mobile devices */
+        @media screen and (max-width: 768px) {
+            body {
+                font-size: 18px; /* Larger base font size on mobile */
+            }
+            
+            h1 {
+                font-size: 2.2em;
+            }
+            
+            h2 {
+                font-size: 1.8em;
+            }
+            
+            p, li {
+                font-size: 1.1em;
+            }
+            
+            .exoplanet-info {
+                padding: 15px;
+            }
+        }
     </style>
 </head>
 <body>
-    <h1 class="title">Exoplanet Discoveries</h1>
+    <h1 class="title">Exoplanet Discoveries V6 </h1>
     <div class="visualization-container">
         <div id="scatter-plot"></div>
     </div>
