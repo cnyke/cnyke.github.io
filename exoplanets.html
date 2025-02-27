@@ -40,12 +40,14 @@
         }
         .citation {
             font-family: Helvetica, Arial, sans-serif;
-            font-size: 10px;
+            font-size: 12px;
+            line-height: 1.5;
             text-align: center;
             color: #666;
-            padding: 10px;
-            margin: 0 60px 40px 60px;  /* Added side margins to match info-box */
+            padding: 15px;
+            margin: 0 60px 40px 60px;
             background-color: white;
+            border-radius: 4px;
         }
 
         /* Add a container to manage the layout */
@@ -57,13 +59,14 @@
 
         .info-box {
             font-family: Helvetica, Arial, sans-serif;
-            font-size: 14px;
-            line-height: 1.5;
-            margin: 20px 60px 20px 60px;  /* Reduced bottom margin */
-            padding: 15px;
+            font-size: 16px;
+            line-height: 1.6;
+            margin: 20px 60px 20px 60px;
+            padding: 20px;
             background-color: rgba(255, 255, 255, 0.9);
-            border-radius: 4px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+            color: #333;
         }
 
         /* Update legend styles for responsiveness */
@@ -100,19 +103,18 @@
             }
 
             .info-box {
+                font-size: 18px;
+                line-height: 1.7;
                 margin: 20px 20px;
-                font-size: 16px;
-                padding: 20px;
-                line-height: 1.6;
-                clear: both; /* Prevent overlap with graph */
+                padding: 25px;
+                border-radius: 10px;
             }
 
             .citation {
-                margin: 0 20px 40px 20px;
                 font-size: 14px;
-                padding: 15px;
-                line-height: 1.5;
-                clear: both; /* Prevent overlap with other elements */
+                line-height: 1.6;
+                margin: 0 20px 30px 20px;
+                padding: 20px;
             }
 
             #scatter-plot {
@@ -123,14 +125,24 @@
             }
             
             .title {
-                font-size: 20px;
-                margin-bottom: 10px;
+                font-size: 24px;
+                margin-bottom: 15px;
+                padding: 0 15px;
             }
             
             .visualization-container {
                 display: flex;
                 flex-direction: column;
                 align-items: center;
+            }
+            
+            .below-graph-legends h3 {
+                font-size: 20px;
+            }
+            
+            .below-graph-legends span,
+            .below-graph-legends text {
+                font-size: 18px;
             }
         }
 
@@ -167,7 +179,7 @@
     </style>
 </head>
 <body>
-    <h1 class="title">Exoplanet Discoveries V6 </h1>
+    <h1 class="title">Exoplanet Discoveries V7 </h1>
     <div class="visualization-container">
         <div id="scatter-plot"></div>
     </div>
