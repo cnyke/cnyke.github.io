@@ -59,6 +59,7 @@
             bottom: 10px;
             right: 10px;
             z-index: 1000;
+            margin-top: 10px;
         }
         
         .legend-toggle:hover {
@@ -76,7 +77,7 @@
             width: auto;
             min-width: 200px;
             max-width: 300px;
-            margin-bottom: 40px;
+            margin-bottom: 50px;
         }
         
         /* Style for each legend item */
@@ -85,6 +86,11 @@
             align-items: center;
             margin-bottom: 5px;
             font-size: 14px;
+        }
+        
+        /* Extra padding for Urban Neighborhood */
+        .extra-padding {
+            margin-bottom: 15px; /* Increased from the default 5px */
         }
         
         .color-box {
@@ -253,8 +259,11 @@
                     landUseTypes.sort();
                     
                     landUseTypes.forEach(landUse => {
+                        // Add extra padding class for Urban Neighborhood
+                        const extraClass = landUse === 'Urban Neighborhood' ? 'extra-padding' : '';
+                        
                         div.innerHTML += `
-                            <div class="legend-item">
+                            <div class="legend-item ${extraClass}">
                                 <span class="color-box" style="background:${getColorForLandUse(landUse)};"></span>
                                 ${landUse}
                             </div>`;
