@@ -44,6 +44,60 @@
             margin: 20px 0;
             color: #333;
         }
+        
+        /* Legend toggle button styling */
+        .legend-toggle {
+            background-color: #4287f5;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            text-align: center;
+            font-size: 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            z-index: 1000;
+        }
+        
+        .legend-toggle:hover {
+            background-color: #3266c0;
+        }
+        
+        /* Custom legend container */
+        .custom-legend {
+            background-color: white;
+            padding: 10px;
+            border-radius: 5px;
+            max-height: 500px;
+            overflow-y: auto;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            width: auto;
+            min-width: 200px;
+            max-width: 300px;
+            margin-bottom: 40px;
+        }
+        
+        /* Style for each legend item */
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        
+        .color-box {
+            width: 20px;
+            height: 20px;
+            display: inline-block;
+            margin-right: 8px;
+            border: 1px solid #ccc;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
     </style>
 </head>
 <body>
@@ -72,6 +126,35 @@
             maxZoom: 20
         }).addTo(map);
 
+        // Add legend toggle button
+        const legendToggleBtn = L.control({position: 'bottomright'});
+        legendToggleBtn.onAdd = function(map) {
+            const btn = L.DomUtil.create('button', 'legend-toggle');
+            btn.innerHTML = 'Hide Key';
+            btn.id = 'legendToggleBtn';
+            
+            // Prevent map click events when clicking the button
+            L.DomEvent.disableClickPropagation(btn);
+            L.DomEvent.on(btn, 'click', toggleLegend);
+            
+            return btn;
+        };
+        legendToggleBtn.addTo(map);
+        
+        // Function to toggle legend visibility
+        function toggleLegend() {
+            const legendContainer = document.querySelector('.custom-legend');
+            const btn = document.getElementById('legendToggleBtn');
+            
+            if (legendContainer.classList.contains('hidden')) {
+                legendContainer.classList.remove('hidden');
+                btn.innerHTML = 'Hide Key';
+            } else {
+                legendContainer.classList.add('hidden');
+                btn.innerHTML = 'Show Key';
+            }
+        }
+
         // Function to get color based on land use
         function getColorForLandUse(landUse) {
             // Clean the input string
@@ -83,9 +166,11 @@
                 .trim()                    // Remove leading/trailing whitespace
                 .normalize();              // Normalize Unicode characters
             
-            // Handle downtown variations
-            if (baseType.startsWith('Downtown')) {
-                return '#FFB300'; // Vivid Gold for all downtown types
+            // Handle specific downtown variations with different colors
+            if (baseType === 'Downtown Center') {
+                return '#FFB300'; // Vivid Gold for Downtown Center
+            } else if (baseType === 'Downtown Destination') {
+                return '#ff6f00'; // Darker amber for Downtown Destination
             }
             
             const colorMap = {
@@ -150,23 +235,27 @@
                 // Add a legend
                 const legend = L.control({position: 'bottomright'});
                 legend.onAdd = function(map) {
-                    const div = L.DomUtil.create('div', 'legend');
-                    div.style.backgroundColor = 'white';
-                    div.style.padding = '10px';
-                    div.style.borderRadius = '5px';
+                    const div = L.DomUtil.create('div', 'custom-legend');
+                    div.id = 'legendContainer';
                     div.innerHTML = '<h4>Land Use Types</h4>';
                     
-                    // Get unique land use types
-                    const landUseTypes = [...new Set(data.features.map(f => f.properties.Land_Use))];
+                    // Get unique land use types and normalize them
+                    let landUseTypes = [...new Set(data.features.map(f => {
+                        const landUse = f.properties.Land_Use;
+                        // Normalize Urban Neighborhood types
+                        if (landUse.startsWith('Urban Neighborhood')) {
+                            return 'Urban Neighborhood';
+                        }
+                        return landUse;
+                    }))];
+                    
+                    // Sort land use types alphabetically for easier reference
+                    landUseTypes.sort();
                     
                     landUseTypes.forEach(landUse => {
                         div.innerHTML += `
-                            <div>
-                                <span style="background:${getColorForLandUse(landUse)}; 
-                                           width: 20px; 
-                                           height: 20px; 
-                                           display: inline-block;
-                                           margin-right: 5px;"></span>
+                            <div class="legend-item">
+                                <span class="color-box" style="background:${getColorForLandUse(landUse)};"></span>
                                 ${landUse}
                             </div>`;
                     });
