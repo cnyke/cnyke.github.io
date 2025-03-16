@@ -92,8 +92,7 @@
         <h1>Minneapolis Campaign Contributions</h1>
         <div class="description">
             This visualization shows campaign contributions for Minneapolis political races. Each bubble represents a campaign, 
-            with the size of the bubble proportional to the total amount of contributions received. Bubbles are color-coded and 
-            grouped by ward or district. Hover over any bubble to see detailed information about the candidate and their total contributions.
+            with the size of the bubble proportional to the total amount of contributions received. Bubbles are color-coded by ward or district. Hover over any bubble to see detailed information about the candidate and their total contributions.
             Use the controls below to explore different years and offices. 
         </div>
     </div>
@@ -133,7 +132,24 @@
             .attr("class", "tooltip");
 
         // Color scale for districts
-        const colorScale = d3.scaleOrdinal(d3.schemeTableau10);
+        const districtColors = {
+            "Ward 1": "#1f77b4",  // Blue
+            "Ward 2": "#2ca02c",  // Green
+            "Ward 3": "#ff7f0e",  // Orange
+            "Ward 4": "#d62728",  // Red
+            "Ward 5": "#9467bd",  // Purple
+            "Ward 6": "#8c564b",  // Brown
+            "Ward 7": "#e377c2",  // Pink
+            "Ward 8": "#7f7f7f",  // Gray
+            "Ward 9": "#bcbd22",  // Olive
+            "Ward 10": "#17becf", // Cyan
+            "Ward 11": "#aec7e8", // Light Blue
+            "Ward 12": "#98df8a", // Light Green
+            "Ward 13": "#ffbb78", // Light Orange
+            "Unknown": "#999999"  // Medium Gray
+        };
+        
+        const colorScale = d => districtColors[d] || "#999999"; // Default to gray if district not found
 
         function showError(message) {
             const errorDiv = document.getElementById('error-message');
