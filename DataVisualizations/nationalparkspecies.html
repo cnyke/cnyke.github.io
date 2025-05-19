@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acadia Species Observations</title>
+    <link rel="icon" type="image/png" href="../favicon.png">
+    <link rel="apple-touch-icon" href="../favicon.png">
+    <link rel="shortcut icon" type="image/png" href="../favicon.png">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-C3S7RZW6F5"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-C3S7RZW6F5');
+</script>
+    <style>
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        #parkSelector {
+            margin: 0;
+            padding: 5px;
+            font-size: 14px;
+            font-family: Helvetica, Arial, sans-serif;
+            width: 100%;
+            max-width: 300px;
+        }
+        #descriptionContainer {
+            position: static !important;
+            width: 100% !important;
+            max-width: 600px;
+        }
+        #legendContainer {
+            position: static !important;
+            width: 100%;
+            overflow-x: auto;
+        }
+        .tooltip {
+            position: absolute;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            pointer-events: none;
+            font-size: 12px;
+            font-family: Helvetica, Arial, sans-serif;
+            box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.1);
+            z-index: 1000;  /* Make sure tooltip appears above other elements */
+        }
+        .legend {
+            font-size: 12px;
+            font-family: Helvetica, Arial, sans-serif;
+        }
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            #visualization svg {
+                width: 100% !important;
+                height: auto !important;
+            }
+        }
+        .title {
+            text-align: center;
+            margin: 0 0 20px 0;
+        }
+        .title h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .content-wrapper {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+        }
+        .main-content {
+            flex: 1;
+            min-width: 0; /* Prevents flex item from overflowing */
+        }
+        #legendContainer {
+            width: 300px; /* Fixed width for the legend */
+            flex-shrink: 0; /* Prevents legend from shrinking */
+        }
+        
+        @media (max-width: 768px) {
+            .content-wrapper {
+                flex-direction: column;
+            }
+            #legendContainer {
+                width: 100%;
+                margin-top: 20px;
+            }
+            body {
+                padding: 10px;
+            }
+            #visualization svg {
+                width: 100% !important;
+                height: auto !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <nav style="margin-bottom: 20px;">
+            <a href="../index.html" style="font-family: Helvetica, Arial, sans-serif; color: #2c5282; text-decoration: none; font-size: 1.1em;">← Back to Home</a>
+        </nav>
+        <div class="title">
+            <h1>Species Observations in National Parks</h1>
+        </div>
+        <select id="parkSelector"></select>
+        <div class="content-wrapper">
+            <div class="main-content">
+                <div id="descriptionContainer"></div>
+                <div id="visualization"></div>
+            </div>
+            <div id="legendContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        // Update margin to have more top and bottom space
+        const margin = {top: 80, right: 25, bottom: 80, left: 25};
+        
+        // Update the getVisualizationDimensions function to increase minimum height
+        function getVisualizationDimensions() {
+            const minHeight = 600; // Increased from 400 to 600
+            let width = Math.min(window.innerWidth - 50, 1200); // Max width of 1200px
+            let height = Math.max(window.innerHeight * 0.7, minHeight); // Increased from 0.6 to 0.7
+            
+            if (window.innerWidth <= 768) {
+                width = window.innerWidth - 40;
+                height = minHeight; // Mobile will still get the increased minimum height
+            }
+            
+            return { width, height };
+        }
+
+        // Remove the absolute positioning code for containers
+        d3.select("#descriptionContainer")
+            .style("font-family", "Helvetica, Arial, sans-serif")
+            .style("font-size", "14px")
+            .html("This data visualization shows the biodiversity in national parks around the United States. Each cluster of circles represents a category of animal, plant, or fungi. Use the dropdown to explore different national parks, and hover over the circles to see what species were observed in each national park. National Park Service and Larion, A. (2017). Biodiversity in National Parks. Retrieved 9/2/2023 from <a href='https://www.kaggle.com/datasets/nationalparkservice/park-biodiversity/discussion/27921' target='_blank'>Kaggle</a>.");
+
+        // Create a global color scale
+        let globalColorScale;
+        let allCategories;
+
+        // Function to create the legend once
+        function createLegend() {
+            const itemsPerColumn = Math.ceil(allCategories.length / 2);
+            const columnWidth = 150;  // width for each column
+
+            const legendSvg = d3.select("#legendContainer")
+                .append("svg")
+                .attr("width", columnWidth * 2)  // double width for two columns
+                .attr("height", itemsPerColumn * 20 + 10);  // height based on items per column
+
+            const legend = legendSvg.append("g")
+                .attr("class", "legend")
+                .attr("transform", "translate(10,10)");
+
+            legend.selectAll("rect")
+                .data(allCategories)
+                .join("rect")
+                .attr("x", (d, i) => Math.floor(i / itemsPerColumn) * columnWidth)  // x position based on column
+                .attr("y", (d, i) => (i % itemsPerColumn) * 20)  // y position wraps within column
+                .attr("width", 10)
+                .attr("height", 10)
+                .attr("fill", d => globalColorScale(d));
+
+            legend.selectAll("text")
+                .data(allCategories)
+                .join("text")
+                .attr("x", (d, i) => Math.floor(i / itemsPerColumn) * columnWidth + 15)  // text position based on column
+                .attr("y", (d, i) => (i % itemsPerColumn) * 20 + 9)  // text wraps within column
+                .text(d => d);
+        }
+
+        // Add debounce function
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Update the forceCluster function to have stronger clustering
+        function forceCluster() {
+            const strength = 0.6; // Increased from 0.2 to 0.6
+            let nodes;
+
+            function force(alpha) {
+                const centroids = d3.rollup(nodes, 
+                    v => ({
+                        x: d3.mean(v, d => d.x),
+                        y: d3.mean(v, d => d.y)
+                    }), 
+                    d => d.Category
+                );
+
+                nodes.forEach(d => {
+                    const centroid = centroids.get(d.Category);
+                    d.vx += (centroid.x - d.x) * strength * alpha;
+                    d.vy += (centroid.y - d.y) * strength * alpha;
+                });
+            }
+
+            force.initialize = (_nodes) => nodes = _nodes;
+
+            return force;
+        }
+
+        // Add a flag to track if visualization is in progress
+        let isVisualizationInProgress = false;
+
+        // Function to create visualization for a specific park
+        function createVisualization(parkName, containerId) {
+            // Prevent multiple simultaneous visualizations
+            if (isVisualizationInProgress) {
+                return;
+            }
+            isVisualizationInProgress = true;
+
+            // Clear previous visualization and tooltip
+            d3.select(containerId).html("");
+            d3.selectAll(".tooltip").remove();
+
+            // Get dimensions
+            const { width, height } = getVisualizationDimensions();
+
+            // Create SVG container
+            const svg = d3.select(containerId)
+                .append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", `translate(${margin.left},${margin.top})`);
+
+            // Create tooltip div
+            const tooltip = d3.select("body")
+                .append("div")
+                .attr("class", "tooltip")
+                .style("opacity", 0)
+                .style("position", "absolute");
+
+            // Load and process the data
+            d3.csv("species.csv").then(function(data) {
+                const parkData = data.filter(d => d["Park Name"] === parkName);
+                
+                // Adjust forces based on screen width
+                const isMobile = window.innerWidth <= 768;
+                const forceStrength = isMobile ? 0.15 : 0.1;
+                const chargeStrength = isMobile ? -2 : -1;
+                const collideRadius = isMobile ? 4 : 3;
+                
+                const simulation = d3.forceSimulation(parkData)
+                    .force("x", d3.forceX(width / 2).strength(forceStrength))
+                    .force("y", d3.forceY(height / 2).strength(forceStrength))
+                    .force("collide", d3.forceCollide().radius(collideRadius))
+                    .force("charge", d3.forceManyBody().strength(chargeStrength))
+                    .force("cluster", forceCluster())
+                    .alphaDecay(0.01) // Decreased from 0.02 to 0.01 for smoother transitions
+                    .velocityDecay(0.4); // Increased from 0.3 to 0.4 for more stability
+
+                // Create nodes
+                const nodes = svg.selectAll("circle")
+                    .data(parkData)
+                    .join("circle")
+                    .attr("r", 2)
+                    .attr("fill", d => globalColorScale(d.Category))
+                    .attr("opacity", 0.8);
+
+                // Add mouseover and mouseout events directly (without debounce)
+                nodes
+                    .on("mouseover", function(event, d) {
+                        d3.select(this)
+                            .attr("opacity", 1)
+                            .attr("r", 4);
+                        
+                        const tooltipWidth = 200; // Approximate width of tooltip
+                        const tooltipHeight = 100; // Approximate height of tooltip
+                        
+                        // Calculate position, keeping tooltip within viewport
+                        let left = event.pageX + 10;
+                        let top = event.pageY - 28;
+                        
+                        // Adjust if tooltip would extend beyond right edge
+                        if (left + tooltipWidth > window.innerWidth) {
+                            left = event.pageX - tooltipWidth - 10;
+                        }
+                        
+                        // Adjust if tooltip would extend beyond bottom edge
+                        if (top + tooltipHeight > window.innerHeight) {
+                            top = event.pageY - tooltipHeight - 10;
+                        }
+                        
+                        tooltip
+                            .style("opacity", 0.9)
+                            .html(`
+                                <strong>${d["Common Names"]}</strong><br/>
+                                Order: ${d.Order}<br/>
+                                Family: ${d.Family}<br/>
+                                Scientific Name: ${d["Scientific Name"]}
+                            `)
+                            .style("left", left + "px")
+                            .style("top", top + "px");
+                    })
+                    .on("mouseout", function() {
+                        d3.select(this)
+                            .attr("opacity", 0.8)
+                            .attr("r", 2);
+                        
+                        tooltip.style("opacity", 0);
+                    });
+
+                // Update node positions on each tick
+                simulation.on("tick", () => {
+                    nodes
+                        .attr("cx", d => Math.max(0, Math.min(width, d.x)))
+                        .attr("cy", d => Math.max(0, Math.min(height, d.y)));
+                });
+
+                // Release the flag when simulation is complete
+                setTimeout(() => {
+                    simulation.stop();
+                    isVisualizationInProgress = false;
+                }, 2000);
+
+                // Update the page title
+                d3.select(".title h1")
+                    .text(`Species Observations in ${parkName}`);
+            }).catch(error => {
+                console.error(`Error loading or processing data for ${parkName}:`, error);
+                isVisualizationInProgress = false; // Release flag if there's an error
+            });
+        }
+
+        // Modify the data loading section
+        d3.csv("species.csv").then(function(data) {
+            // Get all unique categories from the entire dataset
+            allCategories = [...new Set(data.map(d => d.Category))].sort();
+            
+            // Create global color scale
+            globalColorScale = d3.scaleOrdinal()
+                .domain(allCategories)
+                .range(d3.schemeCategory10);
+
+            // Create the legend once
+            createLegend();
+
+            // Get unique park names
+            const parks = [...new Set(data.map(d => d["Park Name"]))].sort();
+            
+            // Populate dropdown
+            const selector = d3.select("#parkSelector")
+                .on("change", function() {
+                    if (!isVisualizationInProgress) {
+                        d3.select("#visualization").html("");
+                        createVisualization(this.value, "#visualization");
+                    }
+                });
+
+            selector.selectAll("option")
+                .data(parks)
+                .join("option")
+                .attr("value", d => d)
+                .text(d => d);
+
+            // Create initial visualization with first park
+            createVisualization(parks[0], "#visualization");
+        }).catch(error => {
+            console.error("Error loading data:", error);
+        });
+
+        // Debounce the resize handler
+        const debouncedResize = debounce(function() {
+            const currentPark = d3.select("#parkSelector").property("value");
+            createVisualization(currentPark, "#visualization");
+        }, 250);
+
+        // Update window resize handler
+        window.addEventListener('resize', debouncedResize);
+    </script>
+</body>
+</html>

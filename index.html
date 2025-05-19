@@ -4,92 +4,158 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Resilience Continuum</title>
-    <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="apple-touch-icon" href="favicon.png">
-    <link rel="shortcut icon" type="image/png" href="favicon.png">
     <link href="https://fonts.googleapis.com/css2?family=Silkscreen&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="favicon.png">
     <style>
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Helvetica, Arial, sans-serif;
         }
 
-        .image-grid {
+        body {
+            padding: 2rem;
+            background-color: #ffffff;
+        }
+
+        header {
             display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            justify-content: center;
-        }
-
-        .image-item {
-            flex: 1 1 calc(50% - 20px);
-            min-width: 250px;
-            max-width: 500px;
-        }
-
-        .image-item img {
-            width: 100%;
-            height: auto;
-            display: block;
-            border-radius: 8px;
-        }
-
-        @media (max-width: 600px) {
-            .image-item {
-                flex: 1 1 100%;
-            }
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3rem;
         }
 
         .title {
-            text-align: center;
-            font-size: 2.5rem;
-            margin-bottom: 30px;
             font-family: 'Silkscreen', cursive;
+            font-size: 2rem;
+            font-weight: bold;
+
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        nav a {
+            text-decoration: none;
             color: #333;
+            font-size: 1rem;
+            transition: color 0.3s ease;
+        }
+
+        nav a:hover {
+            color: #666;
+        }
+
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.565rem;
+            grid-auto-rows: 1px;
+        }
+
+        .project-item {
+            grid-row-end: span 30; /* This will be adjusted by JavaScript */
+            background-color: #f5f5f5;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .project-item img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            nav ul {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: center;
+            }
+
+            .projects-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
-</head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-C3S7RZW6F5"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <script>
+        // Function to adjust grid row spans based on image heights
+        function adjustGridItems() {
+            const gridItems = document.querySelectorAll('.project-item');
+            gridItems.forEach(item => {
+                const height = item.querySelector('img').height;
+                const rowSpan = Math.ceil(height / 10); // 10px is our grid-auto-rows value
+                item.style.gridRowEnd = `span ${rowSpan}`;
+            });
+        }
 
-  gtag('config', 'G-C3S7RZW6F5');
-</script>
+        // Run on load and when images are loaded
+        window.addEventListener('load', adjustGridItems);
+        window.addEventListener('resize', adjustGridItems);
+    </script>
+</head>
 <body>
-    <div class="container">
-        <h1 class="title">Resilience Continuum</h1>
-        <div class="image-grid">
-            <div class="image-item">
-                <a href="datavisualizations.html">
-                    <img src="datavisualizations2.png" alt="data visualizations">
+    <header>
+        <h1 class="title"><a href="index.html" style="text-decoration: none; color: inherit; font-family: 'Silkscreen', cursive;">Resilience Continuum</a></h1>
+        <nav>
+            <ul>
+                <li><a href="datavisualizations.html">Data Visualizations</a></li>
+                <li><a href="designillustration.html">Design & Illustration</a></li>
+                <li><a href="fiction.html">Fiction</a></li>
+                <li><a href="nonfiction.html">Nonfiction</a></li>
+                <li><a href="poems.html">Poems</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <div class="projects-grid">
+            <!-- Project items will be added here -->
+            <div class="project-item">
+                <a href="DesignIllustration/gene-editing.html">
+                    <img src="Images/geneEditing1.png" alt="Project 1">
                 </a>
             </div>
-            <div class="image-item">
-                <a href="fiction.html">
-                    <img src="fiction2.png" alt="fiction">
+            <div class="project-item">
+                <a href="DesignIllustration/skull-and-flies.html">
+                    <img src="Images/skullandflies.jpg" alt="Project 2">
                 </a>
             </div>
-            <div class="image-item">
-                <a href="poems.html">
-                    <img src="poems.png" alt="poems">
+            <div class="project-item">
+                <a href="DesignIllustration/phr.html">
+                    <img src="Images/PHRsmaller.png" alt="Project 3">
                 </a>
             </div>
-            <div class="image-item">
-                <a href="designillustration.html">
-                    <img src="designillustration.png" alt="designillustration">
+            <div class="project-item">
+                <a href="DesignIllustration/marine-life.html">
+                    <img src="Images/whale.jpg" alt="Project 4">
                 </a>
             </div>
-            
-            
-            
+
+<!--
+
+            <div class="project-item">
+                <img src="Images/placeholder5.jpg" alt="Project 5">
+            </div>
+            <div class="project-item">
+                <img src="placeholder6.jpg" alt="Project 6">
+            </div>
+-->
         </div>
-    </div>
-    <footer style="text-align: center; margin-top: 50px; padding: 20px; color: #666; font-size: 0.8em; border-top: 1px solid #eee; font-family: Helvetica, Arial, sans-serif;">
+    </main>
+
+    <footer style="text-align: center; margin-top: 50px; padding: 20px; color: #666; font-size: 0.8em; border-top: 1px solid #eee;">
         &copy; 2025 Claire Nyquist. All rights reserved.
     </footer>
 </body>
-</html>
+</html> 

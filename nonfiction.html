@@ -9,33 +9,80 @@
     <link rel="shortcut icon" type="image/png" href="favicon.png">
     <link href="https://fonts.googleapis.com/css2?family=Silkscreen&display=swap" rel="stylesheet">
     <style>
-        body {
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
             font-family: Helvetica, Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            line-height: 1.6;
         }
-        h1 {
+
+        body {
+            padding: 2rem;
+            background-color: #ffffff;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3rem;
+        }
+
+        .title {
             font-family: 'Silkscreen', cursive;
-            text-align: center;
-            color: #333;
+            font-size: 2rem;
+            font-weight: bold;
         }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: #333;
+            font-size: 1rem;
+            transition: color 0.3s ease;
+        }
+
+        nav a:hover {
+            color: #666;
+        }
+
         .story-list {
             list-style: none;
             padding: 0;
             text-align: center;
         }
+
         .story-list li {
             margin: 15px 0;
         }
+
         .story-list a {
             color: #2c5282;
             text-decoration: none;
             font-size: 1.1em;
         }
+
         .story-list a:hover {
             text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            nav ul {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: center;
+            }
         }
     </style>
 </head>
@@ -49,18 +96,27 @@
   gtag('config', 'G-C3S7RZW6F5');
 </script>
 <body>
-    <nav style="margin-bottom: 20px;">
-        <a href="index.html" style="font-family: Helvetica, Arial, sans-serif; color: #2c5282; text-decoration: none; font-size: 1.1em; margin-right: 20px;">← Back to Home</a>
-        <span style="font-family: Helvetica, Arial, sans-serif; color: #666; font-size: 1.1em;">Nonfiction</span>
-    </nav>
-    <h1>Nonfiction</h1>
-    
-    <ul class="story-list">
-        <li><a href="https://www.partners4healthequity.org/resource-library/p4he-spotlight-national-immunization-awareness-month">National Immunization Awareness Month</a></li>
-        <li>More nonfiction coming soon</li>
+    <header>
+        <h1 class="title"><a href="index.html" style="text-decoration: none; color: inherit; font-family: 'Silkscreen', cursive;">Resilience Continuum</a></h1>
+        <nav>
+            <ul>
+                <li><a href="datavisualizations.html">Data Visualizations</a></li>
+                <li><a href="designillustration.html">Design & Illustration</a></li>
+                <li><a href="fiction.html">Fiction</a></li>
+                <li><a href="nonfiction.html">Nonfiction</a></li>
+                <li><a href="poems.html">Poems</a></li>
+            </ul>
+        </nav>
+    </header>
 
-       
-    </ul>
+    <main>
+        <h1 style="font-family: 'Silkscreen', cursive; text-align: center; color: #333; margin-bottom: 2rem;">Nonfiction</h1>
+        
+        <ul class="story-list">
+            <li>Nonfiction coming soon</li>
+        </ul>
+    </main>
+
     <footer style="text-align: center; margin-top: 50px; padding: 20px; color: #666; font-size: 0.8em; border-top: 1px solid #eee;">
         &copy; 2025 Claire Nyquist. All rights reserved.
     </footer>

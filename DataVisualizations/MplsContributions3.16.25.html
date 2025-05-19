@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minneapolis Campaign Contributions</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="apple-touch-icon" href="favicon.png">
+    <link rel="shortcut icon" type="image/png" href="favicon.png">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            font-family: Helvetica, "Helvetica Neue", Arial, sans-serif;
+            margin: 20px;
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #34495e;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+        .description {
+            color: #555;
+            line-height: 1.5;
+            margin-bottom: 30px;
+            text-align: left;
+        }
+        .controls {
+            margin-bottom: 20px;
+        }
+        select {
+            padding: 5px;
+            margin-right: 10px;
+        }
+        .tooltip {
+            position: absolute;
+            background: white;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            pointer-events: none;
+            opacity: 0;
+        }
+        svg {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        #error-message {
+            color: red;
+            margin: 10px 0;
+            display: none;
+        }
+        .citation {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            font-style: italic;
+        }
+        .copyright {
+            text-align: center;
+            font-size: 0.8em;
+            color: #888;
+            margin-top: 30px;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+        }
+    </style>
+</head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-C3S7RZW6F5"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-C3S7RZW6F5');
+</script>
+<body>
+    <div class="header">
+        <h1>Minneapolis Campaign Contributions</h1>
+        <div class="description">
+            This visualization shows campaign contributions for Minneapolis political races. Each bubble represents a campaign, 
+            with the size of the bubble proportional to the total amount of contributions received. Bubbles are color-coded by ward or district. Hover over any bubble to see detailed information about the candidate and their total contributions.
+            Use the controls below to explore different years and offices. 
+        </div>
+    </div>
+    <div id="error-message"></div>
+    <div class="controls">
+        <label for="yearSelect">Select Year:</label>
+        <select id="yearSelect"></select>
+        
+        <label for="officeSelect">Select Office:</label>
+        <select id="officeSelect"></select>
+    </div>
+    <div id="chart"></div>
+    
+    <div class="citation">
+        Data source: City of Minneapolis. (2025). Candidate & Economic Interest Filing. [dataset]. MapLight. Retrieved 3/16/2025 from https://minneapolis.maplight.com/public/transaction-search.
+    </div>
+
+    <div class="copyright">
+        © Claire Nyquist 2025
+    </div>
+
+    <script>
+        // Set up the dimensions
+        const width = 960;
+        const height = 600;
+        const margin = { top: 20, right: 20, bottom: 20, left: 20 };
+
+        // Create SVG
+        const svg = d3.select("#chart")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height);
+
+        // Create tooltip
+        const tooltip = d3.select("body")
+            .append("div")
+            .attr("class", "tooltip");
+
+        // Color scale for districts
+        const districtColors = {
+            "Ward 1": "#1f77b4",  // Blue
+            "Ward 2": "#2ca02c",  // Green
+            "Ward 3": "#ff7f0e",  // Orange
+            "Ward 4": "#d62728",  // Red
+            "Ward 5": "#9467bd",  // Purple
+            "Ward 6": "#8c564b",  // Brown
+            "Ward 7": "#e377c2",  // Pink
+            "Ward 8": "#7f7f7f",  // Gray
+            "Ward 9": "#bcbd22",  // Olive
+            "Ward 10": "#17becf", // Cyan
+            "Ward 11": "#aec7e8", // Light Blue
+            "Ward 12": "#98df8a", // Light Green
+            "Ward 13": "#ffbb78", // Light Orange
+            "Unknown": "#999999"  // Medium Gray
+        };
+        
+        const colorScale = d => districtColors[d] || "#999999"; // Default to gray if district not found
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.style.display = 'block';
+            errorDiv.textContent = message;
+        }
+
+        // Load the data
+        d3.csv("Contributions3.16.25.csv")
+            .then(data => {
+                console.log("Data loaded successfully:", data.length, "rows");
+                
+                // Parse dates and amounts
+                data.forEach(d => {
+                    try {
+                        d.date = new Date(d["Contribution Date"]);
+                        d.year = d.date.getFullYear();
+                        
+                        // Clean and parse the amount
+                        let amount = d["Amount"];
+                        if (typeof amount === 'string') {
+                            // Remove currency symbols, commas, and handle negative values
+                            amount = amount.replace(/[$ ,]/g, '');
+                            // Handle various forms of negative values
+                            if (amount.includes('(') || amount.includes(')') || amount.startsWith('–') || amount.startsWith('-')) {
+                                amount = '-' + amount.replace(/[()\-–]/g, '');
+                            }
+                        }
+                        d.amount = parseFloat(amount) || 0;
+                        
+                        // Log the first few rows to check column names
+                        if (data.indexOf(d) < 5) {
+                            console.log("Sample row:", {
+                                date: d.date,
+                                year: d.year,
+                                amount: d.amount,
+                                office: d["Office Sought"],
+                                campaign: d["Recipient Campaign"],
+                                ward: d["Ward"],
+                                district: d["District"],
+                                wardDistrict: d["Ward/District"]
+                            });
+                        }
+                        
+                        if (isNaN(d.year)) {
+                            console.warn("Invalid date:", d["Contribution Date"]);
+                        }
+                        if (isNaN(d.amount)) {
+                            console.warn("Invalid amount:", d["Amount"], "->", amount);
+                        }
+                    } catch (e) {
+                        console.error("Error parsing row:", d, e);
+                        // Set default values if parsing fails
+                        d.amount = 0;
+                        d.year = new Date().getFullYear();
+                    }
+                });
+
+                // Get unique years and offices
+                const years = [...new Set(data.map(d => d.year))].filter(year => !isNaN(year)).sort();
+                const offices = [...new Set(data.map(d => d["Office Sought"]))].filter(office => office).sort();
+
+                console.log("Available years:", years);
+                console.log("Available offices:", offices);
+
+                // Populate dropdowns
+                const yearSelect = d3.select("#yearSelect");
+                yearSelect
+                    .selectAll("option")
+                    .data(years)
+                    .enter()
+                    .append("option")
+                    .text(d => d);
+
+                const officeSelect = d3.select("#officeSelect");
+                officeSelect
+                    .selectAll("option")
+                    .data(offices)
+                    .enter()
+                    .append("option")
+                    .text(d => d);
+
+                // Set initial values
+                // Set 2023 as default year
+                if (years.includes(2023)) {
+                    yearSelect.property("value", 2023);
+                } else if (years.length > 0) {
+                    yearSelect.property("value", years[0]);
+                }
+                // Set City Council as default office
+                if (offices.includes("City Council")) {
+                    officeSelect.property("value", "City Council");
+                } else if (offices.length > 0) {
+                    officeSelect.property("value", offices[0]);
+                }
+
+                // Find the global maximum total for consistent scaling
+                const globalMaxTotal = d3.max(years, year => {
+                    return d3.max(offices, office => {
+                        const filtered = data.filter(d => 
+                            d.year === year && 
+                            d["Office Sought"] === office
+                        );
+                        const totals = d3.rollup(filtered, 
+                            v => d3.sum(v, d => d.amount),
+                            d => d["Recipient Campaign"]
+                        );
+                        return d3.max(Array.from(totals.values()));
+                    });
+                });
+
+                console.log("Global max total:", globalMaxTotal);
+
+                // Scale for bubble size
+                const radiusScale = d3.scaleSqrt()
+                    .domain([0, globalMaxTotal])
+                    .range([10.08, 98.4]);
+
+                function updateVisualization() {
+                    try {
+                        console.log("Updating visualization...");
+                        const selectedYear = +yearSelect.property("value");
+                        const selectedOffice = officeSelect.property("value");
+                        
+                        console.log("Selected year:", selectedYear);
+                        console.log("Selected office:", selectedOffice);
+
+                        // Filter data for the selected year and office
+                        const filtered = data.filter(d => 
+                            d.year === selectedYear && 
+                            d["Office Sought"] === selectedOffice
+                        );
+
+                        console.log("Filtered data count:", filtered.length);
+                        if (filtered.length === 0) {
+                            console.warn("No data found for selected year and office");
+                            return;
+                        }
+
+                        // Calculate totals for each campaign in the filtered data
+                        const totals = d3.rollup(filtered,
+                            v => {
+                                // Find the ward/district for this campaign
+                                let wardDistrict = v[0]["Ward"] || v[0]["District"] || v[0]["Ward/District"];
+                                
+                                // If we have a number without "Ward" or "District", add the prefix
+                                if (wardDistrict && !isNaN(wardDistrict) && !wardDistrict.toString().toLowerCase().includes('ward') && !wardDistrict.toString().toLowerCase().includes('district')) {
+                                    wardDistrict = `Ward ${wardDistrict}`;
+                                }
+                                
+                                return {
+                                    total: d3.sum(v, d => d.amount),
+                                    district: wardDistrict || "Unknown"
+                                };
+                            },
+                            d => d["Recipient Campaign"]
+                        );
+
+                        console.log("Sample ward/district data:", 
+                            Array.from(totals.entries()).slice(0, 3).map(([campaign, data]) => ({
+                                campaign,
+                                district: data.district,
+                                total: data.total
+                            }))
+                        );
+
+                        // Create nodes for force simulation
+                        const nodes = Array.from(totals, ([name, data]) => ({
+                            id: name,
+                            value: data.total,
+                            district: data.district,
+                            radius: radiusScale(data.total)
+                        })).filter(node => node.value > 0);
+
+                        console.log("Created nodes:", nodes.length);
+                        console.log("Node values:", nodes.map(n => ({ 
+                            campaign: n.id, 
+                            total: n.value,
+                            radius: n.radius,
+                            district: n.district 
+                        })));
+
+                        if (nodes.length === 0) {
+                            console.warn("No nodes created after filtering");
+                            return;
+                        }
+
+                        // Clear the SVG completely
+                        svg.selectAll("*").remove();
+
+                        // Create force simulation
+                        const simulation = d3.forceSimulation(nodes)
+                            .force("center", d3.forceCenter(width / 2, height / 2))
+                            .force("charge", d3.forceManyBody().strength(-30))  // Increased repulsion
+                            .force("collide", d3.forceCollide().radius(d => d.radius + 2))
+                            .force("x", d3.forceX(width / 2).strength(0.07))  // Reduced center pull
+                            .force("y", d3.forceY(height / 2).strength(0.07))  // Reduced center pull
+                            .force("group", d3.forceX().strength(0.15)  // Add grouping force
+                                .x(d => {
+                                    // Create distinct x-positions for each district
+                                    const districts = [...new Set(nodes.map(n => n.district))];
+                                    const districtIndex = districts.indexOf(d.district);
+                                    const section = width / (districts.length + 1);
+                                    return section * (districtIndex + 1);
+                                }))
+                            .on("tick", ticked);
+
+                        // Create node elements
+                        const node = svg.selectAll(".node")
+                            .data(nodes)
+                            .enter()
+                            .append("g")
+                            .attr("class", "node")
+                            .call(d3.drag()
+                                .on("start", dragstarted)
+                                .on("drag", dragged)
+                                .on("end", dragended));
+
+                        // Add circles to nodes
+                        node.append("circle")
+                            .attr("r", d => d.radius)
+                            .style("fill", d => colorScale(d.district))
+                            .style("fill-opacity", 0.7)
+                            .style("stroke", "#fff")
+                            .style("stroke-width", 2)
+                            .on("mouseover", showTooltip)
+                            .on("mousemove", moveTooltip)
+                            .on("mouseout", hideTooltip);
+
+                        // Add labels to nodes
+                        node.append("text")
+                            .text(d => d.id)
+                            .attr("dy", ".3em")
+                            .style("text-anchor", "middle")
+                            .style("font-size", "10px")
+                            .style("pointer-events", "none");
+
+                        function ticked() {
+                            node.attr("transform", d => {
+                                // Keep nodes within bounds
+                                d.x = Math.max(d.radius, Math.min(width - d.radius, d.x));
+                                d.y = Math.max(d.radius, Math.min(height - d.radius, d.y));
+                                return `translate(${d.x},${d.y})`;
+                            });
+                        }
+
+                        function dragstarted(event) {
+                            if (!event.active) simulation.alphaTarget(0.3).restart();
+                            event.subject.fx = event.subject.x;
+                            event.subject.fy = event.subject.y;
+                        }
+
+                        function dragged(event) {
+                            event.subject.fx = event.x;
+                            event.subject.fy = event.y;
+                        }
+
+                        function dragended(event) {
+                            if (!event.active) simulation.alphaTarget(0);
+                            event.subject.fx = null;
+                            event.subject.fy = null;
+                        }
+
+                        function showTooltip(event, d) {
+                            tooltip.style("opacity", 1)
+                                .html(`
+                                    <strong>${d.id}</strong><br>
+                                    District: ${d.district}<br>
+                                    Total: $${d.value.toLocaleString()}
+                                `);
+                        }
+
+                        function moveTooltip(event) {
+                            tooltip.style("left", (event.pageX + 10) + "px")
+                                .style("top", (event.pageY - 10) + "px");
+                        }
+
+                        function hideTooltip() {
+                            tooltip.style("opacity", 0);
+                        }
+                    } catch (error) {
+                        console.error("Error in updateVisualization:", error);
+                        showError("Error updating visualization: " + error.message);
+                    }
+                }
+
+                // Initial visualization
+                updateVisualization();
+
+                // Update on dropdown changes
+                yearSelect.on("change", updateVisualization);
+                officeSelect.on("change", updateVisualization);
+            })
+            .catch(error => {
+                console.error("Error loading data:", error);
+                showError("Error loading data: " + error.message);
+            });
+    </script>
+</body>
+</html>
