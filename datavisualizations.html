@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Data Visualizations</title>
+    <title>Data Visualizations | Resilience Continuum</title>
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="apple-touch-icon" href="favicon.png">
     <link rel="shortcut icon" type="image/png" href="favicon.png">
@@ -32,6 +32,7 @@
             font-family: 'Silkscreen', cursive;
             font-size: 2rem;
             font-weight: bold;
+
         }
 
         nav ul {
@@ -51,24 +52,24 @@
             color: #666;
         }
 
-        .story-list {
-            list-style: none;
-            padding: 0;
-            text-align: center;
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.565rem;
+            grid-auto-rows: 1px;
         }
 
-        .story-list li {
-            margin: 15px 0;
+        .project-item {
+            grid-row-end: span 30; /* This will be adjusted by JavaScript */
+            background-color: #f5f5f5;
+            border-radius: 8px;
+            overflow: hidden;
         }
 
-        .story-list a {
-            color: #2c5282;
-            text-decoration: none;
-            font-size: 1.1em;
-        }
-
-        .story-list a:hover {
-            text-decoration: underline;
+        .project-item img {
+            width: 100%;
+            height: auto;
+            display: block;
         }
 
         @media (max-width: 768px) {
@@ -83,18 +84,28 @@
                 gap: 1rem;
                 align-items: center;
             }
+
+            .projects-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
-</head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-C3S7RZW6F5"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <script>
+        // Function to adjust grid row spans based on image heights
+        function adjustGridItems() {
+            const gridItems = document.querySelectorAll('.project-item');
+            gridItems.forEach(item => {
+                const height = item.querySelector('img').height;
+                const rowSpan = Math.ceil(height / 10); // 10px is our grid-auto-rows value
+                item.style.gridRowEnd = `span ${rowSpan}`;
+            });
+        }
 
-  gtag('config', 'G-C3S7RZW6F5');
-</script>
+        // Run on load and when images are loaded
+        window.addEventListener('load', adjustGridItems);
+        window.addEventListener('resize', adjustGridItems);
+    </script>
+</head>
 <body>
     <header>
         <h1 class="title"><a href="index.html" style="text-decoration: none; color: inherit; font-family: 'Silkscreen', cursive;">Resilience Continuum</a></h1>
@@ -110,19 +121,44 @@
     </header>
 
     <main>
-        <h1 style="font-family: 'Silkscreen', cursive; text-align: center; color: #333; margin-bottom: 2rem;">Data Visualizations</h1>
-        
-        <ul class="story-list">
-            <li><a href="DataVisualizations/nationalparkspecies.html">Biodiversity in National Parks</a></li>
-            <li><a href="DataVisualizations/exoplanets.html">Exoplanet Discoveries</a></li>
-            <li><a href="DataVisualizations/MplsContributions3.16.25.html">Minneapolis Campaign Contributions</a></li>
-            <li><a href="DataVisualizations/minneapoliszoning.html">Minneapolis Zoning</a></li>
-            <li><a href="DataVisualizations/OctopusMap.html">Octopus Sightings</a></li>
-        </ul>
+        <div class="projects-grid">
+            <!-- Project items will be added here -->
+            <div class="project-item">
+                <a href="DataVisualizations/OctopusMap.html">
+                    <img src="Images/octopus.png" alt="Octopus Visualization">
+                </a>
+            </div>
+            <div class="project-item">
+                <a href="DataVisualizations/nationalparkspecies.html">
+                    <img src="Images/natparks.png" alt="National Parks Visualization">
+                </a>
+            </div>
+            <div class="project-item">
+                <a href="DataVisualizations/minneapoliszoning.html">
+                    <img src="Images/mplszoning.png" alt="Minneapolis Zoning Visualization">
+                </a>
+            </div>
+            <div class="project-item">
+                <a href="DataVisualizations/MplsContributions3.16.25.html">
+                    <img src="Images/citycouncil.png" alt="City Council Visualization">
+                </a>
+            </div>
+            <div class="project-item">
+                <a href="DataVisualizations/exoplanets.html">
+                    <img src="Images/exoplanets.png" alt="Exoplanets Visualization">
+                </a>
+            </div>
+            <div class="project-item">
+                <a href="DataVisualizations/microbesposter.html">
+                    <img src="Images/microbesPoster.png" alt="Microbes Poster">
+                </a>
+            </div>
+            
+        </div>
     </main>
 
     <footer style="text-align: center; margin-top: 50px; padding: 20px; color: #666; font-size: 0.8em; border-top: 1px solid #eee;">
         &copy; 2025 Claire Nyquist. All rights reserved.
     </footer>
 </body>
-</html>
+</html> 
