@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="../favicon.png">
+    <title>Mosquitoes at the Natural History Museum - Resilience Continuum</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: black;
+            color: #ababab;
+            font-family: 'Lexend', sans-serif;
+            font-weight: 300;
+        }
+        .home-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+        .home-link img {
+            width: 100px;
+            height: auto;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 20px auto 0;
+            padding: 20px;
+        }
+        h1 {
+            text-align: left;
+            margin: 0 0 10px 120px;
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+        }
+        .explanation {
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto 12px;
+            padding: 12px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            font-size: clamp(0.9rem, 2vw, 1rem);
+        }
+        #histogram {
+            width: 100%;
+            min-height: 350px;
+            margin: 0 auto 0 auto;
+            background: #181818;
+            border-radius: 10px;
+            padding: 12px 0 4px 0;
+            box-sizing: border-box;
+        }
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 8px 0 0 0;
+            padding: 0 min(20px, 3vw);
+            justify-content: center;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.95em;
+        }
+        .legend-color {
+            width: 18px;
+            height: 18px;
+            border-radius: 3px;
+            display: inline-block;
+        }
+        @media (max-width: 768px) {
+            .container {
+                margin-top: 60px;
+                padding: 8px;
+            }
+            h1 {
+                margin-left: 100px;
+                margin-bottom: 6px;
+            }
+            .explanation {
+                margin-bottom: 8px;
+                padding: 8px;
+            }
+            #histogram {
+                padding: 6px 0 2px 0;
+            }
+            .home-link img {
+                width: 80px;
+            }
+            .legend {
+                margin-top: 4px;
+            }
+        }
+        @media (max-width: 480px) {
+            .container {
+                margin-top: 40px;
+                padding: 3px;
+            }
+            h1 {
+                margin-left: 80px;
+                margin-bottom: 4px;
+            }
+            .explanation {
+                margin-bottom: 6px;
+                padding: 6px;
+            }
+            #histogram {
+                padding: 3px 0 1px 0;
+            }
+            .home-link img {
+                width: 60px;
+            }
+            .legend {
+                margin-top: 2px;
+            }
+        }
+    </style>
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-C3S7RZW6F5"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-C3S7RZW6F5');
+    </script>
+    <!-- End Google Analytics -->
+</head>
+<body>
+    <a href="../index.html" class="home-link">
+        <img src="../Images/rc.png" alt="Home">
+    </a>
+    <div class="container">
+        <h1>Mosquitoes at the Natural History Museum</h1>
+        <div class="explanation">
+            <p>The London Natural History Museum's API is exciting because it allows the public and researchers to peer into the collection from around the world, seeing data and patterns that aren't visible even on a visit to the museum. You can search by collector to see the specimens collected by giants of natural history, like Carl Linnaeus and Charles Darwin. This graph shows a sampling of the museum's mosquito specimens with year and location data collected from 1892 to the present.</p>
+        </div>
+        <div id="histogram"></div>
+        <div class="legend" id="legend"></div>
+        
+        <div id="tooltip" style="position:absolute; pointer-events:none; background:rgba(0,0,0,0.92); color:#fff; border:1px solid #ababab; border-radius:6px; padding:12px 16px; font-size:1em; z-index:2000; display:none; max-width:320px;"></div>
+        <p style="text-align:center; color:#ababab; font-size:0.98em; margin: 32px auto 0 auto; max-width: 700px;">
+            Natural History Museum (2014). Collection specimens [Data set]. Natural History Museum. <a href="https://doi.org/10.5519/0002965" style="color:#7fb3d5;">https://doi.org/10.5519/0002965</a>
+        </p>
+    </div>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script>
+    function drawHistogram() {
+        // Remove any previous SVG
+        d3.select("#histogram").selectAll("svg").remove();
+        // Responsive width
+        const container = document.getElementById('histogram');
+        const containerWidth = container.offsetWidth;
+        const margin = {top: 30, right: 30, bottom: 120, left: 60},
+              width = Math.max(250, containerWidth - margin.left - margin.right),
+              height = Math.max(400, 500 - margin.top - margin.bottom);
+
+        d3.csv("mosquitos_with_year_and_coords.csv").then(function(data) {
+            data = data.filter(d => d.year && d.scientificName);
+            data.forEach(d => { d.year = +d.year; });
+            // Find min and max year in the data
+            const minYear = Math.floor(d3.min(data, d => d.year) / 10) * 10;
+            const maxYear = Math.ceil(d3.max(data, d => d.year) / 10) * 10;
+            // Generate all decades between min and max
+            const decadeYears = [];
+            for (let y = minYear; y <= maxYear; y += 10) {
+                decadeYears.push(y);
+            }
+            // Get all years present in the data
+            const years = Array.from(new Set(data.map(d => d.year))).sort((a, b) => a - b);
+            const species = Array.from(new Set(data.map(d => d.scientificName)));
+            // Count specimens per year per species
+            const counts = {};
+            // Fill in all years (including missing years) for each decade
+            for (let y = minYear; y <= maxYear; y++) {
+                counts[y] = {};
+                species.forEach(s => counts[y][s] = 0);
+            }
+            data.forEach(d => {
+                if (counts[d.year] && counts[d.year][d.scientificName] !== undefined) {
+                    counts[d.year][d.scientificName]++;
+                }
+            });
+            // Prepare data for stacked histogram
+            const stackedData = [];
+            for (let y = minYear; y <= maxYear; y++) {
+                const entry = { year: y };
+                species.forEach(s => { entry[s] = counts[y][s]; });
+                stackedData.push(entry);
+            }
+            const color = d3.scaleOrdinal()
+                .domain(species)
+                .range(d3.schemeCategory10.concat(d3.schemeSet3, d3.schemeTableau10));
+            const stack = d3.stack()
+                .keys(species)
+                .order(d3.stackOrderNone)
+                .offset(d3.stackOffsetNone);
+            const series = stack(stackedData);
+            const x = d3.scaleBand()
+                .domain(stackedData.map(d => d.year))
+                .range([0, width])
+                .padding(0.2);
+            const y = d3.scaleLinear()
+                .domain([0, d3.max(stackedData, d => d3.sum(species, s => d[s]))]).nice()
+                .range([height, 0]);
+            const svg = d3.select("#histogram")
+                .append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .attr("viewBox", `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`)
+                .attr("preserveAspectRatio", "xMidYMid meet")
+                .append("g")
+                .attr("transform", `translate(${margin.left},${margin.top})`);
+            svg.append("g")
+                .attr("transform", `translate(0,${height})`)
+                .call(d3.axisBottom(x)
+                    .tickValues(decadeYears)
+                    .tickFormat(function(d) { return d; })
+                )
+                .selectAll("text")
+                .attr("transform", "rotate(90)")
+                .style("text-anchor", "start")
+                .attr("dx", "0.5em")
+                .attr("dy", "-0.1em");
+            svg.append("g")
+                .call(d3.axisLeft(y));
+            svg.selectAll(".serie")
+                .data(series)
+                .join("g")
+                .attr("fill", d => color(d.key))
+                .attr("class", "serie")
+                .selectAll("rect")
+                .data(d => d)
+                .join("rect")
+                .attr("x", d => x(d.data.year))
+                .attr("y", y(0))
+                .attr("height", 0)
+                .attr("width", x.bandwidth())
+                .on("mousemove", function(event, d) {
+                    const speciesName = this.parentNode.__data__.key;
+                    const year = d.data.year;
+                    const count = d.data[speciesName];
+                    const locations = (locationLookup[year] && locationLookup[year][speciesName]) ? locationLookup[year][speciesName] : [];
+                    // Summarize locations
+                    let locSummary = '';
+                    if (locations.length > 0) {
+                        // Show up to 5 unique locations
+                        const uniqueLocs = Array.from(new Set(locations.map(l => `${l.country || ''}${l.stateProvince ? ', ' + l.stateProvince : ''}`))).slice(0,5);
+                        locSummary = uniqueLocs.map(l => `<div>${l}</div>`).join('');
+                        if (locations.length > 5) locSummary += `<div style='color:#ababab'>(+${locations.length-5} more)</div>`;
+                    } else {
+                        locSummary = '<div>No location data</div>';
+                    }
+                    const tooltipHtml = `<strong>Species:</strong> ${speciesName}<br><strong>Year:</strong> ${year}<br><strong>Count:</strong> ${count}<br><strong>Locations:</strong> ${locSummary}`;
+                    const tooltip = document.getElementById('tooltip');
+                    tooltip.innerHTML = tooltipHtml;
+                    tooltip.style.display = 'block';
+                    const [mx, my] = d3.pointer(event, document.body);
+                    tooltip.style.left = (mx + 20) + 'px';
+                    tooltip.style.top = (my - 10) + 'px';
+                })
+                .on("mouseleave", function() {
+                    const tooltip = document.getElementById('tooltip');
+                    tooltip.style.display = 'none';
+                })
+                .transition()
+                .duration(900)
+                .delay((d, i) => i * 5)
+                .attr("y", d => y(d[1]))
+                .attr("height", d => y(d[0]) - y(d[1]));
+            svg.append("text")
+                .attr("text-anchor", "middle")
+                .attr("x", width / 2)
+                .attr("y", height + margin.bottom - 10)
+                .attr("fill", "#ababab")
+                .attr("font-size", "1.1em")
+                .text("Year");
+            svg.append("text")
+                .attr("text-anchor", "middle")
+                .attr("transform", `rotate(-90)`)
+                .attr("x", -height / 2)
+                .attr("y", -margin.left + 18)
+                .attr("fill", "#ababab")
+                .attr("font-size", "1.1em")
+                .text("Number of Specimens");
+            // Add legend
+            const legend = d3.select("#legend");
+            legend.selectAll("*").remove();
+            species.forEach(s => {
+                legend.append("div")
+                    .attr("class", "legend-item")
+                    .html(`<span class='legend-color' style='background:${color(s)}'></span>${s}`);
+            });
+            // Prepare a lookup for locations by year and species
+            const locationLookup = {};
+            data.forEach(d => {
+                if (!locationLookup[d.year]) locationLookup[d.year] = {};
+                if (!locationLookup[d.year][d.scientificName]) locationLookup[d.year][d.scientificName] = [];
+                locationLookup[d.year][d.scientificName].push({
+                    country: d.country,
+                    stateProvince: d.stateProvince,
+                    lat: d.decimalLatitude,
+                    lon: d.decimalLongitude
+                });
+            });
+        });
+    }
+    // Initial draw
+    drawHistogram();
+    // Redraw on resize
+    window.addEventListener('resize', drawHistogram);
+    </script>
+</body>
+</html>

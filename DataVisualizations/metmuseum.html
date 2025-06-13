@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-C3S7RZW6F5"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-C3S7RZW6F5');
+    </script>
+    <link rel="icon" type="image/png" href="../favicon.png">
+    <title>Met Museum: Colors of European Paintings - Resilience Continuum</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: black;
+            color: #ababab;
+            font-family: 'Lexend', sans-serif;
+            font-weight: 300;
+        }
+
+        .home-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+
+        .home-link img {
+            width: 100px;
+            height: auto;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto 0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: left;
+            margin: 0 0 40px 120px;
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+        }
+
+        .explanation {
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto 40px;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            font-size: clamp(0.9rem, 2vw, 1rem);
+        }
+
+        .explanation a {
+            color: #7fb3d5;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .explanation a:hover {
+            color: #a8d1e7;
+        }
+
+        .refresh-button {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #ababab;
+            border: 1px solid #ababab;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: 'Lexend', sans-serif;
+            font-weight: 300;
+            transition: all 0.3s ease;
+        }
+
+        .refresh-button:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .artwork-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+            margin-top: 20px;
+        }
+
+        .artwork-pair {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+            padding: 15px;
+        }
+
+        .images-wrapper {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+
+        .image-container {
+            position: relative;
+            order: 1;
+            flex: 0 1 150px;
+        }
+
+        .image-container img,
+        .image-container.sorted img,
+        .image-container canvas,
+        .image-container.sorted canvas {
+            border-radius: 10px;
+        }
+
+        .image-container.sorted {
+            order: 2;
+            flex: 0 1 150px;
+        }
+
+        canvas {
+            max-width: 200px;
+            width: 100%;
+            height: auto;
+        }
+
+        .artwork-info {
+            text-align: center;
+            width: 100%;
+            padding: 10px;
+        }
+
+        .artwork-info h3 {
+            font-size: clamp(0.9rem, 2vw, 1.2rem);
+            margin: 0 0 5px 0;
+        }
+
+        .artwork-info p {
+            font-size: clamp(0.8rem, 1.8vw, 1rem);
+            margin: 0;
+        }
+
+        .loading {
+            text-align: center;
+            font-size: 1.2em;
+            margin: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin-top: 80px;
+                padding: 10px;
+            }
+
+            .artwork-container {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+
+            .images-wrapper {
+                gap: 10px;
+            }
+
+            .image-container, .image-container.sorted {
+                flex: 0 1 120px;
+            }
+
+            .home-link img {
+                width: 80px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                margin-top: 60px;
+                padding: 5px;
+            }
+
+            .explanation {
+                padding: 15px;
+                margin-bottom: 20px;
+            }
+
+            .artwork-pair {
+                gap: 15px;
+                padding: 10px;
+            }
+
+            .image-container, .image-container.sorted {
+                flex: 0 1 100px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="home-link">
+        <img src="../Images/rc.png" alt="Home">
+    </a>
+
+    <div class="container">
+        <h1>Met Museum: Colors of European Paintings</h1>
+        <div class="explanation">
+            <p>The Metropolitan Museum of Art's API allows access to their vast collection spanning 5,000 years of human history. I was curious about the colors used in public domain works from the European paintings collection. This data visualization sorts the pixels of these works by their brightness to see what colors the artists used. This project was inspired by the Parsons MS in Data Visualization program's <a href="https://www.metmuseum.org/perspectives/met-api-parsons-data-visualization">partnership with the Metropolitan Museum.</a></p>
+            <button class="refresh-button" onclick="refreshImages()">See More Paintings</button>
+        </div>
+        <div id="loading" class="loading">Loading artworks...</div>
+        <div id="artwork-container" class="artwork-container"></div>
+    </div>
+
+    <script>
+        async function getEuropeanPaintings() {
+            const response = await fetch('https://collectionapi.metmuseum.org/public/collection/v1/search?departmentId=11&hasImages=true&isPublicDomain=true&q=*');
+            const data = await response.json();
+            const shuffled = data.objectIDs.sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, 30); // Get more IDs to ensure we have enough public domain images
+        }
+
+        async function getArtworkDetails(objectId) {
+            const response = await fetch(`https://collectionapi.metmuseum.org/public/collection/v1/objects/${objectId}`);
+            return await response.json();
+        }
+
+        function sortPixelsByBrightness(imageData) {
+            const pixels = [];
+            for (let i = 0; i < imageData.data.length; i += 4) {
+                const r = imageData.data[i];
+                const g = imageData.data[i + 1];
+                const b = imageData.data[i + 2];
+                const a = imageData.data[i + 3];
+                const brightness = (r + g + b) / 3;
+                pixels.push({ r, g, b, a, brightness });
+            }
+
+            pixels.sort((a, b) => a.brightness - b.brightness);
+
+            const sortedData = new Uint8ClampedArray(imageData.data.length);
+            pixels.forEach((pixel, index) => {
+                const i = index * 4;
+                sortedData[i] = pixel.r;
+                sortedData[i + 1] = pixel.g;
+                sortedData[i + 2] = pixel.b;
+                sortedData[i + 3] = pixel.a;
+            });
+
+            return new ImageData(sortedData, imageData.width, imageData.height);
+        }
+
+        async function createArtworkElement(artwork) {
+            const artworkPair = document.createElement('div');
+            artworkPair.className = 'artwork-pair';
+
+            const imagesWrapper = document.createElement('div');
+            imagesWrapper.className = 'images-wrapper';
+
+            // Create container for original image
+            const originalContainer = document.createElement('div');
+            originalContainer.className = 'image-container';
+            const originalImg = document.createElement('img');
+            originalImg.src = artwork.primaryImage;
+            originalImg.alt = artwork.title;
+            originalImg.style.maxWidth = '150px';
+            originalImg.style.width = '100%';
+            originalImg.style.height = 'auto';
+            originalContainer.appendChild(originalImg);
+
+            // Create container for sorted image
+            const sortedContainer = document.createElement('div');
+            sortedContainer.className = 'image-container sorted';
+            const sortedCanvas = document.createElement('canvas');
+            sortedCanvas.style.maxWidth = '150px';
+            sortedCanvas.style.width = '100%';
+            sortedCanvas.style.height = 'auto';
+            sortedContainer.appendChild(sortedCanvas);
+
+            // Load and process the image for sorting
+            const img = new Image();
+            img.crossOrigin = "Anonymous";
+            await new Promise((resolve, reject) => {
+                img.onload = () => {
+                    // Calculate new dimensions while maintaining aspect ratio
+                    const MAX_DIMENSION = 150;
+                    let width = img.width;
+                    let height = img.height;
+                    
+                    if (width > height && width > MAX_DIMENSION) {
+                        height = Math.round((height * MAX_DIMENSION) / width);
+                        width = MAX_DIMENSION;
+                    } else if (height > MAX_DIMENSION) {
+                        width = Math.round((width * MAX_DIMENSION) / height);
+                        height = MAX_DIMENSION;
+                    }
+
+                    const ctx = sortedCanvas.getContext('2d');
+                    sortedCanvas.width = width;
+                    sortedCanvas.height = height;
+                    ctx.drawImage(img, 0, 0, width, height);
+                    const imageData = ctx.getImageData(0, 0, width, height);
+                    const sortedImageData = sortPixelsByBrightness(imageData);
+                    ctx.putImageData(sortedImageData, 0, 0);
+                    resolve();
+                };
+                img.onerror = reject;
+                img.src = artwork.primaryImage;
+            });
+
+            imagesWrapper.appendChild(originalContainer);
+            imagesWrapper.appendChild(sortedContainer);
+
+            // Create artwork info
+            const info = document.createElement('div');
+            info.className = 'artwork-info';
+            info.innerHTML = `
+                <h3>${artwork.title}</h3>
+                <p>${artwork.artistDisplayName}${artwork.objectDate ? `, ${artwork.objectDate}` : ''}</p>
+            `;
+
+            artworkPair.appendChild(imagesWrapper);
+            artworkPair.appendChild(info);
+
+            return artworkPair;
+        }
+
+        async function init() {
+            try {
+                const objectIds = await getEuropeanPaintings();
+                const container = document.getElementById('artwork-container');
+                const loading = document.getElementById('loading');
+                let loadedCount = 0;
+                const targetCount = 10;
+
+                for (const objectId of objectIds) {
+                    if (loadedCount >= targetCount) break;
+
+                    const artwork = await getArtworkDetails(objectId);
+                    if (artwork.primaryImage && artwork.isPublicDomain) {
+                        try {
+                            const artworkElement = await createArtworkElement(artwork);
+                            container.appendChild(artworkElement);
+                            loadedCount++;
+                        } catch (error) {
+                            console.error('Error processing image:', error);
+                        }
+                    }
+                }
+
+                if (loadedCount === 0) {
+                    loading.textContent = 'No public domain images found. Please try again later.';
+                } else {
+                    loading.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('loading').textContent = 'Error loading artworks. Please try again later.';
+            }
+        }
+
+        async function refreshImages() {
+            const container = document.getElementById('artwork-container');
+            const loading = document.getElementById('loading');
+            
+            // Clear existing images
+            container.innerHTML = '';
+            loading.style.display = 'block';
+            loading.textContent = 'Loading new artworks...';
+            
+            // Reinitialize
+            await init();
+        }
+
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html> 

@@ -3,220 +3,233 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=MEASUREMENT_ID"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-C3S7RZW6F5');
+    </script>
+    <!-- End Google Analytics -->
     <title>Resilience Continuum</title>
-    <link href="https://fonts.googleapis.com/css2?family=Silkscreen&display=swap" rel="stylesheet">
-    <link rel="icon" type="image/x-icon" href="favicon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300&family=Lora:ital@0;1&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: Helvetica, Arial, sans-serif;
-        }
-
         body {
-            padding: 2rem;
-            background-color: #ffffff;
+            margin: 0;
+            padding: 20px;
+            background-color: black;
+            color: #ababab;
+            font-family: 'Lexend', sans-serif;
+            font-weight: 300;
         }
 
-        header {
+        .header {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 3rem;
+            gap: 40px;
+            margin-bottom: 40px;
+            align-items: flex-start;
         }
 
-        .title {
-            font-family: 'Silkscreen', cursive;
-            font-size: 2rem;
-            font-weight: bold;
-
+        .header-image {
+            max-width: 400px;
+            width: 100%;
+            height: auto;
+            object-fit: cover;
         }
 
-        nav ul {
-            display: flex;
-            list-style: none;
-            gap: 2rem;
+        .about-section {
+            flex: 1;
+            padding: 0;
         }
 
-        nav a {
-            text-decoration: none;
-            color: #333;
-            font-size: 1rem;
-            transition: color 0.3s ease;
+        .about-section p {
+            padding: 0 min(20px, 3vw);
+            margin: 0;
         }
 
-        nav a:hover {
-            color: #666;
+        h2 {
+            margin-bottom: 20px;
+            padding: 0 min(20px, 3vw);
+            font-family: 'Lora', serif;
+            font-style: italic;
+            font-weight: normal;
         }
 
-        .projects-grid {
+        .gallery {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 0.565rem;
-            grid-auto-rows: 1px;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: min(20px, 3vw);
+            margin-top: 40px;
+            padding: 0 min(20px, 3vw);
         }
 
-        .project-item {
-            grid-row-end: span 30; /* This will be adjusted by JavaScript */
-            background-color: #f5f5f5;
-            border-radius: 8px;
+        .gallery-item {
+            position: relative;
             overflow: hidden;
+            width: 100%;
         }
 
-        .project-item img {
+        .gallery-item img {
             width: 100%;
             height: auto;
             display: block;
+            transition: filter 0.3s ease;
         }
 
-        .intro-section {
-            max-width: 800px;
-            margin: 0 auto 3rem auto;
-            line-height: 1.6;
-            color: #333;
+        .gallery-item:hover img {
+            filter: brightness(0.3);
         }
 
-        .intro-section p {
-            margin-bottom: 1rem;
+        .gallery-text {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .gallery-item:hover .gallery-text {
+            opacity: 1;
         }
 
         @media (max-width: 768px) {
-            header {
+            .header {
                 flex-direction: column;
-                gap: 1rem;
-                text-align: center;
+                gap: 20px;
+            }
+            
+            .header-image {
+                max-width: 100%;
+                padding: 0 min(15px, 2vw);
             }
 
-            nav ul {
-                flex-direction: column;
-                gap: 1rem;
-                align-items: center;
+            h2, .about-section p {
+                padding: 0 min(15px, 2vw);
             }
 
-            .projects-grid {
+            .gallery {
+                grid-template-columns: repeat(2, 1fr);
+                gap: min(15px, 2vw);
+                padding: 0 min(15px, 2vw);
+            }
+        }
+
+        @media (max-width: 480px) {
+            h2, .about-section p {
+                padding: 0 min(10px, 1.5vw);
+            }
+
+            .gallery {
                 grid-template-columns: 1fr;
+                gap: min(10px, 1.5vw);
+                padding: 0 min(10px, 1.5vw);
+            }
+
+            .header-image {
+                padding: 0 min(10px, 1.5vw);
+            }
+
+            body {
+                padding: 10px;
             }
         }
     </style>
-    <script>
-        // Function to adjust grid row spans based on image heights
-        function adjustGridItems() {
-            const gridItems = document.querySelectorAll('.project-item');
-            gridItems.forEach(item => {
-                const height = item.querySelector('img').height;
-                const rowSpan = Math.ceil(height / 10); // 10px is our grid-auto-rows value
-                item.style.gridRowEnd = `span ${rowSpan}`;
-            });
-        }
-
-        // Run on load and when images are loaded
-        window.addEventListener('load', adjustGridItems);
-        window.addEventListener('resize', adjustGridItems);
-    </script>
 </head>
 <body>
-    <header>
-        <h1 class="title"><a href="index.html" style="text-decoration: none; color: inherit; font-family: 'Silkscreen', cursive;">Resilience Continuum</a></h1>
-        <nav>
-            <ul>
-                <li><a href="datavisualizations.html">Data Visualizations</a></li>
-                <li><a href="designillustration.html">Design & Illustration</a></li>
-                <li><a href="fiction.html">Fiction</a></li>
-                <li><a href="nonfiction.html">Nonfiction</a></li>
-                <li><a href="poems.html">Poems</a></li>
-            </ul>
-        </nav>
-    </header>
-
-    <main>
-        <div class="intro-section">
-            <!-- Add your introductory text here -->
-            <p>Resilience Continuum explores art and science through data visualization, design, fiction, and poetry.</p>
+    <div class="header">
+        <img src="Images/resiliencecontinuumkunstformendurnatur4.png" alt="Resilience Continuum" class="header-image">
+        <div class="about-section">
+            <h2>About</h2>
+        
+            <p>Resilience Continuum is a project by Claire Nyquist which explores life on Earth and the cosmos through data visualization and fiction. I have always loved the intersection of art and science, which has led me in two directions, both to realistic science fiction and exploring the freely available open datasets online through code. I use R, Python, JavaScript's D3 library, and other tools for data visualization.</p>
+            <br>
+            <p>I studied graphic communication design in London, UK and public health at the University of Minnesota. I am excited about the combination of these apparently disparate fields as they come together in data visualization.</p>
+            <br>
+            <p>I am inspired by art history including the artwork of Hilma af Klint, Marian Bantjes, Coralie Bickford-Smith, Katherine Duclos, Rick Guidice, Ernst Haeckel, Wassily Kandinsky, Golan Levin, Giorgia Lupi, Edward Tufte, Kehinde Wiley, and Frank Lloyd Wright. </p>
+            <br>
+            <p>In fiction and poetry, I love the work of Arthur C. Clarke, Frank O'Hara, Mary Oliver, Kim Stanley Robinson, and Robin Wall Kimmerer.</p>
+            <br>
+        
         </div>
-        <div class="projects-grid">
-            <!-- Project items will be added here -->
-            <div class="project-item">
-                <a href="DataVisualizations/OctopusMap.html">
-                    <img src="Images/octopus.png" alt="Octopus Visualization">
-                </a>
-            </div>
-            <div class="project-item">
-                <a href="DataVisualizations/nationalparkspecies.html">
-                    <img src="Images/natparks.png" alt="National Parks Visualization">
-                </a>
-            </div>
-            <div class="project-item">
-                <a href="DataVisualizations/minneapoliszoning.html">
-                    <img src="Images/mplszoning.png" alt="Minneapolis Zoning Visualization">
-                </a>
-            </div>
-            <div class="project-item">
-                <a href="DataVisualizations/MplsContributions3.16.25.html">
-                    <img src="Images/citycouncil.png" alt="City Council Visualization">
-                </a>
-            </div>
-            <div class="project-item">
-                <a href="DataVisualizations/exoplanets.html">
-                    <img src="Images/exoplanets.png" alt="Exoplanets Visualization">
-                </a>
-            </div>
-            <div class="project-item">
-                <a href="DataVisualizations/microbesposter.html">
-                    <img src="Images/microbesPoster.png" alt="Microbes Poster">
-                </a>
-            </div>
-            <div class="project-item">
-                <a href="DesignIllustration/coffeestickers.html">
-                    <img src="Images/hitme.png" alt="Coffee Sticker Collection">
-                </a>
-            </div>
-            <div class="project-item">
-                <a href="DesignIllustration/marsposter.html">
-                    <img src="Images/MarsSocietyPoster.png" alt="Mars Society Poster">
-                </a>
-            </div>
-            <div class="project-item">
-                <a href="DesignIllustration/gene-editing.html">
-                    <img src="Images/geneEditing1.png" alt="Project 1">
-                </a>
-            </div>
-            <div class="project-item">
-                <a href="DesignIllustration/ppe.html">
-                    <img src="Images/finalPPEgraphic.png" alt="PPE Design">
-                </a>
-            </div>
-            <div class="project-item">
-                <a href="DesignIllustration/phr.html">
-                    <img src="Images/PHRsmaller.png" alt="Project 3">
-                </a>
-            </div>
-            <div class="project-item">
-                <a href="DesignIllustration/skull-and-flies.html">
-                    <img src="Images/skullandflies.jpg" alt="Project 2">
-                </a>
-            </div>
-            <div class="project-item">
-                <a href="DesignIllustration/marine-life.html">
-                    <img src="Images/whale.jpg" alt="Project 4">
-                </a>
-            </div>
-            
+    </div>
 
-<!--
-
-            <div class="project-item">
-                <img src="Images/placeholder5.jpg" alt="Project 5">
+    <h2>Data Visualizations</h2>
+    <div class="gallery">
+        <a href="DataVisualizations/octopus.html" class="gallery-item">
+            <img src="Images/comingiomerculiano.png" alt="Comingio Merculiano">
+            <div class="gallery-text">
+                <p>This data visualization examines octopus sightings since 2000. This image is by Comingio Merculiano.</p>
             </div>
-            <div class="project-item">
-                <img src="placeholder6.jpg" alt="Project 6">
+        </a>
+        <a href="DataVisualizations/mosquito.html" class="gallery-item">
+            <img src="Images/nhmmosquitoes.png" alt="Mosquito Species">
+            <div class="gallery-text">
+                <p>Explore the London Natural History Museum's mosquito collection.</p>
             </div>
--->
-        </div>
-    </main>
-
-    <footer style="text-align: center; margin-top: 50px; padding: 20px; color: #666; font-size: 0.8em; border-top: 1px solid #eee;">
-        &copy; 2025 Claire Nyquist. All rights reserved.
-    </footer>
+        </a>
+        
+        <a href="DataVisualizations/exoplanets.html" class="gallery-item">
+            <img src="Images/exoplanets.png" alt="Exoplanet Discoveries">
+            <div class="gallery-text">
+                <p>This data visualization shows the discovery of exoplanets over time, with their sizes and distances from Earth.</p>
+            </div>
+        </a>
+        <a href="DataVisualizations/mosquitomap.html" class="gallery-item">
+            <img src="Images/mosquitomap.png" alt="Mosquito Specimens Map">
+            <div class="gallery-text">
+                <p>This map shows mosquito specimens from the Natural History Museum, London.</p>
+            </div>
+        </a>
+        <a href="DataVisualizations/metmuseum.html" class="gallery-item">
+            <img src="Images/MetMariaPortinariTommasoDiFolcoPortinari.jpg" alt="Met Maria Portinari Tommaso di Folco Portinari">
+            <div class="gallery-text">
+                <p>This data visualization explores the colors used by European painters in the Met Museum's collection.</p>
+            </div>
+        </a>
+    </div>
+    <h2>Fiction</h2>
+    <div class="gallery">
+        <a href="Fiction/autotrophs.html" class="gallery-item">
+            <img src="Images/dysonsphere.png" alt="dyson sphere">
+            <div class="gallery-text">
+                <p>"The Autotrophs" wonders what life on Earth might become on a Dyson Sphere given enough time. </p>
+            </div>
+        </a>
+        <a href="Fiction/creative-computer.html" class="gallery-item">
+            <img src="Images/creativecomputer.png" alt="Creative Computer">
+            <div class="gallery-text">
+                <p>"Creative Computer" asks questions about human creativity in the face of generative artificial intelligence.</p>
+            </div>
+        </a>
+        <a href="Fiction/starkite.html" class="gallery-item">
+            <img src="Images/solarsail.png" alt="Solar Sail">
+            <div class="gallery-text">
+                <p>"Starkite" is a short story about multigenerational projects, what is worth doing, and human exploration of the cosmos. </p>
+            </div>
+        </a>
+        <a href="Fiction/solarium.html" class="gallery-item">
+            <img src="Images/rickguidice.jpg" alt="Rick Guidice">
+            <div class="gallery-text">
+                <p>"Solarium" is about life and revolution on an O'Neill cylinder space habitat at the Earth-Sun Lagrange 5 point. Art by Rick Guidice.</p>
+            </div>
+        </a>
+        <a href="Fiction/brief-history-of-mars.html" class="gallery-item">
+            <img src="Images/mars.png" alt="Mars">
+            <div class="gallery-text">
+                <p>"A Brief History of Mars" is a short story exploring the lives of two intrepid rovers on Mars. </p>
+            </div>
+        </a>
+    </div>
 </body>
-</html> 
+</html>

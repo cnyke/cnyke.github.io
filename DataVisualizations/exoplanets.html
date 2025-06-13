@@ -1,335 +1,403 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Exoplanets</title>
-    <link rel="shortcut icon" type="image/png" href="../favicon.png">
-    <link rel="icon" type="image/png" href="../favicon.png" sizes="32x32">
-    <link rel="apple-touch-icon" type="image/png" href="../favicon.png">
-    <link href="https://fonts.googleapis.com/css2?family=Silkscreen&display=swap" rel="stylesheet">
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-C3S7RZW6F5"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-C3S7RZW6F5');
+    </script>
+    <link rel="icon" type="image/png" href="../favicon.png">
+    <title>Exoplanet Discoveries - Resilience Continuum</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300&display=swap" rel="stylesheet">
     <script src="https://d3js.org/d3.v7.min.js"></script>
-    <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-C3S7RZW6F5"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-C3S7RZW6F5');
-</script>
     <style>
         body {
-            font-family: sans-serif;
             margin: 0;
-            padding: 10px;
+            padding: 20px;
+            background-color: black;
+            color: #ababab;
+            font-family: 'Lexend', sans-serif;
+            font-weight: 300;
         }
+
+        .home-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+
+        .home-link img {
+            width: 100px;
+            height: auto;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto 0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin: 0 0 20px;
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            padding-left: 120px; /* Add padding to account for logo */
+        }
+
+        .explanation {
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto 40px;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            font-size: clamp(0.9rem, 2vw, 1rem);
+        }
+
+        .explanation a {
+            color: #7fb3d5;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .explanation a:hover {
+            color: #a8d1e7;
+        }
+
+        #visualization {
+            width: 100%;
+            height: 600px;
+            margin: 0 auto;
+        }
+
         .tooltip {
             position: absolute;
-            background-color: white;
-            padding: 8px;
-            border: 1px solid #ddd;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #ababab;
             border-radius: 4px;
             pointer-events: none;
-            font-size: 12px;
-        }
-        #scatter-plot {
-            width: 100%;
-            height: 70vh;
-            min-height: 300px;
-        }
-        .title {
-            text-align: center;
-            font-size: 20px;
-            margin: 10px 0;
-        }
-        .info-box, .citation {
-            margin: 10px 0;
             font-size: 14px;
             line-height: 1.4;
         }
-        .citation {
-            font-size: 10px;
-            color: #666;
+
+        .tooltip strong {
+            color: #fff;
+            display: inline-block;
+            width: 100px;
         }
-        .legend-container {
-            position: absolute;
-            right: 10px;
-            top: 10px;
-            background-color: rgba(255, 255, 255, 0.9);
-            padding: 8px;
-            border-radius: 4px;
-            font-size: 10px;
+
+        .tooltip span {
+            color: #ababab;
         }
-        
-        @media (max-width: 600px) {
-            .legend-container {
-                position: static;
-                margin-top: 10px;
+
+        @media (max-width: 768px) {
+            .container {
+                margin-top: 20px;
+                padding: 10px;
             }
-            #scatter-plot {
-                height: 50vh;
+
+            h1 {
+                padding-left: 100px;
+            }
+
+            #visualization {
+                height: 400px;
+            }
+
+            .home-link img {
+                width: 80px;
+            }
+
+            .tooltip {
+                font-size: 12px;
+                max-width: 200px;
+            }
+
+            .tooltip strong {
+                width: 80px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                margin-top: 20px;
+                padding: 5px;
+            }
+
+            h1 {
+                padding-left: 80px;
+            }
+
+            #visualization {
+                height: 300px;
+            }
+
+            .home-link img {
+                width: 60px;
+            }
+
+            .explanation {
+                padding: 15px;
+                margin-bottom: 20px;
+            }
+
+            .tooltip strong {
+                width: 70px;
             }
         }
     </style>
 </head>
 <body>
-    <nav style="margin-bottom: 20px;">
-        <a href="../index.html" style="font-family: Helvetica, Arial, sans-serif; color: #2c5282; text-decoration: none; font-size: 1.1em;">← Back to Home</a>
-    </nav>
-    <h1 class="title">Exoplanet Discoveries</h1>
-    <div id="scatter-plot"></div>
-    <div class="info-box">
-        Exoplanets are planets orbiting stars that are not our sun. They help us understand possible environments for other forms of life. This visualization shows how exoplanet detection has changed since scientists discovered the first planets orbiting other star systems in the past few decades. Color represents the method of detection, and size represents the mass of the planet. As detection methods have become more sensitive, we are able to detect exoplanets farther and farther, especially via the transit method (light dims as exoplanets pass in front of their star) or the microlensing method (where light from extrasolar stars and planets is bent due to gravity of objects in space).
-    </div>
-    <div class="citation">
-        This research has made use of the NASA Exoplanet Archive, which is operated by the California Institute of Technology, under contract with the National Aeronautics and Space Administration under the Exoplanet Exploration Program.
+    <a href="../index.html" class="home-link">
+        <img src="../Images/rc.png" alt="Home">
+    </a>
+    <div class="container">
+        <h1>Exoplanet Discoveries Over Time</h1>
+        <div class="explanation">
+            <p>Exoplanets are planets that orbit stars that are not our sun. They are interesting because they help us understand our place in the universe and possible environments for other forms of life.</p>
+
+            <p>This scatterplot attempts to answer the question as to how exoplanet detection has changed since scientists discovered the first planets orbiting other star systems in the mid-1990s. The size of exoplanets is represented by the circle size.</p>
+
+            <p>Plotted on the y-axis is distance from Earth, so you can see that as time has passed and detection methods have become more sensitive we are able to detect exoplanets farther and farther, especially via the transit method (light dims as exoplanets pass in front of their star) or the microlensing method (where light from extrasolar stars and planets is bent due to gravity of objects in space). The distance from Earth is measured in units of lightyears.  </p>
+            
+            <p> This research has made use of the NASA Exoplanet Archive, which is operated by the California Institute of Technology, under contract with the National Aeronautics and Space Administration under the Exoplanet Exploration Program.</p>
+        </div>
+        <div id="visualization"></div>
     </div>
 
     <script>
         // Function to create/update the visualization
-        function createVisualization(data) {
-            // Clear existing SVG and any existing legends
-            d3.select("#scatter-plot").select("svg").remove();
-            d3.selectAll(".legend-container").remove(); // Remove any existing legends
+        function createVisualization() {
+            // Clear previous visualization
+            d3.select('#visualization').selectAll('*').remove();
 
-            // Set responsive margins based on screen size
-            const isMobile = window.innerWidth < 600;
-            const margin = isMobile ? 
-                {top: 30, right: 20, bottom: 40, left: 40} : 
-                {top: 40, right: 150, bottom: 50, left: 60};
+            // Set up the visualization
+            const margin = {top: 40, right: 40, bottom: 120, left: 60};
+            const width = document.getElementById('visualization').clientWidth - margin.left - margin.right;
+            const height = document.getElementById('visualization').clientHeight - margin.top - margin.bottom;
 
-            // Get current dimensions
-            const container = d3.select("#scatter-plot").node();
-            const width = container.getBoundingClientRect().width - margin.left - margin.right;
-            const height = container.getBoundingClientRect().height - margin.top - margin.bottom;
+            const svg = d3.select('#visualization')
+                .append('svg')
+                .attr('width', width + margin.left + margin.right)
+                .attr('height', height + margin.top + margin.bottom + 250)
+                .append('g')
+                .attr('transform', `translate(${margin.left},${margin.top})`);
 
-            // Create SVG container
-            const svg = d3.select("#scatter-plot")
-                .append("svg")
-                .attr("width", "100%")
-                .attr("height", "100%")
-                .attr("viewBox", `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`)
-                .append("g")
-                .attr("transform", `translate(${margin.left},${margin.top})`);
+            // Create tooltip
+            const tooltip = d3.select('body')
+                .append('div')
+                .attr('class', 'tooltip')
+                .style('opacity', 0);
 
-            // Create tooltip div
-            d3.select("body").selectAll(".tooltip").remove(); // Remove any existing tooltips
-            const tooltip = d3.select("body").append("div")
-                .attr("class", "tooltip")
-                .style("opacity", 0);
+            // Add loading indicator
+            const loadingDiv = d3.select('#visualization')
+                .append('div')
+                .style('text-align', 'center')
+                .style('color', '#ababab')
+                .text('Loading data...');
 
-            // Create scales
-            const xScale = d3.scaleLinear()
-                .domain([d3.min(data, d => d.disc_year), d3.max(data, d => d.disc_year)])
-                .range([0, width]);
+            // Load and process the data
+            d3.csv('CaltechExoplanetArchive.csv')
+                .then(data => {
+                    console.log('Raw data loaded:', data.length, 'rows');
+                    
+                    // Process the data
+                    const processedData = data.map(d => ({
+                        year: +d.disc_year,
+                        distance: +d.sy_dist,
+                        mass: +d.pl_masse || 1,
+                        method: d.discoverymethod,
+                        name: d.pl_name
+                    })).filter(d => !isNaN(d.year) && !isNaN(d.distance));
 
-            const yScale = d3.scaleLinear()
-                .domain([0, d3.max(data, d => d.sy_dist * 3.26156)])
-                .range([height, 0]);
+                    console.log('Processed data:', processedData.length, 'rows');
+                    console.log('Sample row:', processedData[0]);
 
-            const rScale = d3.scaleSqrt()
-                .domain([0, d3.max(data, d => d.pl_masse)])
-                .range([2, isMobile ? 10 : 15]);
+                    if (processedData.length === 0) {
+                        throw new Error('No valid data after processing');
+                    }
 
-            // Use Set 1 color palette
-            const colorScale = d3.scaleOrdinal(d3.schemeSet1);
-            
-            // Add X grid lines
-            svg.append("g")
-                .attr("class", "grid")
-                .attr("transform", `translate(0,${height})`)
-                .call(d3.axisBottom(xScale)
-                    .tickSize(-height)
-                    .tickFormat("")
-                )
-                .call(g => g.select(".domain").remove())
-                .call(g => g.selectAll(".tick line")
-                    .attr("stroke", "#e0e0e0")
-                    .attr("stroke-opacity", 0.7)
-                );
-                
-            // Add Y grid lines
-            svg.append("g")
-                .attr("class", "grid")
-                .call(d3.axisLeft(yScale)
-                    .tickSize(-width)
-                    .tickFormat("")
-                )
-                .call(g => g.select(".domain").remove())
-                .call(g => g.selectAll(".tick line")
-                    .attr("stroke", "#e0e0e0")
-                    .attr("stroke-opacity", 0.7)
-                );
+                    // Remove loading indicator
+                    loadingDiv.remove();
 
-            // Add X axis
-            svg.append("g")
-                .attr("transform", `translate(0,${height})`)
-                .call(d3.axisBottom(xScale).tickFormat(d3.format("d")))
-                .append("text")
-                .attr("x", width/2)
-                .attr("y", 30)
-                .attr("fill", "black")
-                .style("text-anchor", "middle")
-                .text("Discovery Year");
+                    // Create scales
+                    const x = d3.scaleLinear()
+                        .domain(d3.extent(processedData, d => d.year))
+                        .range([0, width]);
 
-            // Add Y axis
-            svg.append("g")
-                .call(d3.axisLeft(yScale))
-                .append("text")
-                .attr("transform", "rotate(-90)")
-                .attr("y", -50)
-                .attr("x", -height/2)
-                .attr("fill", "black")
-                .style("text-anchor", "middle")
-                .text("Distance from Earth (Light-years)");
+                    const y = d3.scaleLog()
+                        .domain([1, d3.max(processedData, d => d.distance)])
+                        .range([height, 0])
+                        .nice();
 
-            // Add dots
-            svg.selectAll("circle")
-                .data(data)
-                .join("circle")
-                .attr("cx", d => xScale(d.disc_year))
-                .attr("cy", d => yScale(d.sy_dist * 3.26156))
-                .attr("r", d => rScale(d.pl_masse))
-                .style("fill", d => colorScale(d.discoverymethod))
-                .style("opacity", 0.4)
-                .on("mouseover", function(event, d) {
-                    tooltip.transition()
-                        .duration(200)
-                        .style("opacity", .9);
-                    tooltip.html(`Planet: ${d.pl_name}<br/>
-                                Year: ${d.disc_year}<br/>
-                                Distance: ${(d.sy_dist * 3.26156).toFixed(2)} light-years<br/>
-                                Mass: ${d.pl_masse.toFixed(2)} Earth masses<br/>
-                                Method: ${d.discoverymethod}`)
-                        .style("left", (event.pageX + 10) + "px")
-                        .style("top", (event.pageY - 28) + "px");
+                    const radius = d3.scaleLinear()
+                        .domain([0, d3.max(processedData, d => d.mass)])
+                        .range([2, 15]);
+
+                    // Create color scale for discovery methods
+                    const methods = [...new Set(processedData.map(d => d.method))];
+                    const color = d3.scaleOrdinal()
+                        .domain(methods)
+                        .range(d3.schemeSet3);
+
+                    // Add axes
+                    svg.append('g')
+                        .attr('transform', `translate(0,${height})`)
+                        .call(d3.axisBottom(x).ticks(10).tickFormat(d3.format('d')))
+                        .style('color', '#ababab');
+
+                    svg.append('g')
+                        .call(d3.axisLeft(y)
+                            .ticks(10)
+                            .tickFormat(d3.format('.0f')))
+                        .style('color', '#ababab');
+
+                    // Add axis labels
+                    svg.append('text')
+                        .attr('transform', `translate(${width/2}, ${height + margin.bottom - 80})`)
+                        .style('text-anchor', 'middle')
+                        .style('fill', '#ababab')
+                        .text('Year of Discovery');
+
+                    svg.append('text')
+                        .attr('transform', 'rotate(-90)')
+                        .attr('y', -margin.left + 15)
+                        .attr('x', -(height/2))
+                        .style('text-anchor', 'middle')
+                        .style('fill', '#ababab')
+                        .text('Distance from Earth (light-years)');
+
+                    // Add circles
+                    svg.selectAll('circle')
+                        .data(processedData)
+                        .enter()
+                        .append('circle')
+                        .attr('cx', d => x(d.year))
+                        .attr('cy', d => y(d.distance))
+                        .attr('r', d => radius(d.mass))
+                        .attr('fill', d => color(d.method))
+                        .attr('opacity', 0.7)
+                        .on('mouseover', function(event, d) {
+                            d3.select(this)
+                                .attr('opacity', 1)
+                                .attr('stroke', '#fff')
+                                .attr('stroke-width', 1);
+                            
+                            tooltip.transition()
+                                .duration(200)
+                                .style('opacity', .9);
+                            
+                            tooltip.html(`
+                                <strong>Planet:</strong> <span>${d.name}</span><br/>
+                                <strong>Year:</strong> <span>${d.year}</span><br/>
+                                <strong>Distance:</strong> <span>${d.distance.toFixed(1)} light-years</span><br/>
+                                <strong>Mass:</strong> <span>${d.mass.toFixed(1)} Earth masses</span><br/>
+                                <strong>Method:</strong> <span>${d.method}</span>
+                            `)
+                                .style('left', (event.pageX + 10) + 'px')
+                                .style('top', (event.pageY - 28) + 'px');
+                        })
+                        .on('mouseout', function() {
+                            d3.select(this)
+                                .attr('opacity', 0.7)
+                                .attr('stroke', 'none');
+                            
+                            tooltip.transition()
+                                .duration(500)
+                                .style('opacity', 0);
+                        });
+
+                    // Add size legend
+                    const sizeLegend = svg.append('g')
+                        .attr('transform', `translate(${width/12}, ${height + 80})`);
+
+                    // Add size legend title
+                    sizeLegend.append('text')
+                        .attr('x', 0)
+                        .attr('y', -5)
+                        .style('fill', '#ababab')
+                        .style('font-size', '16px')
+                        .text('Planet Mass (Earth masses)');
+
+                    // Add size legend circles
+                    const sizeValues = [1, 100, 1000, 10000];
+                    const sizeLegendWidth = 240; // Fixed width for size legend
+                    const sizeSpacing = sizeLegendWidth / (sizeValues.length - 1);
+                    
+                    sizeValues.forEach((size, i) => {
+                        const legendRow = sizeLegend.append('g')
+                            .attr('transform', `translate(${i * sizeSpacing}, 0)`);
+
+                        legendRow.append('circle')
+                            .attr('cx', 0)
+                            .attr('cy', 0)
+                            .attr('r', radius(size))
+                            .attr('fill', '#ababab')
+                            .attr('opacity', 0.7);
+
+                        legendRow.append('text')
+                            .attr('x', 0)
+                            .attr('y', 20)
+                            .style('text-anchor', 'middle')
+                            .style('fill', '#ababab')
+                            .style('font-size', '12px')
+                            .text(size.toLocaleString());
+                    });
+
+                    // Add discovery method legend
+                    const methodLegend = svg.append('g')
+                        .attr('transform', `translate(${width/12}, ${height + 160})`);
+
+                    // Add method legend title
+                    methodLegend.append('text')
+                        .attr('x', 0)
+                        .attr('y', -15)
+                        .style('fill', '#ababab')
+                        .style('font-size', '16px')
+                        .text('Discovery Method');
+
+                    // Add method legend items
+                    methods.forEach((method, i) => {
+                        const legendRow = methodLegend.append('g')
+                            .attr('transform', `translate(0, ${i * 20})`);
+
+                        legendRow.append('circle')
+                            .attr('cx', 0)
+                            .attr('cy', 0)
+                            .attr('r', 5)
+                            .attr('fill', color(method));
+
+                        legendRow.append('text')
+                            .attr('x', 10)
+                            .attr('y', 4)
+                            .text(method)
+                            .style('fill', '#ababab')
+                            .style('font-size', '12px');
+                    });
                 })
-                .on("mouseout", function() {
-                    tooltip.transition()
-                        .duration(500)
-                        .style("opacity", 0);
+                .catch(error => {
+                    console.error('Error loading or processing data:', error);
+                    loadingDiv.text('Error loading data. Please check the console for details.');
                 });
-
-            // Handle legend placement based on screen size
-            const legendGroup = isMobile ? 
-                d3.select("body").append("div").attr("class", "legend-container") :
-                svg.append("g").attr("class", "legend-container")
-                   .attr("transform", `translate(${width + 10}, 5)`);
-
-            // Add discovery method legend
-            const methods = [...new Set(data.map(d => d.discoverymethod))];
-            
-            if (isMobile) {
-                // HTML legend for mobile
-                // Color legend
-                legendGroup.append("div").text("Discovery Method").style("font-weight", "bold");
-                
-                methods.forEach((method, i) => {
-                    const item = legendGroup.append("div").style("margin-top", "5px");
-                    item.append("span")
-                        .style("display", "inline-block")
-                        .style("width", "12px")
-                        .style("height", "12px")
-                        .style("border-radius", "50%")
-                        .style("background-color", colorScale(method))
-                        .style("opacity", "0.4")
-                        .style("margin-right", "5px");
-                    
-                    item.append("span").text(method);
-                });
-                
-                // Size legend
-                legendGroup.append("div")
-                    .style("margin-top", "15px")
-                    .style("font-weight", "bold")
-                    .text("Planet Mass (Earth masses)");
-                
-                // Create size examples
-                const sizeLegendValues = [1, 100, 1000, 10000];
-                sizeLegendValues.forEach(value => {
-                    const item = legendGroup.append("div").style("margin-top", "5px");
-                    item.append("span")
-                        .style("display", "inline-block")
-                        .style("width", `${rScale(value)*2}px`)
-                        .style("height", `${rScale(value)*2}px`)
-                        .style("border-radius", "50%")
-                        .style("background-color", "#999")
-                        .style("opacity", "0.4")
-                        .style("margin-right", "5px");
-                    
-                    item.append("span").text(value);
-                });
-            } else {
-                // SVG legend for desktop
-                // Color legend
-                legendGroup.append("text")
-                    .attr("x", 0)
-                    .attr("y", 0)
-                    .attr("font-weight", "bold")
-                    .text("Discovery Method");
-
-                const legendItems = legendGroup.selectAll(".legend-item")
-                    .data(methods)
-                    .join("g")
-                    .attr("class", "legend-item")
-                    .attr("transform", (d, i) => `translate(0, ${i * 20 + 20})`);
-
-                legendItems.append("circle")
-                    .attr("r", 6)
-                    .attr("fill", d => colorScale(d))
-                    .attr("opacity", 0.4);
-
-                legendItems.append("text")
-                    .attr("x", 15)
-                    .attr("y", 3)
-                    .text(d => d);
-                
-                // Size legend
-                const sizeLegendY = methods.length * 20 + 40;
-                
-                legendGroup.append("text")
-                    .attr("x", 0)
-                    .attr("y", sizeLegendY)
-                    .attr("font-weight", "bold")
-                    .text("Planet Mass (Earth masses)");
-                
-                // Create size examples
-                const sizeLegendValues = [1, 100, 1000, 10000];
-                sizeLegendValues.forEach((value, i) => {
-                    const yPos = sizeLegendY + 25 + i * 25;
-                    
-                    legendGroup.append("circle")
-                        .attr("cx", 6)
-                        .attr("cy", yPos)
-                        .attr("r", rScale(value))
-                        .attr("fill", "#999")
-                        .attr("opacity", 0.4);
-                    
-                    legendGroup.append("text")
-                        .attr("x", 20)
-                        .attr("y", yPos + 3)
-                        .text(value);
-                });
-            }
         }
 
-        // Load data and create initial visualization
-        d3.csv("CaltechExoplanetArchive.csv").then(function(data) {
-            // Convert string values to numbers
-            data.forEach(d => {
-                d.disc_year = +d.disc_year;
-                d.sy_dist = +d.sy_dist;
-                d.pl_masse = +d.pl_masse;
-            });
+        // Create initial visualization
+        createVisualization();
 
-            // Create initial visualization
-            createVisualization(data);
-
-            // Add resize event listener
-            window.addEventListener('resize', () => {
-                createVisualization(data);
-            });
+        // Update visualization on window resize
+        let resizeTimer;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(function() {
+                createVisualization();
+            }, 250);
         });
     </script>
 </body>

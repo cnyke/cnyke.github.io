@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-C3S7RZW6F5"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-C3S7RZW6F5');
+    </script>
+    <!-- End Google Analytics -->
+    <link rel="icon" type="image/png" href="../favicon.png">
+    <title>Octopus Sightings Map - Resilience Continuum</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background: #000;
+            color: #fff;
+            font-family: Helvetica, Arial, sans-serif;
+        }
+        #map {
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+        }
+        .logo-link {
+            position: absolute;
+            top: 20px;
+            left: 100px;
+            z-index: 1000;
+            background: rgba(24,26,27,0.8);
+            border-radius: 8px;
+            padding: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        .logo-link img {
+            width: 90px;
+            height: auto;
+            display: block;
+        }
+        .leaflet-control-attribution {
+            color: #aaa;
+            background: rgba(24,26,27,0.7);
+        }
+        .leaflet-popup-content {
+            color: #222;
+        }
+        @media (max-width: 600px) {
+            .logo-link {
+                top: 8px;
+                left: 60px;
+                padding: 2px;
+            }
+            .logo-link img {
+                width: 60px;
+            }
+            .leaflet-container {
+                background: #000 !important;
+            }
+        }
+        #bottom-container {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.92);
+            color: #fff;
+            z-index: 1100;
+            padding: 18px 24px 12px 24px;
+            box-shadow: 0 -2px 12px rgba(0,0,0,0.5);
+            transition: transform 0.3s, height 0.3s;
+            border-top-left-radius: 16px;
+            border-top-right-radius: 16px;
+            max-width: 600px;
+            margin: 0 auto;
+            left: 50%;
+            transform: translateX(-50%) translateY(0);
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+        }
+        #bottom-container.minimized #explanation {
+            display: none;
+        }
+        #bottom-container.minimized {
+            padding-top: 40px;
+        }
+        #toggle-container {
+            position: absolute;
+            top: -32px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #222;
+            color: #fff;
+            border: none;
+            border-radius: 12px 12px 0 0;
+            padding: 4px 16px;
+            cursor: pointer;
+            font-size: 1.2em;
+            z-index: 1200;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.3);
+        }
+        #explanation {
+            min-height: 32px;
+            margin-bottom: 12px;
+            color: #ababab;
+        }
+        #slider-area {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 8px;
+        }
+        #year-slider {
+            width: 100%;
+            accent-color: #eee;
+            background: transparent;
+            height: 8px;
+            border-radius: 6px;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        #slider-label {
+            font-size: 1em;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+        @media (max-width: 600px) {
+            #bottom-container {
+                max-width: 98vw;
+                padding: 10px 4vw 8px 4vw;
+            }
+            #year-slider {
+                width: 120px;
+            }
+        }
+        /* Webkit browsers */
+        #year-slider::-webkit-slider-runnable-track {
+            height: 8px;
+            background: linear-gradient(90deg, #fff 0%, #ababab 100%);
+            border-radius: 6px;
+        }
+        #year-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #fff;
+            border: 2px solid #ababab;
+            box-shadow: 0 0 4px #000a;
+            cursor: pointer;
+            margin-top: -7px;
+        }
+        /* Firefox */
+        #year-slider::-moz-range-track {
+            height: 8px;
+            background: linear-gradient(90deg, #fff 0%, #ababab 100%);
+            border-radius: 6px;
+        }
+        #year-slider::-moz-range-thumb {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #fff;
+            border: 2px solid #ababab;
+            box-shadow: 0 0 4px #000a;
+            cursor: pointer;
+        }
+        /* IE */
+        #year-slider::-ms-fill-lower {
+            background: #fff;
+        }
+        #year-slider::-ms-fill-upper {
+            background: #ababab;
+        }
+        #year-slider:focus {
+            outline: none;
+        }
+        #year-slider::-ms-thumb {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #fff;
+            border: 2px solid #ababab;
+            box-shadow: 0 0 4px #000a;
+            cursor: pointer;
+        }
+        #year-slider::-ms-tooltip {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <a class="logo-link" href="../index.html" title="Back to Home">
+        <img src="../Images/rc.png" alt="Resilience Continuum Logo">
+    </a>
+    <div id="map"></div>
+    <div id="bottom-container">
+        <button id="toggle-container" title="Hide/show info">&#x25B2;</button>
+        <div id="explanation">
+
+            <p>Octopuses are molluscs in the class Cephalopoda, related to cuttlefish, nautiluses, squid, and, more distantly, snails, clams, and slugs. They evolved intelligence independently of mammals, which is one reason why they are so intriguing. I became fascinated with octopuses' intelligence, camouflage, and creativity after seeing the beautiful documentary <em>My Octopus Teacher.</em></p>
+ 
+            <p>This data visualization examines octopus sightings since 2000. Each species is shown in a unique color, and each dot represents a documented octopus observation in the Global Biodiversity Information Facility (GBIF). Click on a dot to see the species name, and use the slider below to explore when and where each species has been seen.</p>
+           
+            <p>Global Biodiversity Information Facility. GBIF.org (20 January 2025) GBIF Occurrence Download https://doi.org/10.15468/dl.v9ctjg</p>
+        </div>
+        <div id="slider-area">
+            <label for="year-slider" id="slider-label">Year: <span id="slider-value">All</span></label>
+            <input type="range" min="2000" max="2025" value="2025" id="year-slider">
+        </div>
+    </div>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <script>
+    // Initialize map
+    var map = L.map('map').setView([20, 0], 2);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://carto.com/attributions">CARTO</a> | Octopus data: GBIF',
+        subdomains: 'abcd',
+        maxZoom: 18
+    }).addTo(map);
+
+    // Helper: parse year and filter
+    function isValidYear(year) {
+        return year >= 2000 && year <= 2025;
+    }
+
+    // Helper: parse float
+    function parseNum(val) {
+        var n = parseFloat(val);
+        return isNaN(n) ? null : n;
+    }
+
+    // Marker color by species
+    const speciesColors = {};
+    const colorPalette = [
+        '#e41a1c', '#377eb8', '#4daf4a', '#984ea3', '#ff7f00',
+        '#ffff33', '#a65628', '#f781bf', '#999999', '#00bfff',
+        '#ffd700', '#32cd32', '#ff6347', '#1e90ff', '#8b4513',
+        '#ff1493', '#00fa9a', '#4682b4', '#b22222', '#20b2aa'
+    ];
+    let colorIndex = 0;
+    function getSpeciesColor(species) {
+        if (!species) return '#fff';
+        if (!speciesColors[species]) {
+            speciesColors[species] = colorPalette[colorIndex % colorPalette.length];
+            colorIndex++;
+        }
+        return speciesColors[species];
+    }
+
+    // --- Slider and container logic ---
+    const bottomContainer = document.getElementById('bottom-container');
+    const toggleBtn = document.getElementById('toggle-container');
+    let containerMinimized = false;
+    toggleBtn.addEventListener('click', function() {
+        containerMinimized = !containerMinimized;
+        bottomContainer.classList.toggle('minimized', containerMinimized);
+        toggleBtn.innerHTML = containerMinimized ? '&#x25BC;' : '&#x25B2;';
+    });
+
+    // --- Year slider logic ---
+    const yearSlider = document.getElementById('year-slider');
+    const sliderValue = document.getElementById('slider-value');
+    let currentYear = 2025;
+    let allMarkers = [];
+
+    function updateMarkers(year) {
+        allMarkers.forEach(function(obj) {
+            if (year === 'all' || obj.year === year) {
+                obj.marker.addTo(map);
+            } else {
+                map.removeLayer(obj.marker);
+            }
+        });
+    }
+
+    yearSlider.addEventListener('input', function() {
+        currentYear = parseInt(yearSlider.value);
+        sliderValue.textContent = currentYear;
+        updateMarkers(currentYear);
+    });
+
+    // --- Update marker creation logic ---
+    Papa.parse('OctopusGBIF.csv', {
+        download: true,
+        header: true,
+        skipEmptyLines: true,
+        complete: function(results) {
+            var data = results.data;
+            data.forEach(function(row) {
+                var lat = parseNum(row['decimalLatitude']);
+                var lng = parseNum(row['decimalLongitude']);
+                var year = parseInt(row['year']);
+                var species = row['scientificName'] || 'Unknown';
+                if (lat && lng && isValidYear(year)) {
+                    var color = getSpeciesColor(species);
+                    var marker = L.circleMarker([lat, lng], {
+                        radius: 5,
+                        color: color,
+                        fillColor: color,
+                        fillOpacity: 0.7,
+                        weight: 1
+                    });
+                    marker.bindPopup(
+                        '<b>Species:</b> ' + species + '<br>' +
+                        '<b>Year:</b> ' + year + '<br>' +
+                        (row['locality'] ? ('<b>Location:</b> ' + row['locality'] + '<br>') : '') +
+                        (row['countryCode'] ? ('<b>Country:</b> ' + row['countryCode']) : '')
+                    );
+                    allMarkers.push({marker, year});
+                    marker.addTo(map);
+                }
+            });
+        }
+    });
+    </script>
+</body>
+</html> 
