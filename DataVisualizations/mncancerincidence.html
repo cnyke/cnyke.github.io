@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-C3S7RZW6F5"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-C3S7RZW6F5');
+    </script>
+    <!-- End Google Analytics -->
+    <link rel="icon" type="image/png" href="../favicon.png">
+    <title>Minnesota Cancer Statistics Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            background-color: #1a1a1a;
+            color: #ffffff;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #5B9BD5;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #cccccc;
+            font-size: 1.2em;
+        }
+        
+        .controls-panel {
+            background-color: #2a2a2a;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .control-group label {
+            color: #ababab;
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+        
+        .control-group select {
+            background: linear-gradient(180deg, #3e3e3e 0%, #363636 100%);
+            color: #ffffff;
+            border: 1px solid #ababab;
+            border-radius: 3px;
+            padding: 10px 12px;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="8"><path d="M0 0l6 8 6-8z" fill="%23ababab"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 12px;
+            padding-right: 35px;
+        }
+        
+        .control-group select.has-selection {
+            border-color: #5B9BD5;
+            background: linear-gradient(180deg, #3e4a5c 0%, #364050 100%);
+            box-shadow: 0 0 0 1px rgba(91, 155, 213, 0.3);
+        }
+        
+        .control-group select:focus {
+            outline: none;
+            border-color: #5B9BD5;
+            background: linear-gradient(180deg, #424242 0%, #3a3a3a 100%);
+            box-shadow: 0 0 0 2px rgba(91, 155, 213, 0.2);
+        }
+        
+        .control-group select:hover {
+            border-color: #5B9BD5;
+            background: linear-gradient(180deg, #424242 0%, #3a3a3a 100%);
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .btn {
+            background-color: #ababab;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            background-color: #999999;
+        }
+        
+        .btn.filters-active {
+            background-color: #5B9BD5;
+            box-shadow: 0 2px 4px rgba(91, 155, 213, 0.3);
+        }
+        
+        .btn.filters-active:hover {
+            background-color: #4A8BC2;
+        }
+        
+        .btn-secondary {
+            background-color: #666666;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #555555;
+        }
+        
+        .stats-panel {
+            background-color: #2a2a2a;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .stat-card {
+            background-color: #3a3a3a;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #ababab;
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card.filtered {
+            border-color: #5B9BD5;
+            box-shadow: 0 0 0 1px rgba(91, 155, 213, 0.2);
+        }
+        
+        .stat-card h3 {
+            color: #ababab;
+            margin: 0 0 10px 0;
+            font-size: 1.2em;
+        }
+        
+        .stat-card .value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #ffffff;
+        }
+        
+
+        
+
+        
+
+        
+        .explanation-panel {
+            background-color: #2a2a2a;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .explanation-panel h2 {
+            color: #ababab;
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+        
+        .explanation-panel p {
+            color: #cccccc;
+            line-height: 1.6;
+            margin-bottom: 0;
+        }
+        
+        .chart-panel {
+            background-color: #2a2a2a;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .chart-panel h2 {
+            color: #ababab;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 1.4em;
+            text-align: center;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 400px;
+            width: 100%;
+        }
+        
+        .chart-controls {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+        
+        .toggle-button {
+            background-color: #3a3a3a;
+            color: #cccccc;
+            border: 1px solid #ababab;
+            padding: 6px 12px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s ease;
+        }
+        
+        .toggle-button:hover {
+            border-color: #5B9BD5;
+            background-color: #424242;
+        }
+        
+        .toggle-button.active {
+            background-color: #5B9BD5;
+            color: white;
+            border-color: #5B9BD5;
+        }
+        
+        .logo-link {
+            position: absolute;
+            top: 20px;
+            left: 100px;
+            z-index: 1000;
+            background: rgba(24,26,27,0.8);
+            border-radius: 8px;
+            padding: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        
+        .logo-link img {
+            width: 90px;
+            height: auto;
+            display: block;
+        }
+    </style>
+  </head>
+<body>
+    <a href="../index.html" class="logo-link">
+        <img src="../Images/rc.png" alt="Resilience Continuum">
+    </a>
+    
+    <div class="dashboard-container">
+        <div class="header">
+            <h1>Minnesota Cancer Statistics Dashboard</h1>
+            <p>Explore cancer incidence data in Minnesota from 1999 to 2021</p>
+        </div>
+        
+        <div class="explanation-panel">
+            <h2>About This Dashboard</h2>
+
+                        <p>placeholder text</p>
+                
+            <p><em>United States Cancer Statistics - Incidence: 1999 - 2021, WONDER Online Database. United States Department of Health and Human Services, Centers for Disease Control and Prevention and National Cancer Institute; 2023 submission; 2024 release. Accessed at http://wonder.cdc.gov/cancer-v2021.html on Jul 13, 2025</em></p>
+        </div>
+        
+        <div class="controls-panel">
+            <div class="controls-grid">
+                <div class="control-group">
+                    <label for="cancerSitesFilter">Cancer Sites:</label>
+                    <select id="cancerSitesFilter">
+                        <option value="">All Cancer Sites</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label for="ageGroupsFilter">Age Groups:</label>
+                    <select id="ageGroupsFilter">
+                        <option value="">All Age Groups</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="button-group">
+                <button class="btn" onclick="applyFilters()">Apply Filters</button>
+                <button class="btn btn-secondary" onclick="clearFilters()">Clear All</button>
+            </div>
+        </div>
+        
+        <div class="chart-panel">
+            <h2>Cancer Trends Over Time</h2>
+            <div class="chart-controls">
+                <button id="yAxisToggle" class="toggle-button" onclick="toggleYAxis()">
+                    Dynamic Y-Axis
+                </button>
+            </div>
+            <div class="chart-container">
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="stats-panel">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Total Records</h3>
+                    <div class="value" id="totalRecords">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Cases</h3>
+                    <div class="value" id="totalCases">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Average Cases/Year</h3>
+                    <div class="value" id="avgCases">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Years Covered</h3>
+                    <div class="value" id="yearsRange">-</div>
+                </div>
+            </div>
+        </div>
+        
+
+    </div>
+
+    <script>
+        let allData = [];
+        let filteredData = [];
+        let trendChart = null;
+        let chartScales = { minYear: 1999, maxYear: 2021, minCount: 0, maxCount: 0 };
+        let useFixedYAxis = false;
+        
+        // Load and parse the data
+        async function loadData() {
+            try {
+                const response = await fetch('MinnesotaCancerStatistics1999to2021Incidence.txt');
+                const text = await response.text();
+                
+                // Parse tab-delimited data
+                const lines = text.split('\n');
+                const headers = lines[0].split('\t').map(h => h.replace(/"/g, ''));
+                
+                allData = [];
+                for (let i = 1; i < lines.length; i++) {
+                    if (lines[i].trim() === '') continue;
+                    
+                    const values = lines[i].split('\t').map(v => v.replace(/"/g, ''));
+                    if (values.length >= 10) {
+                        allData.push({
+                            notes: values[0] || '',
+                            cancerSites: values[1] || '',
+                            cancerSitesCode: values[2] || '',
+                            states: values[3] || '',
+                            statesCode: values[4] || '',
+                            ageGroups: values[5] || '',
+                            ageGroupsCode: values[6] || '',
+                            year: values[7] || '',
+                            yearCode: values[8] || '',
+                            count: parseInt(values[9]) || 0
+                        });
+                    }
+                }
+                
+                // Initialize filters and display
+                initializeFilters();
+                filteredData = [...allData];
+                calculateChartScales();
+                initializeChart();
+                updateVisualFeedback();
+                updateStats();
+                updateChart();
+                
+            } catch (error) {
+                console.error('Error loading data:', error);
+                alert('Error loading data. Please try again.');
+            }
+        }
+        
+        // Initialize filter dropdowns
+        function initializeFilters() {
+            // Get unique values for each filter
+            const cancerSites = [...new Set(allData.map(d => d.cancerSites))].sort();
+            const ageGroups = [...new Set(allData.map(d => d.ageGroups))].sort();
+            
+            // Populate dropdowns
+            populateDropdown('cancerSitesFilter', cancerSites);
+            populateDropdown('ageGroupsFilter', ageGroups);
+        }
+        
+        function populateDropdown(id, options) {
+            const select = document.getElementById(id);
+            // Keep the "All" option
+            const allOption = select.querySelector('option[value=""]');
+            select.innerHTML = '';
+            select.appendChild(allOption);
+            
+            options.forEach(option => {
+                if (option.trim() !== '') {
+                    const optionElement = document.createElement('option');
+                    optionElement.value = option;
+                    optionElement.textContent = option;
+                    select.appendChild(optionElement);
+                }
+            });
+            
+            // Add event listener for real-time visual feedback
+            select.addEventListener('change', updateVisualFeedback);
+        }
+        
+        // Apply filters
+        function applyFilters() {
+            const cancerSitesFilter = document.getElementById('cancerSitesFilter').value;
+            const ageGroupsFilter = document.getElementById('ageGroupsFilter').value;
+            
+            filteredData = allData.filter(row => {
+                return (cancerSitesFilter === '' || row.cancerSites === cancerSitesFilter) &&
+                       (ageGroupsFilter === '' || row.ageGroups === ageGroupsFilter);
+            });
+            
+            updateVisualFeedback();
+            updateStats();
+            updateChart();
+        }
+        
+        // Clear all filters
+        function clearFilters() {
+            document.getElementById('cancerSitesFilter').value = '';
+            document.getElementById('ageGroupsFilter').value = '';
+            
+            filteredData = [...allData];
+            updateVisualFeedback();
+            updateStats();
+            updateChart();
+        }
+        
+        // Update statistics
+        function updateStats() {
+            const totalRecords = filteredData.length;
+            const totalCases = filteredData.reduce((sum, row) => sum + row.count, 0);
+            const years = [...new Set(filteredData.map(d => d.year))].sort();
+            const avgCases = years.length > 0 ? Math.round(totalCases / years.length) : 0;
+            const yearsRange = years.length > 0 ? `${years[0]} - ${years[years.length - 1]}` : '-';
+            
+            document.getElementById('totalRecords').textContent = totalRecords.toLocaleString();
+            document.getElementById('totalCases').textContent = totalCases.toLocaleString();
+            document.getElementById('avgCases').textContent = avgCases.toLocaleString();
+            document.getElementById('yearsRange').textContent = yearsRange;
+        }
+        
+
+        
+        // Update visual feedback based on filter selections
+        function updateVisualFeedback() {
+            const filters = ['cancerSitesFilter', 'ageGroupsFilter'];
+            let hasActiveFilters = false;
+            
+            // Update dropdown styling based on selections
+            filters.forEach(filterId => {
+                const select = document.getElementById(filterId);
+                if (select.value !== '') {
+                    select.classList.add('has-selection');
+                    hasActiveFilters = true;
+                } else {
+                    select.classList.remove('has-selection');
+                }
+            });
+            
+            // Update apply button styling
+            const applyButton = document.querySelector('.btn[onclick="applyFilters()"]');
+            if (hasActiveFilters) {
+                applyButton.classList.add('filters-active');
+            } else {
+                applyButton.classList.remove('filters-active');
+            }
+            
+            // Update statistics cards styling
+            const statCards = document.querySelectorAll('.stat-card');
+            statCards.forEach(card => {
+                if (hasActiveFilters) {
+                    card.classList.add('filtered');
+                } else {
+                    card.classList.remove('filtered');
+                }
+            });
+        }
+        
+        // Calculate fixed chart scales from all data
+        function calculateChartScales() {
+            const allCounts = allData.map(d => d.count);
+            chartScales.maxCount = Math.max(...allCounts);
+            chartScales.minCount = 0;
+        }
+        
+        // Initialize the trend chart
+        function initializeChart() {
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            
+            trendChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Cancer Cases',
+                        data: [],
+                        borderColor: '#5B9BD5',
+                        backgroundColor: 'rgba(91, 155, 213, 0.1)',
+                        borderWidth: 2,
+                        fill: false,
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#cccccc',
+                                usePointStyle: true,
+                                pointStyle: 'line'
+                            },
+                            onClick: null
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            position: 'bottom',
+                            min: chartScales.minYear,
+                            max: chartScales.maxYear,
+                            ticks: {
+                                color: '#cccccc',
+                                stepSize: 1,
+                                callback: function(value) {
+                                    return Math.floor(value).toString();
+                                }
+                            },
+                            grid: {
+                                color: '#444444'
+                            },
+                            title: {
+                                display: true,
+                                text: 'Year',
+                                color: '#cccccc'
+                            }
+                        },
+                        y: {
+                            min: chartScales.minCount,
+                            max: chartScales.maxCount,
+                            ticks: {
+                                color: '#cccccc'
+                            },
+                            grid: {
+                                color: '#444444'
+                            },
+                            title: {
+                                display: true,
+                                text: 'Number of Cases',
+                                color: '#cccccc'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Update chart with filtered data
+        function updateChart() {
+            if (!trendChart) return;
+            
+            // Group filtered data by year and sum counts
+            const yearlyData = {};
+            filteredData.forEach(row => {
+                const year = parseInt(row.year);
+                if (!isNaN(year)) {
+                    if (!yearlyData[year]) {
+                        yearlyData[year] = 0;
+                    }
+                    yearlyData[year] += row.count;
+                }
+            });
+            
+            // Convert to arrays for Chart.js
+            const years = Object.keys(yearlyData).map(year => parseInt(year)).sort((a, b) => a - b);
+            const counts = years.map(year => yearlyData[year]);
+            
+            // Update chart data
+            trendChart.data.labels = years;
+            trendChart.data.datasets[0].data = counts;
+            
+            // Set scales based on mode
+            if (useFixedYAxis) {
+                // Fixed scales
+                trendChart.options.scales.x.min = chartScales.minYear;
+                trendChart.options.scales.x.max = chartScales.maxYear;
+                trendChart.options.scales.y.min = chartScales.minCount;
+                trendChart.options.scales.y.max = chartScales.maxCount;
+            } else {
+                // Dynamic scales
+                trendChart.options.scales.x.min = chartScales.minYear;
+                trendChart.options.scales.x.max = chartScales.maxYear;
+                
+                if (counts.length > 0) {
+                    const minCount = Math.min(...counts);
+                    const maxCount = Math.max(...counts);
+                    const padding = (maxCount - minCount) * 0.1;
+                    trendChart.options.scales.y.min = Math.max(0, minCount - padding);
+                    trendChart.options.scales.y.max = maxCount + padding;
+                } else {
+                    trendChart.options.scales.y.min = 0;
+                    trendChart.options.scales.y.max = 100;
+                }
+            }
+            
+            trendChart.update();
+        }
+        
+        // Toggle Y-axis mode
+        function toggleYAxis() {
+            useFixedYAxis = !useFixedYAxis;
+            const toggleButton = document.getElementById('yAxisToggle');
+            
+            if (useFixedYAxis) {
+                toggleButton.textContent = 'Fixed Y-Axis';
+                toggleButton.classList.add('active');
+            } else {
+                toggleButton.textContent = 'Dynamic Y-Axis';
+                toggleButton.classList.remove('active');
+            }
+            
+            updateChart();
+        }
+
+        
+        // Load data when page loads
+        window.addEventListener('load', loadData);
+    </script>
+</body>
+</html>
