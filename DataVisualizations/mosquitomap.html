@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="../favicon.png">
+    <title>Mosquito Specimens Map - Resilience Continuum</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: black;
+            color: #ababab;
+            font-family: 'Lexend', sans-serif;
+            font-weight: 300;
+        }
+        .home-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+        .home-link img {
+            width: 100px;
+            height: auto;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 20px auto 0;
+            padding: 20px;
+        }
+        h1 {
+            text-align: left;
+            margin: 0 0 10px 120px;
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+        }
+        .explanation {
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto 12px;
+            padding: 12px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            font-size: clamp(0.9rem, 2vw, 1rem);
+        }
+        #map {
+            width: 100%;
+            min-height: 600px;
+            margin: 0 auto 0 auto;
+            background: #181818;
+            border-radius: 10px;
+            padding: 12px 0 4px 0;
+            box-sizing: border-box;
+        }
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 8px 0 0 0;
+            padding: 0 min(20px, 3vw);
+            justify-content: center;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.8em;
+        }
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+            display: inline-block;
+        }
+        @media (max-width: 768px) {
+            .container {
+                margin-top: 60px;
+                padding: 8px;
+            }
+            h1 {
+                margin-left: 100px;
+                margin-bottom: 6px;
+            }
+            .explanation {
+                margin-bottom: 8px;
+                padding: 8px;
+            }
+            #map {
+                padding: 6px 0 2px 0;
+            }
+            .home-link img {
+                width: 80px;
+            }
+            .legend {
+                margin-top: 4px;
+            }
+        }
+        @media (max-width: 480px) {
+            .container {
+                margin-top: 40px;
+                padding: 3px;
+            }
+            h1 {
+                margin-left: 80px;
+                margin-bottom: 4px;
+            }
+            .explanation {
+                margin-bottom: 6px;
+                padding: 6px;
+            }
+            #map {
+                padding: 3px 0 1px 0;
+            }
+            .home-link img {
+                width: 60px;
+            }
+            .legend {
+                margin-top: 2px;
+            }
+        }
+    </style>
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-C3S7RZW6F5"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-C3S7RZW6F5');
+    </script>
+    <!-- End Google Analytics -->
+</head>
+<body>
+    <a href="../index.html" class="home-link">
+        <img src="../Images/rc.png" alt="Home">
+    </a>
+    <div class="container">
+        <h1>Mosquito Specimens Map</h1>
+        <div class="explanation">
+            <p>I used the Natural History Museum, London's API to explore the historical range of mosquitoes. Climate change is impacting habitats of disease vectors like these insects, which can carry malaria, dengue fever, chikungunya, yellow fever, and West Nile virus, among other serious diseases. This visualization explores a sampling from the museum's collection. 920 specimens with both year and location data are included here. I was interested in mosquitoes from all over the world, but it turns out that most if the Natural History Museum's mosquito specimens are from the United Kingdom. You can hover to see the species and year.</p>
+
+        </div>
+        <div id="map"></div>
+        <div class="legend" id="legend"></div>
+        <div id="tooltip" style="position:absolute; pointer-events:none; background:rgba(0,0,0,0.92); color:#fff; border:1px solid #ababab; border-radius:6px; padding:8px 14px; font-size:1em; z-index:2000; display:none; max-width:320px;"></div>
+        <p style="text-align:center; color:#ababab; font-size:0.98em; margin: 32px auto 0 auto; max-width: 700px;">
+            Natural History Museum (2014). Collection specimens [Data set]. Natural History Museum. <a href="https://doi.org/10.5519/0002965" style="color:#7fb3d5;">https://doi.org/10.5519/0002965</a>
+        </p>
+    </div>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://unpkg.com/topojson-client@3"></script>
+    <script src="d3-geo-projection.min.js"></script>
+    <script>
+    // Responsive map draw
+    function drawMap() {
+        d3.select("#map").selectAll("svg").remove();
+        const container = document.getElementById('map');
+        const containerWidth = container.offsetWidth;
+        const margin = {top: 20, right: 20, bottom: 20, left: 20},
+              width = Math.max(300, containerWidth - margin.left - margin.right),
+              height = Math.max(400, 600 - margin.top - margin.bottom);
+
+        // Waterman butterfly projection
+        const projection = d3.geoPolyhedralWaterman()
+            .scale(Math.min(width, height) * 2.4)
+            .translate([width / 2, height / 2])
+            .rotate([1.5, -10]); // Shift farther north
+
+        const path = d3.geoPath().projection(projection);
+
+        const svg = d3.select("#map")
+            .append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .attr("viewBox", `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`)
+            .attr("preserveAspectRatio", "xMidYMid meet")
+            .append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        // Draw graticule
+        const graticule = d3.geoGraticule();
+        svg.append("path")
+            .datum(graticule())
+            .attr("fill", "none")
+            .attr("stroke", "#444")
+            .attr("stroke-width", 0.7)
+            .attr("d", path);
+
+        // Draw world outline
+        d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json").then(function(world) {
+            const land = topojson.feature(world, world.objects.countries);
+            svg.append("path")
+                .datum(land)
+                .attr("fill", "#222")
+                .attr("stroke", "#fff")
+                .attr("stroke-width", 0.5)
+                .attr("d", path);
+
+            // Load mosquito data and plot points (draw after map)
+            d3.csv("mosquitos_with_year_and_coords.csv").then(function(data) {
+                data = data.filter(d => d.decimalLatitude && d.decimalLongitude && d.scientificName);
+                data.forEach(d => {
+                    d.decimalLatitude = +d.decimalLatitude;
+                    d.decimalLongitude = +d.decimalLongitude;
+                });
+                // Get unique species and color scale (same as mosquito.html)
+                const species = Array.from(new Set(data.map(d => d.scientificName)));
+                const color = d3.scaleOrdinal()
+                    .domain(species)
+                    .range(d3.schemeCategory10.concat(d3.schemeSet3, d3.schemeTableau10));
+                // Draw dots
+                svg.selectAll(".mosquito-dot")
+                    .data(data)
+                    .enter()
+                    .append("circle")
+                    .attr("class", "mosquito-dot")
+                    .attr("cx", d => projection([d.decimalLongitude, d.decimalLatitude])[0])
+                    .attr("cy", d => projection([d.decimalLongitude, d.decimalLatitude])[1])
+                    .attr("r", 2)
+                    .attr("fill", d => color(d.scientificName))
+                    .attr("fill-opacity", 0.85)
+                    .on("mousemove", function(event, d) {
+                        const tooltip = document.getElementById('tooltip');
+                        tooltip.innerHTML = `<strong>Species:</strong> ${d.scientificName}`;
+                        tooltip.style.display = 'block';
+                        const [mx, my] = d3.pointer(event, document.body);
+                        tooltip.style.left = (mx + 18) + 'px';
+                        tooltip.style.top = (my - 10) + 'px';
+                    })
+                    .on("mouseleave", function() {
+                        const tooltip = document.getElementById('tooltip');
+                        tooltip.style.display = 'none';
+                    });
+                // Draw legend
+                const legend = d3.select("#legend");
+                legend.selectAll("*").remove();
+                species.forEach(s => {
+                    legend.append("div")
+                        .attr("class", "legend-item")
+                        .html(`<span class='legend-color' style='background:${color(s)}'></span>${s}`);
+                });
+            });
+        });
+    }
+    drawMap();
+    window.addEventListener('resize', drawMap);
+    </script>
+</body>
+</html>
