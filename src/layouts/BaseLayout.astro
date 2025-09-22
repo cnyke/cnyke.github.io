@@ -5,6 +5,9 @@ export interface Props {
 }
 
 const { title, description = "Resilience Continuum - Data Visualization and Design" } = Astro.props;
+
+// Google Analytics Measurement ID - replace with your actual GA4 Measurement ID
+const GA_MEASUREMENT_ID = "G-C3S7RZW6F5"; // Replace with your actual Measurement ID
 ---
 
 <!DOCTYPE html>
@@ -19,6 +22,19 @@ const { title, description = "Resilience Continuum - Data Visualization and Desi
     <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <title>{title}</title>
+    
+    <!-- Google Analytics -->
+    {GA_MEASUREMENT_ID !== "G-XXXXXXXXXX" && (
+      <>
+        <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}></script>
+        <script is:inline define:vars={{ GA_MEASUREMENT_ID }}>
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', GA_MEASUREMENT_ID);
+        </script>
+      </>
+    )}
   </head>
   <body class="font-lexend bg-white text-gray-900 min-h-screen flex flex-col">
     <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200">
