@@ -1,0 +1,112 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Adaptator: An Evolution Game - Resilience Continuum" description="Game design project exploring evolutionary concepts through interactive gameplay">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Back Navigation -->
+    <div class="mb-8">
+      <a href="/graphic-design" class="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium">
+        ← Back to Graphic Design
+      </a>
+    </div>
+
+    <!-- Project Header -->
+    <div class="text-center mb-12">
+      <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+        Adaptator: An Evolution Game
+      </h1>
+      <p class="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+        This game concept explores evolution by introducing random chance into the creation of animal body plans. The poster explains how to play the game. Each drawer has an animal’s body part in them. You roll the colored die, then open the drawer associated with the color that comes up. You add this to your animal and repeat until you have a whole creature. The game plays with the idea that evolution is the accumulation of random mutations. 
+      </p>
+    </div>
+
+    <!-- Featured Game Design -->
+    <div class="mb-12">
+      <div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300">
+        <div class="relative">
+          <img 
+            src="/images/adaptatorfull.png" 
+            alt="Adaptator Full Game Layout"
+            class="w-full h-auto object-contain"
+          />
+        </div>
+      </div>
+    </div>
+
+
+
+    <!-- Navigation -->
+    <div class="mt-12 pt-8 border-t border-gray-200">
+      <div class="flex justify-between items-center">
+        <a href="/graphic-design" class="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium">
+          ← Back to Graphic Design
+        </a>
+        <div class="text-sm text-gray-500">
+          Game Design Project
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    /* Masonry layout using CSS columns */
+    .masonry-container {
+      column-count: 1;
+      column-gap: 2rem;
+      column-fill: balance;
+    }
+    
+    /* Responsive masonry columns */
+    @media (min-width: 768px) {
+      .masonry-container {
+        column-count: 2;
+      }
+    }
+    
+    @media (min-width: 1024px) {
+      .masonry-container {
+        column-count: 3;
+      }
+    }
+    
+    /* Masonry items */
+    .masonry-item {
+      break-inside: avoid;
+      page-break-inside: avoid;
+      display: inline-block;
+      width: 100%;
+      margin-bottom: 2rem;
+    }
+    
+    /* Natural image sizing - no cropping */
+    .masonry-item img {
+      display: block;
+      width: 100%;
+      height: auto;
+      object-fit: contain;
+      transition: transform 0.3s ease;
+    }
+    
+    /* Card hover effects */
+    .masonry-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+    
+    /* Image zoom effect on hover */
+    .masonry-item:hover img {
+      transform: scale(1.05);
+    }
+    
+    /* Ensure image container doesn't show overflow */
+    .masonry-item .relative {
+      overflow: hidden;
+    }
+    
+    /* Prevent column breaks within cards */
+    .masonry-item * {
+      break-inside: avoid;
+    }
+  </style>
+</BaseLayout>

@@ -1,0 +1,126 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Skull and Flies Painting - Resilience Continuum" description="Artistic exploration of mortality and nature through mixed media painting">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Back Navigation -->
+    <div class="mb-8">
+      <a href="/graphic-design" class="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium">
+        ← Back to Graphic Design
+      </a>
+    </div>
+
+    <!-- Project Header -->
+    <div class="text-center mb-12">
+      <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+        Skull and Flies Painting
+      </h1>
+      <p class="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+        A human skull surrounded by larger than life flies aims to explore the recycling of nutrients and energy in an ecosystem. Decay means fungi and bacteria are breaking down molecules. I find this decomposition to be a beautiful process. The acrylic paint, which is made of plastic, is a very human material, which contrasts with the natural wood it is painted on.       </p>
+    </div>
+
+    <!-- Project Gallery -->
+    <div class="mb-16">
+      <div class="masonry-container">
+        
+        <!-- Gallery Item 1 -->
+        <div class="masonry-item bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 mb-6">
+          <div class="relative">
+            <img 
+              src="/images/skullandflies.jpg" 
+              alt="Skull and Flies Painting"
+              class="w-full h-auto object-contain"
+            />
+          </div>
+        </div>
+
+        <!-- Gallery Item 2 -->
+        <div class="masonry-item bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 mb-6">
+          <div class="relative">
+            <img 
+              src="/images/flywing.jpg" 
+              alt="Fly Wing Study"
+              class="w-full h-auto object-contain"
+            />
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+
+    <!-- Navigation -->
+    <div class="mt-12 pt-8 border-t border-gray-200">
+      <div class="flex justify-between items-center">
+        <a href="/graphic-design" class="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium">
+          ← Back to Graphic Design
+        </a>
+        <div class="text-sm text-gray-500">
+          Artistic Work
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    /* Masonry layout using CSS columns */
+    .masonry-container {
+      column-count: 1;
+      column-gap: 2rem;
+      column-fill: balance;
+    }
+    
+    /* Responsive masonry columns */
+    @media (min-width: 768px) {
+      .masonry-container {
+        column-count: 2;
+      }
+    }
+    
+    @media (min-width: 1024px) {
+      .masonry-container {
+        column-count: 3;
+      }
+    }
+    
+    /* Masonry items */
+    .masonry-item {
+      break-inside: avoid;
+      page-break-inside: avoid;
+      display: inline-block;
+      width: 100%;
+      margin-bottom: 2rem;
+    }
+    
+    /* Natural image sizing - no cropping */
+    .masonry-item img {
+      display: block;
+      width: 100%;
+      height: auto;
+      object-fit: contain;
+      transition: transform 0.3s ease;
+    }
+    
+    /* Card hover effects */
+    .masonry-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+    
+    /* Image zoom effect on hover */
+    .masonry-item:hover img {
+      transform: scale(1.05);
+    }
+    
+    /* Ensure image container doesn't show overflow */
+    .masonry-item .relative {
+      overflow: hidden;
+    }
+    
+    /* Prevent column breaks within cards */
+    .masonry-item * {
+      break-inside: avoid;
+    }
+  </style>
+</BaseLayout>

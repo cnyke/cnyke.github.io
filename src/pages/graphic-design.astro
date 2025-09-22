@@ -1,0 +1,194 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Graphic Design - Resilience Continuum" description="Creative graphic design portfolio showcasing visual storytelling and design solutions">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Hero Section -->
+    <div class="text-center mb-12">
+      <h1 class="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
+        Graphic Design
+      </h1>
+      <p class="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+        With my training in visual communication, I aim to share complex ideas, elucidate data, and celebrate the splendor of nature. 
+
+      </p>
+    </div>
+
+    <!-- Gallery Section -->
+    <div class="mb-16">
+      <div class="masonry-container">
+        <!-- Gallery Item 1 -->
+        <a href="/public-health-review-cover" class="masonry-item bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 mb-6 block">
+          <div class="relative">
+            <img 
+              src="/images/phr4.png" 
+              alt="PHR Design Project"
+              class="w-full h-auto object-contain"
+            />
+          </div>
+          <div class="p-6">
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">Public Health Review Cover</h3>
+            <p class="text-gray-600 text-sm mb-4">This cover won a competition for the student-led public health journal, the Public Health Review.</p>
+          </div>
+        </a>
+
+        <!-- Gallery Item 3 -->
+        <a href="/skull-and-flies-painting" class="masonry-item bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 mb-6 block">
+          <div class="relative">
+            <img 
+              src="/images/skullandflies.jpg" 
+              alt="Skull and Flies Artistic Design"
+              class="w-full h-auto object-contain"
+            />
+          </div>
+          <div class="p-6">
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">Skull and Flies Painting</h3>
+            <p class="text-gray-600 text-sm mb-4">A human skull surrounded by larger than life flies aims to explore the recycling of nutrients and energy in an ecosystem. 
+            </p>
+          </div>
+        </a>
+
+        <!-- Gallery Item 4 -->
+        <a href="/whale-painting" class="masonry-item bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 mb-6 block">
+          <div class="relative">
+            <img 
+              src="/images/whale.jpg" 
+              alt="Whale Artistic Design"
+              class="w-full h-auto object-contain whale-image"
+            />
+          </div>
+          <div class="p-6">
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">Whale Painting</h3>
+            <p class="text-gray-600 text-sm mb-4">The whale is inspired by the small colored pencil drawings of Frank Lloyd Wright. 
+            </p>
+          </div>
+        </a>
+
+        <!-- Gallery Item 5 -->
+        <a href="/adaptator-evolution-game" class="masonry-item bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 mb-6 block">
+          <div class="relative">
+            <img 
+              src="/images/adaptatorcreatures.png" 
+              alt="Adaptator An Evolution Game"
+              class="w-full h-auto object-contain"
+            />
+          </div>
+          <div class="p-6">
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">Adaptator: An Evolution Game</h3>
+            <p class="text-gray-600 text-sm mb-4">This game concept explores evolution by introducing random chance into the creation of animal body plans.</p>
+          </div>
+        </a>
+
+        <!-- Gallery Item 6 -->
+        <a href="/gene-editing-perspectives" class="masonry-item bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 mb-6 block">
+          <div class="relative">
+            <img 
+              src="/images/child.png" 
+              alt="Child Anatomical Illustration"
+              class="w-full h-auto object-contain"
+            />
+          </div>
+          <div class="p-6">
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">Gene Editing Perspectives</h3>
+            <p class="text-gray-600 text-sm mb-4">A gallery installation explores what people think about gene editing technologies.</p>
+          </div>
+        </a>
+
+        <!-- Gallery Item 7 -->
+        <a href="/rainbow-bricks" class="masonry-item bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 mb-6 block">
+          <div class="relative">
+            <img 
+              src="/images/lego.jpeg" 
+              alt="LEGO Creative Design"
+              class="w-full h-auto object-contain"
+            />
+          </div>
+          <div class="p-6">
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">Rainbow Bricks</h3>
+            <p class="text-gray-600 text-sm mb-4">Each toy brick is like a brush stroke in this color composition. 
+            </p>
+          </div>
+        </a>
+
+        <!-- Gallery Item 8 -->
+        <a href="/ppe-instructions" class="masonry-item bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 mb-6 block">
+          <div class="relative">
+            <img 
+              src="/images/ppemask.png" 
+              alt="PPE Graphic Design"
+              class="w-full h-auto object-contain"
+            />
+          </div>
+          <div class="p-6">
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">Personal Protective Equipment Instructions</h3>
+            <p class="text-gray-600 text-sm mb-4">How do you correctly put on personal protective equipment in a hospital?</p>
+          </div>
+        </a>
+
+      </div>
+    </div>
+  </div>
+
+  <style>
+    /* Masonry layout using CSS columns */
+    .masonry-container {
+      column-count: 1;
+      column-gap: 2rem;
+      column-fill: balance;
+    }
+    
+    /* Responsive masonry columns */
+    @media (min-width: 768px) {
+      .masonry-container {
+        column-count: 2;
+      }
+    }
+    
+    @media (min-width: 1024px) {
+      .masonry-container {
+        column-count: 3;
+      }
+    }
+    
+    /* Masonry items */
+    .masonry-item {
+      break-inside: avoid;
+      page-break-inside: avoid;
+      display: inline-block;
+      width: 100%;
+      margin-bottom: 2rem;
+    }
+    
+    /* Natural image sizing - no cropping */
+    .masonry-item img {
+      display: block;
+      width: 100%;
+      height: auto;
+      object-fit: contain;
+      transition: transform 0.3s ease;
+    }
+    
+    /* Card hover effects */
+    .masonry-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+    
+    /* Image zoom effect on hover */
+    .masonry-item:hover img {
+      transform: scale(1.05);
+    }
+    
+    /* Ensure image container doesn't show overflow */
+    .masonry-item .relative {
+      overflow: hidden;
+    }
+    
+    /* Prevent column breaks within cards */
+    .masonry-item * {
+      break-inside: avoid;
+    }
+  </style>
+</BaseLayout>
+

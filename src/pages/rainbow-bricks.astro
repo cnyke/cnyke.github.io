@@ -1,0 +1,80 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Rainbow Bricks - Resilience Continuum" description="Creative composition using colorful toy building blocks">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Back Navigation -->
+    <div class="mb-8">
+      <a href="/graphic-design" class="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium">
+        ← Back to Graphic Design
+      </a>
+    </div>
+
+    <!-- Project Header -->
+    <div class="text-center mb-12">
+      <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+        Rainbow Bricks
+      </h1>
+      <p class="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+        Each toy brick is like a brush stroke in this color composition. I am inspired by fantastic toy brick artists like Ekow Nimako, Katherine Duclos, and set designers. 
+      </p>
+    </div>
+
+    <!-- Project Gallery -->
+    <div class="mb-16 flex justify-center">
+      <div class="max-w-4xl">
+        <!-- Gallery Item 1 -->
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300">
+          <div class="relative">
+            <img 
+              src="/images/lego.jpeg" 
+              alt="Rainbow Bricks Composition"
+              class="w-full h-auto object-contain"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- Navigation -->
+    <div class="mt-12 pt-8 border-t border-gray-200">
+      <div class="flex justify-between items-center">
+        <a href="/graphic-design" class="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium">
+          ← Back to Graphic Design
+        </a>
+        <div class="text-sm text-gray-500">
+          Creative Study
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    /* Natural image sizing - no cropping */
+    img {
+      display: block;
+      width: 100%;
+      height: auto;
+      object-fit: contain;
+      transition: transform 0.3s ease;
+    }
+    
+    /* Card hover effects */
+    .bg-white:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+    
+    /* Image zoom effect on hover */
+    .bg-white:hover img {
+      transform: scale(1.05);
+    }
+    
+    /* Ensure image container doesn't show overflow */
+    .relative {
+      overflow: hidden;
+    }
+  </style>
+</BaseLayout>

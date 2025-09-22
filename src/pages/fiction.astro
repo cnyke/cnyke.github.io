@@ -1,0 +1,160 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Fiction - Resilience Continuum" description="Creative fiction exploring themes of resilience, adaptation, and human experience">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Hero Section -->
+    <div class="text-center mb-12">
+      <h1 class="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
+        Fiction
+      </h1>
+      <p class="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+        Short science fiction stories exploring humanity's place in nature, on Earth and beyond. I am inspired by the works of Arthur C. Clarke, Frank O'Hara, Mary Oliver, Kim Stanley Robinson, and Robin Wall Kimmerer.
+      </p>
+    </div>
+
+    <!-- Gallery Section -->
+    <div class="mb-16">
+      <div class="masonry-container">
+        <!-- Story 1 -->
+        <a href="/brief-history-of-mars" class="masonry-item bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 mb-6 block">
+          <div class="relative">
+            <img 
+              src="/images/ashorthistoryofmars.png" 
+              alt="A Brief History of Mars illustration" 
+              class="w-full h-auto object-contain"
+            />
+          </div>
+          <div class="p-6">
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">A Brief History of Mars</h3>
+            <p class="text-gray-600 text-sm mb-4">"A Brief History of Mars" is a short story exploring the lives of two intrepid rovers on Mars.</p>
+          </div>
+        </a>
+
+        <!-- Story 2 -->
+        <a href="/creative-computer" class="masonry-item bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 mb-6 block">
+          <div class="relative">
+            <img 
+              src="/images/creativecomputer.png" 
+              alt="Creative Computer illustration" 
+              class="w-full h-auto object-contain"
+            />
+          </div>
+          <div class="p-6">
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">Creative Computer</h3>
+            <p class="text-gray-600 text-sm mb-4">"Creative Computer" asks questions about human creativity in the face of generative artificial intelligence.</p>
+          </div>
+        </a>
+
+        <!-- Story 3 -->
+        <a href="/solarium" class="masonry-item bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 mb-6 block">
+          <div class="relative">
+            <img 
+              src="/images/solarium.jpg" 
+              alt="Solarium space habitat illustration" 
+              class="w-full h-auto object-contain"
+            />
+          </div>
+          <div class="p-6">
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">Solarium</h3>
+            <p class="text-gray-600 text-sm mb-4">"Solarium" is about life and revolution on an O'Neill cylinder space habitat at the Earth-Sun Lagrange 5 point. Art by Rick Guidice.</p>
+          </div>
+        </a>
+
+        <!-- Story 4 -->
+        <a href="/starkite" class="masonry-item bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 mb-6 block">
+          <div class="relative">
+            <img 
+              src="/images/starkite.png" 
+              alt="Starkite interstellar probe illustration" 
+              class="w-full h-auto object-contain"
+            />
+          </div>
+          <div class="p-6">
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">Starkite</h3>
+            <p class="text-gray-600 text-sm mb-4">"Starkite" is a short story about multigenerational projects, what is worth doing, and human exploration of the cosmos.</p>
+          </div>
+        </a>
+
+        <!-- Story 5 - The Autotrophs -->
+        <a href="/the-autotrophs" class="masonry-item bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 mb-6 block">
+          <div class="relative">
+            <img 
+              src="/images/theautotrophs.png" 
+              alt="The Autotrophs Dyson swarm illustration" 
+              class="w-full h-auto object-contain"
+            />
+          </div>
+          <div class="p-6">
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">The Autotrophs</h3>
+            <p class="text-gray-600 text-sm mb-4">"The Autotrophs" wonders what life on Earth might become on a Dyson Sphere given enough time.</p>
+          </div>
+        </a>
+
+      </div>
+    </div>
+  </div>
+
+  <style>
+    /* Masonry layout using CSS columns */
+    .masonry-container {
+      column-count: 1;
+      column-gap: 2rem;
+      column-fill: balance;
+    }
+    
+    /* Responsive masonry columns */
+    @media (min-width: 768px) {
+      .masonry-container {
+        column-count: 2;
+      }
+    }
+    
+    @media (min-width: 1024px) {
+      .masonry-container {
+        column-count: 3;
+      }
+    }
+    
+    /* Masonry items */
+    .masonry-item {
+      break-inside: avoid;
+      page-break-inside: avoid;
+      display: inline-block;
+      width: 100%;
+      margin-bottom: 2rem;
+    }
+    
+    /* Natural image sizing - no cropping */
+    .masonry-item img {
+      display: block;
+      width: 100%;
+      height: auto;
+      object-fit: contain;
+      transition: transform 0.3s ease;
+    }
+    
+    /* Card hover effects */
+    .masonry-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+    
+    /* Image zoom effect on hover */
+    .masonry-item:hover img {
+      transform: scale(1.05);
+    }
+    
+    /* Ensure image container doesn't show overflow */
+    .masonry-item .relative {
+      overflow: hidden;
+    }
+    
+    /* Prevent column breaks within cards */
+    .masonry-item * {
+      break-inside: avoid;
+    }
+  </style>
+</BaseLayout>
+

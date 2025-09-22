@@ -1,0 +1,74 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="PPE Instructions - Resilience Continuum" description="Infographic design for personal protective equipment usage guidelines">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Back Navigation -->
+    <div class="mb-8">
+      <a href="/graphic-design" class="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium">
+        ← Back to Graphic Design
+      </a>
+    </div>
+
+    <!-- Project Header -->
+    <div class="text-center mb-12">
+      <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+        Personal Protective Equipment
+      </h1>
+      <p class="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+        How do you correctly put on personal protective equipment in a hospital? This infographic, created for the Minneapolis Health Department, explains the correct order and includes some dos and don’ts when donning PPE. 
+      </p>
+    </div>
+
+    <!-- Project Gallery -->
+    <div class="mb-16 flex justify-center">
+      <div class="max-w-4xl">
+        <!-- Gallery Item 1 -->
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300">
+          <div class="relative">
+            <img 
+              src="/images/finalPPEgraphic.png" 
+              alt="Complete PPE Instructions"
+              class="w-full h-auto object-contain"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- Navigation -->
+    <div class="mt-12 pt-8 border-t border-gray-200">
+      <div class="flex justify-between items-center">
+        <a href="/graphic-design" class="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium">
+          ← Back to Graphic Design
+        </a>
+        <div class="text-sm text-gray-500">
+          Public Health Design
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    /* Natural image sizing - no cropping */
+    img {
+      display: block;
+      width: 100%;
+      height: auto;
+      object-fit: contain;
+    }
+    
+    /* Card hover effects */
+    .bg-white:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+    
+    /* Ensure image container doesn't show overflow */
+    .relative {
+      overflow: hidden;
+    }
+  </style>
+</BaseLayout>

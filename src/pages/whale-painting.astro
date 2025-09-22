@@ -1,0 +1,139 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Whale Painting - Resilience Continuum" description="Marine life artistic study exploring ocean conservation themes">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Back Navigation -->
+    <div class="mb-8">
+      <a href="/graphic-design" class="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium">
+        ← Back to Graphic Design
+      </a>
+    </div>
+
+    <!-- Project Header -->
+    <div class="text-center mb-12">
+      <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+        Whale Painting
+      </h1>
+      <p class="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+        The whale is inspired by the small colored pencil drawings of Frank Lloyd Wright, such as his “Saguaro Forms and Cactus Flowers” and his geometric designs for stained glass or carpets of his innovative buildings. The whale’s bright colors of acrylics contrast with the natural wood. The whale painting sought to celebrate nature and the beauty of whales with color. 
+      </p>
+    </div>
+
+    <!-- Project Gallery -->
+    <div class="mb-16">
+      <div class="masonry-container">
+        
+        <!-- Gallery Item 1 -->
+        <div class="masonry-item bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 mb-6">
+          <div class="relative">
+            <img 
+              src="/images/whale.jpg" 
+              alt="Whale Painting"
+              class="w-full h-auto object-contain"
+            />
+          </div>
+        </div>
+
+        <!-- Gallery Item 2 -->
+        <div class="masonry-item bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 mb-6">
+          <div class="relative">
+            <img 
+              src="/images/whalesketchbook1.png" 
+              alt="Whale Sketchbook Studies 1"
+              class="w-full h-auto object-contain"
+            />
+          </div>
+        </div>
+
+        <!-- Gallery Item 3 -->
+        <div class="masonry-item bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 mb-6">
+          <div class="relative">
+            <img 
+              src="/images/whalesketchbook2.png" 
+              alt="Whale Sketchbook Studies 2"
+              class="w-full h-auto object-contain"
+            />
+          </div>
+        </div>
+
+
+      </div>
+    </div>
+
+
+    <!-- Navigation -->
+    <div class="mt-12 pt-8 border-t border-gray-200">
+      <div class="flex justify-between items-center">
+        <a href="/graphic-design" class="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium">
+          ← Back to Graphic Design
+        </a>
+        <div class="text-sm text-gray-500">
+          Artistic Work
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    /* Masonry layout using CSS columns */
+    .masonry-container {
+      column-count: 1;
+      column-gap: 2rem;
+      column-fill: balance;
+    }
+    
+    /* Responsive masonry columns */
+    @media (min-width: 768px) {
+      .masonry-container {
+        column-count: 2;
+      }
+    }
+    
+    @media (min-width: 1024px) {
+      .masonry-container {
+        column-count: 3;
+      }
+    }
+    
+    /* Masonry items */
+    .masonry-item {
+      break-inside: avoid;
+      page-break-inside: avoid;
+      display: inline-block;
+      width: 100%;
+      margin-bottom: 2rem;
+    }
+    
+    /* Natural image sizing - no cropping */
+    .masonry-item img {
+      display: block;
+      width: 100%;
+      height: auto;
+      object-fit: contain;
+      transition: transform 0.3s ease;
+    }
+    
+    /* Card hover effects */
+    .masonry-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+    
+    /* Image zoom effect on hover */
+    .masonry-item:hover img {
+      transform: scale(1.05);
+    }
+    
+    /* Ensure image container doesn't show overflow */
+    .masonry-item .relative {
+      overflow: hidden;
+    }
+    
+    /* Prevent column breaks within cards */
+    .masonry-item * {
+      break-inside: avoid;
+    }
+  </style>
+</BaseLayout>

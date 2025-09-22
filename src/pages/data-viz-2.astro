@@ -1,0 +1,968 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<script src="https://d3js.org/d3.v7.min.js"></script>
+
+<BaseLayout title="Mosquitoes - Resilience Continuum" description="Data visualization exploring mosquito population dynamics and disease transmission patterns">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Hero Section -->
+    <div class="text-center mb-12">
+      <h1 class="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
+        Mosquitoes
+      </h1>
+      <p class="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+        Explore the drawers deep within London's Natural History Museum
+      </p>
+      <p class="text-lg text-gray-600 max-w-4xl mx-auto leading-relaxed mt-4">
+        London’s Natural History Museum has a collection of mosquitoes going back to the 1880s. These animals are important to public health, since they could be used to study the history of vector-borne diseases like malaria, dengue fever, and West Nile virus. 
+      </p>
+    </div>
+
+    <!-- Specimen Gallery -->
+    <div class="mb-16">
+      <div class="bg-white rounded-lg overflow-hidden">
+        
+        <!-- Loading indicator -->
+        <div id="gallery-loading" class="p-8 text-center">
+          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
+          <p class="text-gray-600">Loading specimen gallery...</p>
+        </div>
+        
+        <!-- Gallery container -->
+        <div id="specimen-gallery" class="p-6 hidden">
+          <div class="masonry-container" id="gallery-grid">
+            <!-- Cards will be inserted here by JavaScript -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+
+
+    <!-- Data Explorer Dashboard -->
+    <div class="mt-16">
+      <div class="text-center mb-8">
+        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          Explore the Collection
+        </h2>
+        <p class="text-lg text-gray-600 max-w-3xl mx-auto">
+          There are many different species of mosquito which live all over the world. Below, filter and explore over 9,000 mosquito specimens from the Natural History Museum's collection. Each row represents another one of the little preserved insects pictured above. Filter to see what species are in the museum’s collection. 
+        </p>
+      </div>
+
+      <div class="bg-white rounded-lg overflow-hidden">
+        <!-- Filter Controls -->
+        <div class="p-6 bg-gray-50 border-b">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- Genus Filter -->
+            <div>
+              <label for="genus-filter" class="block text-sm font-medium text-gray-700 mb-1">Genus</label>
+              <select id="genus-filter" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                <option value="">All Genera</option>
+              </select>
+            </div>
+
+            <!-- Higher Geography Filter -->
+            <div>
+              <label for="geography-filter" class="block text-sm font-medium text-gray-700 mb-1">Geography</label>
+              <select id="geography-filter" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                <option value="">All Locations</option>
+              </select>
+            </div>
+
+            <!-- Life Stage Filter -->
+            <div>
+              <label for="lifestage-filter" class="block text-sm font-medium text-gray-700 mb-1">Life Stage</label>
+              <select id="lifestage-filter" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                <option value="">All Stages</option>
+              </select>
+            </div>
+
+            <!-- Sex Filter -->
+            <div>
+              <label for="sex-filter" class="block text-sm font-medium text-gray-700 mb-1">Sex</label>
+              <select id="sex-filter" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                <option value="">All</option>
+              </select>
+            </div>
+
+            <!-- Locality Filter -->
+            <div>
+              <label for="locality-filter" class="block text-sm font-medium text-gray-700 mb-1">Locality</label>
+              <select id="locality-filter" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                <option value="">All Localities</option>
+              </select>
+            </div>
+
+            <!-- Preservative Filter -->
+            <div>
+              <label for="preservative-filter" class="block text-sm font-medium text-gray-700 mb-1">Preservative</label>
+              <select id="preservative-filter" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                <option value="">All Types</option>
+              </select>
+            </div>
+
+            <!-- Year Filter -->
+            <div>
+              <label for="year-filter" class="block text-sm font-medium text-gray-700 mb-1">Year</label>
+              <select id="year-filter" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                <option value="">All Years</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Clear Filters Button -->
+          <div class="mt-4 flex justify-between items-center">
+            <button id="clear-filters" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors">
+              Clear All Filters
+            </button>
+            <div id="result-count" class="text-sm text-gray-600">
+              Loading data...
+            </div>
+          </div>
+        </div>
+
+        <!-- Histogram -->
+        <div class="p-4 sm:p-6 border-b bg-gray-50">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">Distribution by Genus</h3>
+          <div id="histogram-container" class="bg-white rounded-lg p-2 sm:p-4 shadow-sm overflow-x-auto">
+            <div id="histogram-loading" class="text-center py-8">
+              <div class="animate-pulse">
+                <div class="h-4 bg-gray-200 rounded w-1/4 mx-auto mb-2"></div>
+                <div class="h-32 bg-gray-200 rounded"></div>
+              </div>
+            </div>
+            <div id="histogram-chart" class="hidden min-w-full"></div>
+          </div>
+        </div>
+
+        <!-- Results Table -->
+        <div class="overflow-x-auto">
+          <div id="dashboard-loading" class="p-8 text-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
+            <p class="text-gray-600">Loading collection data...</p>
+          </div>
+
+          <div id="dashboard-content" class="hidden">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Genus</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sex</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Life Stage</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Locality</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Geography</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Preservative</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Year</th>
+                </tr>
+              </thead>
+              <tbody id="data-table-body" class="bg-white divide-y divide-gray-200">
+                <!-- Data will be inserted here -->
+              </tbody>
+            </table>
+
+            <!-- Pagination -->
+            <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+              <div class="flex-1 flex justify-between sm:hidden">
+                <button id="prev-page-mobile" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                  Previous
+                </button>
+                <button id="next-page-mobile" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                  Next
+                </button>
+              </div>
+              <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                <div>
+                  <p class="text-sm text-gray-700">
+                    Showing <span id="showing-from" class="font-medium">1</span> to <span id="showing-to" class="font-medium">50</span> of <span id="total-results" class="font-medium">0</span> results
+                  </p>
+                </div>
+                <div>
+                  <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                    <button id="prev-page" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                      <span class="sr-only">Previous</span>
+                      <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                      </svg>
+                    </button>
+                    <span id="page-info" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                      Page 1
+                    </span>
+                    <button id="next-page" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                      <span class="sr-only">Next</span>
+                      <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                      </svg>
+                    </button>
+                  </nav>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Data Citation -->
+    <div class="mt-12 bg-white rounded-lg shadow-sm border p-6">
+      <h3 class="text-lg font-semibold text-gray-900 mb-3">Data Source</h3>
+      <p class="text-sm text-gray-600 mb-3">
+        Natural History Museum (2014). Collection specimens [Data set]. Natural History Museum. <a href="https://doi.org/10.5519/qd.qv131qog" class="text-blue-600 hover:text-blue-800" target="_blank" rel="noopener">https://doi.org/10.5519/qd.qv131qog</a>
+      </p>
+      <p class="text-sm text-gray-600">
+        Natural History Museum (2025). Data Portal query on 1 resources created at 2025-09-22 01:13:42.898321 PID <a href="https://doi.org/10.5519/qd.vfhq6c6m" class="text-blue-600 hover:text-blue-800" target="_blank" rel="noopener">https://doi.org/10.5519/qd.vfhq6c6m</a>
+      </p>
+    </div>
+  </div>
+
+  <script>
+    // Global D3 declaration
+    declare const d3: any;
+
+    // Global variables
+
+    // Load mosquito images from static files
+    async function loadMosquitoGallery() {
+      try {
+        // Static mosquito specimens from the mosquitoimages folder
+        const specimens = [
+          {
+            imageUrl: '/images/mosquitoimages/Aedes (Stegomyia) UK Female 2022.jpeg',
+            fileName: 'Aedes (Stegomyia) UK Female 2022',
+            scientificName: 'Aedes (Stegomyia)',
+            sex: 'Female',
+            year: '2022',
+            country: 'UK'
+          },
+          {
+            imageUrl: '/images/mosquitoimages/Aedes (Stegomyia) UK Male 2016.jpeg',
+            fileName: 'Aedes (Stegomyia) UK Male 2016',
+            scientificName: 'Aedes (Stegomyia)',
+            sex: 'Male',
+            year: '2016',
+            country: 'UK'
+          },
+          {
+            imageUrl: '/images/mosquitoimages/Aedes (Ochlerotatus) UK Female 2022.jpeg',
+            fileName: 'Aedes (Ochlerotatus) UK Female 2022',
+            scientificName: 'Aedes (Ochlerotatus)',
+            sex: 'Female',
+            year: '2022',
+            country: 'UK'
+          },
+          {
+            imageUrl: '/images/mosquitoimages/Culex (Melanoconion) UK Female 2017.jpeg',
+            fileName: 'Culex (Melanoconion) UK Female 2017',
+            scientificName: 'Culex (Melanoconion)',
+            sex: 'Female',
+            year: '2017',
+            country: 'UK'
+          },
+          {
+            imageUrl: '/images/mosquitoimages/Anopheles (Cellia) UK Female 2022.jpeg',
+            fileName: 'Anopheles (Cellia) UK Female 2022',
+            scientificName: 'Anopheles (Cellia)',
+            sex: 'Female',
+            year: '2022',
+            country: 'UK'
+          }
+        ];
+        
+        console.log(`Loaded ${specimens.length} mosquito specimens from static files`);
+        
+        hideLoadingIndicator();
+        displayGallery(specimens);
+        
+      } catch (error) {
+        console.error('Error loading mosquito gallery:', error);
+        hideLoadingIndicator();
+        showError();
+      }
+    }
+
+
+    // Hide loading indicator and show gallery
+    function hideLoadingIndicator() {
+      const loading = document.getElementById('gallery-loading');
+      const gallery = document.getElementById('specimen-gallery');
+      
+      console.log('Hiding loading indicator...', {loading: !!loading, gallery: !!gallery});
+      
+      if (loading) {
+        loading.style.display = 'none';
+        console.log('Loading indicator hidden');
+      }
+      if (gallery) {
+        gallery.classList.remove('hidden');
+        console.log('Gallery shown');
+      }
+    }
+
+    // Show error message
+    function showError() {
+      const loading = document.getElementById('gallery-loading');
+      if (loading) {
+        loading.innerHTML = `
+          <div class="text-center">
+            <div class="w-16 h-16 bg-red-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+              <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+            <p class="text-red-600">Error loading specimen gallery</p>
+          </div>
+        `;
+      }
+    }
+
+    // Display the gallery
+    function displayGallery(specimens: any[]) {
+      const galleryGrid = document.getElementById('gallery-grid');
+      console.log('Displaying gallery...', {galleryGrid: !!galleryGrid, specimens: specimens.length});
+      
+      if (!galleryGrid) {
+        console.log('ERROR: Gallery grid element not found!');
+        return;
+      }
+      
+      const cardsHTML = specimens.map((specimen: any) => {
+        return `
+          <div class="masonry-item bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 mb-6 block">
+            <div class="relative">
+              <img 
+                src="${specimen.imageUrl}" 
+                alt="${specimen.fileName || specimen.scientificName}"
+                class="w-full h-auto object-contain"
+                onload="console.log('Image loaded successfully:', this.src);"
+                onerror="console.log('Image failed to load:', this.src); this.parentElement.parentElement.style.display='none';"
+                loading="lazy"
+              />
+              <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+                <h3 class="text-white font-semibold text-lg mb-1">${specimen.scientificName}</h3>
+                <p class="text-white/90 text-sm">${specimen.sex} • ${specimen.year} • ${specimen.country}</p>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      console.log('Setting gallery HTML...', cardsHTML.length, 'characters');
+      galleryGrid.innerHTML = cardsHTML;
+      console.log('Gallery HTML set successfully');
+    }
+
+    // Initialize gallery when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      loadMosquitoGallery();
+      loadDashboardData();
+    });
+
+    // Dashboard functionality
+    let dashboardData: any[] = [];
+    let filteredData: any[] = [];
+    let currentPage = 1;
+    const itemsPerPage = 50;
+
+    // Load and parse the comprehensive CSV data for the dashboard
+    async function loadDashboardData() {
+      try {
+        const response = await fetch('/data/allnhmspecimensculicidae9.21.25/allnhmspecimensculicidae.csv');
+        const csvText = await response.text();
+        const lines = csvText.split('\n');
+        
+        // Parse CSV header to get column indices
+        const headers = lines[0].split(',');
+        const columnMap: {[key: string]: number} = {};
+        headers.forEach((header, index) => {
+          columnMap[header.trim()] = index;
+        });
+
+        console.log('CSV headers loaded, total columns:', headers.length);
+
+        // Parse data rows
+        const specimens = [];
+        for (let i = 1; i < lines.length; i++) {
+          if (!lines[i].trim()) continue;
+          
+          try {
+            // Parse CSV line - handle commas within quoted fields
+            const row = parseCSVLine(lines[i]);
+            
+            if (row.length > Math.max(...Object.values(columnMap))) {
+              const specimen = {
+                genus: cleanValue(row[columnMap['genus']]),
+                higherGeography: cleanValue(row[columnMap['higherGeography']]),
+                lifeStage: cleanValue(row[columnMap['lifeStage']]),
+                locality: cleanValue(row[columnMap['locality']]),
+                preservative: cleanValue(row[columnMap['preservative']]),
+                scientificName: cleanValue(row[columnMap['scientificName']]),
+                sex: cleanValue(row[columnMap['sex']]),
+                year: cleanValue(row[columnMap['year']])
+              };
+
+              // Only include specimens with essential data
+              if (specimen.scientificName && specimen.scientificName !== 'Unknown') {
+                specimens.push(specimen);
+              }
+            }
+          } catch (error) {
+            console.log(`Error parsing line ${i}:`, error);
+            continue;
+          }
+        }
+
+        console.log(`Loaded ${specimens.length} specimens for dashboard`);
+        dashboardData = specimens;
+        filteredData = [...specimens];
+        
+        populateFilterOptions();
+        updateDashboard();
+        updateHistogram();
+        hideDashboardLoading();
+        
+      } catch (error) {
+        console.error('Error loading dashboard data:', error);
+        showDashboardError();
+      }
+    }
+
+    // Parse CSV line handling quoted fields with commas
+    function parseCSVLine(line: string) {
+      const result = [];
+      let current = '';
+      let inQuotes = false;
+      
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        
+        if (char === '"') {
+          inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+          result.push(current);
+          current = '';
+        } else {
+          current += char;
+        }
+      }
+      
+      result.push(current); // Add the last field
+      return result;
+    }
+
+    // Clean and normalize values
+    function cleanValue(value: any) {
+      if (!value) return 'Unknown';
+      let cleaned = value.toString().replace(/^"|"$/g, '').trim() || 'Unknown';
+      
+      // Normalize common values to have consistent capitalization
+      if (cleaned.toLowerCase() === 'adult') cleaned = 'Adult';
+      if (cleaned.toLowerCase() === 'male') cleaned = 'Male';
+      if (cleaned.toLowerCase() === 'female') cleaned = 'Female';
+      
+      return cleaned;
+    }
+
+    // Populate filter dropdown options
+    function populateFilterOptions() {
+      const filters: {[key: string]: Set<string>} = {
+        'genus-filter': new Set<string>(),
+        'geography-filter': new Set<string>(),
+        'lifestage-filter': new Set<string>(),
+        'locality-filter': new Set<string>(),
+        'preservative-filter': new Set<string>(),
+        'sex-filter': new Set<string>(),
+        'year-filter': new Set<string>()
+      };
+
+      // Collect unique values
+      dashboardData.forEach(specimen => {
+        if (specimen.genus && specimen.genus !== 'Unknown') filters['genus-filter'].add(specimen.genus);
+        if (specimen.higherGeography && specimen.higherGeography !== 'Unknown') filters['geography-filter'].add(specimen.higherGeography);
+        if (specimen.lifeStage && specimen.lifeStage !== 'Unknown') filters['lifestage-filter'].add(specimen.lifeStage);
+        if (specimen.locality && specimen.locality !== 'Unknown') filters['locality-filter'].add(specimen.locality);
+        if (specimen.preservative && specimen.preservative !== 'Unknown') filters['preservative-filter'].add(specimen.preservative);
+        if (specimen.sex && specimen.sex !== 'Unknown') filters['sex-filter'].add(specimen.sex);
+        if (specimen.year && specimen.year !== 'Unknown') filters['year-filter'].add(specimen.year);
+      });
+
+      // Populate dropdowns
+      Object.keys(filters).forEach(filterId => {
+        const select = document.getElementById(filterId) as HTMLSelectElement;
+        if (!select) return;
+        
+        const values = Array.from(filters[filterId]).sort();
+        
+        // Clear existing options except the first "All" option
+        while (select.children.length > 1) {
+          const lastChild = select.lastChild;
+          if (lastChild) select.removeChild(lastChild);
+        }
+        
+        values.forEach(value => {
+          const option = document.createElement('option');
+          option.value = value;
+          option.textContent = value;
+          select.appendChild(option);
+        });
+      });
+
+      console.log('Filter options populated');
+    }
+
+    // Apply filters to data
+    function applyFilters() {
+      const genusFilter = (document.getElementById('genus-filter') as HTMLSelectElement)?.value || '';
+      const geographyFilter = (document.getElementById('geography-filter') as HTMLSelectElement)?.value || '';
+      const lifestageFilter = (document.getElementById('lifestage-filter') as HTMLSelectElement)?.value || '';
+      const localityFilter = (document.getElementById('locality-filter') as HTMLSelectElement)?.value || '';
+      const preservativeFilter = (document.getElementById('preservative-filter') as HTMLSelectElement)?.value || '';
+      const sexFilter = (document.getElementById('sex-filter') as HTMLSelectElement)?.value || '';
+      const yearFilter = (document.getElementById('year-filter') as HTMLSelectElement)?.value || '';
+
+      filteredData = dashboardData.filter(specimen => {
+        return (!genusFilter || specimen.genus === genusFilter) &&
+               (!geographyFilter || specimen.higherGeography === geographyFilter) &&
+               (!lifestageFilter || specimen.lifeStage === lifestageFilter) &&
+               (!localityFilter || specimen.locality === localityFilter) &&
+               (!preservativeFilter || specimen.preservative === preservativeFilter) &&
+               (!sexFilter || specimen.sex === sexFilter) &&
+               (!yearFilter || specimen.year === yearFilter);
+      });
+
+      currentPage = 1;
+      updateDashboard();
+      updateHistogram();
+    }
+
+    // Update dashboard display
+    function updateDashboard() {
+      const tableBody = document.getElementById('data-table-body');
+      const resultCount = document.getElementById('result-count');
+      const showingFrom = document.getElementById('showing-from');
+      const showingTo = document.getElementById('showing-to');
+      const totalResults = document.getElementById('total-results');
+      const pageInfo = document.getElementById('page-info');
+
+      // Update result count
+      if (resultCount) resultCount.textContent = `Showing ${filteredData.length} of ${dashboardData.length} specimens`;
+      if (totalResults) totalResults.textContent = filteredData.length.toString();
+
+      // Calculate pagination
+      const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const endIndex = Math.min(startIndex + itemsPerPage, filteredData.length);
+      const pageData = filteredData.slice(startIndex, endIndex);
+
+      // Update pagination info
+      if (showingFrom) showingFrom.textContent = (filteredData.length > 0 ? startIndex + 1 : 0).toString();
+      if (showingTo) showingTo.textContent = endIndex.toString();
+      if (pageInfo) pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+
+      // Update pagination buttons
+      const prevButtons = document.querySelectorAll('#prev-page, #prev-page-mobile');
+      const nextButtons = document.querySelectorAll('#next-page, #next-page-mobile');
+      
+      prevButtons.forEach(btn => (btn as HTMLButtonElement).disabled = currentPage <= 1);
+      nextButtons.forEach(btn => (btn as HTMLButtonElement).disabled = currentPage >= totalPages);
+
+      // Update table
+      if (tableBody) {
+        tableBody.innerHTML = '';
+        pageData.forEach(specimen => {
+          const row = document.createElement('tr');
+          row.className = 'hover:bg-gray-50';
+          row.innerHTML = `
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${specimen.genus}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${specimen.sex}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${specimen.lifeStage}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 max-w-xs truncate" title="${specimen.locality}">${specimen.locality}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 max-w-xs truncate" title="${specimen.higherGeography}">${specimen.higherGeography}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${specimen.preservative}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${specimen.year}</td>
+          `;
+          tableBody.appendChild(row);
+        });
+      }
+    }
+
+    // Hide dashboard loading indicator
+    function hideDashboardLoading() {
+      const loading = document.getElementById('dashboard-loading');
+      const content = document.getElementById('dashboard-content');
+      
+      if (loading) loading.style.display = 'none';
+      if (content) content.classList.remove('hidden');
+    }
+
+    // Show dashboard error
+    function showDashboardError() {
+      const loading = document.getElementById('dashboard-loading');
+      if (loading) {
+        loading.innerHTML = `
+          <div class="text-center">
+            <div class="w-16 h-16 bg-red-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+              <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+            <p class="text-red-600">Error loading dashboard data</p>
+          </div>
+        `;
+      }
+    }
+
+    // Debounce function for search input
+    function debounce(func: Function, wait: number) {
+      let timeout: ReturnType<typeof setTimeout>;
+      return function executedFunction(...args: any[]) {
+        const later = () => {
+          clearTimeout(timeout);
+          func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+      };
+    }
+
+    // D3.js Histogram functionality
+    function updateHistogram() {
+      const container = document.getElementById('histogram-chart');
+      const loading = document.getElementById('histogram-loading');
+      
+      if (!container) return;
+      
+      // Count specimens by genus
+      const genusCounts: {[key: string]: number} = {};
+      filteredData.forEach(specimen => {
+        const genus = specimen.genus || 'Unknown';
+        genusCounts[genus] = (genusCounts[genus] || 0) + 1;
+      });
+
+      // Check if all data is being displayed (no filters applied)
+      const allDataDisplayed = filteredData.length === dashboardData.length;
+      
+      let data: {genus: string, count: number}[];
+      
+      if (allDataDisplayed) {
+        // When all data is displayed, group genera with < 50 specimens into "Other"
+        const majorGenera: {genus: string, count: number}[] = [];
+        let otherCount = 0;
+
+        Object.entries(genusCounts).forEach(([genus, count]) => {
+          if (count >= 50) {
+            majorGenera.push({ genus, count });
+          } else {
+            otherCount += count;
+          }
+        });
+
+        // Sort major genera by count (descending)
+        majorGenera.sort((a, b) => b.count - a.count);
+
+        // Add "Other" category if there are any genera with < 50 specimens
+        data = [...majorGenera];
+        if (otherCount > 0) {
+          data.push({ genus: 'Other', count: otherCount });
+        }
+      } else {
+        // When filters are applied, show all genera individually
+        data = Object.entries(genusCounts)
+          .map(([genus, count]) => ({ genus, count }))
+          .sort((a, b) => b.count - a.count);
+      }
+
+      // Show chart and hide loading
+      if (loading) loading.classList.add('hidden');
+      container.classList.remove('hidden');
+
+      // Draw histogram
+      drawD3Histogram(container, data);
+    }
+
+    function drawD3Histogram(container: HTMLElement, data: {genus: string, count: number}[]) {
+      // Clear previous chart
+      d3.select(container).selectAll("*").remove();
+
+      if (data.length === 0) {
+        d3.select(container)
+          .append("div")
+          .style("text-align", "center")
+          .style("padding", "2rem")
+          .style("color", "#6B7280")
+          .text("No data to display. Please try different filters.");
+        return;
+      }
+
+      // Responsive dimensions
+      const containerWidth = container.clientWidth;
+      const isMobile = containerWidth < 640;
+      
+      // Calculate dimensions
+      const margin = { 
+        top: 20, 
+        right: 20, 
+        bottom: isMobile ? 80 : 60, 
+        left: isMobile ? 50 : 60 
+      };
+      
+      // Make chart wide enough to accommodate all bars with narrow width
+      const barWidth = isMobile ? 8 : 12;
+      const barSpacing = isMobile ? 2 : 3;
+      const minChartWidth = data.length * (barWidth + barSpacing);
+      const chartWidth = Math.max(containerWidth - margin.left - margin.right, minChartWidth);
+      const width = chartWidth + margin.left + margin.right;
+      const height = isMobile ? 250 : 300;
+
+      // Create SVG
+      const svg = d3.select(container)
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .style("min-width", `${width}px`);
+
+      const g = svg.append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+      // Scales
+      const xScale = d3.scaleBand()
+        .domain(data.map(d => d.genus))
+        .range([0, chartWidth])
+        .paddingInner(barSpacing / (barWidth + barSpacing))
+        .paddingOuter(0.1);
+
+      const yScale = d3.scaleLinear()
+        .domain([0, d3.max(data, (d: any) => d.count) || 0])
+        .range([height - margin.top - margin.bottom, 0]);
+
+      // Color scale
+      const colorScale = d3.scaleOrdinal()
+        .domain(data.map(d => d.genus))
+        .range([
+          '#DC2626', '#EA580C', '#D97706', '#CA8A04', '#65A30D',
+          '#16A34A', '#059669', '#0891B2', '#0284C7', '#2563EB',
+          '#7C3AED', '#C026D3', '#DB2777', '#E11D48', '#F59E0B'
+        ]);
+
+      // Create bars
+      g.selectAll(".bar")
+        .data(data)
+        .enter().append("rect")
+        .attr("class", "bar")
+        .attr("x", (d: any) => xScale(d.genus) || 0)
+        .attr("width", Math.min(barWidth, xScale.bandwidth()))
+        .attr("y", (d: any) => yScale(d.count))
+        .attr("height", (d: any) => (height - margin.top - margin.bottom) - yScale(d.count))
+        .attr("fill", (d: any) => colorScale(d.genus) as string)
+        .style("opacity", 0.8)
+        .on("mouseover", function(this: any, event: any, d: any) {
+          d3.select(this).style("opacity", 1);
+          
+          // Create tooltip
+          const tooltip = d3.select("body").append("div")
+            .attr("class", "histogram-tooltip")
+            .style("position", "absolute")
+            .style("background", "rgba(0, 0, 0, 0.8)")
+            .style("color", "white")
+            .style("padding", "8px")
+            .style("border-radius", "4px")
+            .style("font-size", "12px")
+            .style("pointer-events", "none")
+            .style("z-index", "1000")
+            .html(`<strong>${d.genus}</strong><br/>${d.count} specimens`);
+          
+          tooltip
+            .style("left", (event.pageX + 10) + "px")
+            .style("top", (event.pageY - 10) + "px");
+        })
+        .on("mouseout", function(this: any) {
+          d3.select(this).style("opacity", 0.8);
+          d3.selectAll(".histogram-tooltip").remove();
+        });
+
+      // Add count labels on top of bars (only for larger bars to avoid clutter)
+      g.selectAll(".bar-label")
+        .data(data.filter((d: any) => d.count > (d3.max(data, (d: any) => d.count) || 0) * 0.05))
+        .enter().append("text")
+        .attr("class", "bar-label")
+        .attr("x", (d: any) => (xScale(d.genus) || 0) + Math.min(barWidth, xScale.bandwidth()) / 2)
+        .attr("y", (d: any) => yScale(d.count) - 5)
+        .attr("text-anchor", "middle")
+        .style("font-size", isMobile ? "10px" : "11px")
+        .style("fill", "#374151")
+        .text((d: any) => d.count);
+
+      // X-axis
+      const xAxis = g.append("g")
+        .attr("transform", `translate(0,${height - margin.top - margin.bottom})`)
+        .call(d3.axisBottom(xScale).tickSize(0))
+        .style("font-size", isMobile ? "8px" : "10px");
+
+      // Rotate x-axis labels
+      xAxis.selectAll("text")
+        .style("text-anchor", "end")
+        .attr("dx", "-.8em")
+        .attr("dy", ".15em")
+        .attr("transform", `rotate(-${isMobile ? 45 : 35})`);
+
+      // Y-axis
+      g.append("g")
+        .call(d3.axisLeft(yScale).ticks(isMobile ? 4 : 6))
+        .style("font-size", isMobile ? "8px" : "10px");
+
+      // Add grid lines
+      g.selectAll(".grid-line")
+        .data(yScale.ticks(isMobile ? 4 : 6))
+        .enter().append("line")
+        .attr("class", "grid-line")
+        .attr("x1", 0)
+        .attr("x2", chartWidth)
+        .attr("y1", (d: any) => yScale(d))
+        .attr("y2", (d: any) => yScale(d))
+        .style("stroke", "#F3F4F6")
+        .style("stroke-width", 0.5)
+        .style("opacity", 0.7);
+
+      // Y-axis label
+      g.append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 0 - margin.left)
+        .attr("x", 0 - (height - margin.top - margin.bottom) / 2)
+        .attr("dy", "1em")
+        .style("text-anchor", "middle")
+        .style("font-size", isMobile ? "10px" : "12px")
+        .style("fill", "#6B7280")
+        .text("Number of Specimens");
+    }
+
+    // Dashboard event listeners (separate from gallery)
+    document.addEventListener('DOMContentLoaded', function() {
+      // Filter event listeners
+      const filterIds = ['genus-filter', 'geography-filter', 'lifestage-filter', 'locality-filter', 'preservative-filter', 'sex-filter', 'year-filter'];
+      filterIds.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) element.addEventListener('change', applyFilters);
+      });
+
+      // Clear filters button
+      const clearFilters = document.getElementById('clear-filters');
+      if (clearFilters) {
+        clearFilters.addEventListener('click', function() {
+          filterIds.forEach(id => {
+            const element = document.getElementById(id) as HTMLSelectElement;
+            if (element) element.value = '';
+          });
+          applyFilters();
+        });
+      }
+
+      // Pagination buttons
+      const prevButtons = document.querySelectorAll('#prev-page, #prev-page-mobile');
+      const nextButtons = document.querySelectorAll('#next-page, #next-page-mobile');
+      
+      prevButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+          if (currentPage > 1) {
+            currentPage--;
+            updateDashboard();
+          }
+        });
+      });
+
+      nextButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+          const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+          if (currentPage < totalPages) {
+            currentPage++;
+            updateDashboard();
+          }
+        });
+      });
+
+      // Handle window resize for histogram
+      let resizeTimeout: ReturnType<typeof setTimeout>;
+      window.addEventListener('resize', function() {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+          if (filteredData.length > 0) {
+            updateHistogram();
+          }
+        }, 250);
+      });
+    });
+  </script>
+
+  <style>
+    /* Masonry layout using CSS columns */
+    .masonry-container {
+      column-count: 1;
+      column-gap: 2rem;
+      column-fill: balance;
+    }
+    
+    /* Responsive masonry columns */
+    @media (min-width: 768px) {
+      .masonry-container {
+        column-count: 2;
+      }
+    }
+    
+    @media (min-width: 1024px) {
+      .masonry-container {
+        column-count: 3;
+      }
+    }
+    
+    /* Masonry items */
+    .masonry-item {
+      break-inside: avoid;
+      page-break-inside: avoid;
+      display: inline-block;
+      width: 100%;
+      margin-bottom: 2rem;
+    }
+    
+    /* Natural image sizing - no cropping */
+    .masonry-item img {
+      display: block;
+      width: 100%;
+      height: auto;
+      object-fit: contain;
+      transition: transform 0.3s ease;
+    }
+    
+    /* Smooth overlay gradient */
+    .bg-gradient-to-t {
+      background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.3) 50%, transparent 100%);
+    }
+    
+    /* Text shadow for better readability on images */
+    .masonry-item .text-white {
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+    }
+    
+    /* Card hover effects */
+    .masonry-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+    
+    /* Image zoom effect on hover */
+    .masonry-item:hover img {
+      transform: scale(1.05);
+    }
+    
+    /* Ensure image container doesn't show overflow */
+    .masonry-item .relative {
+      overflow: hidden;
+    }
+    
+    /* Prevent column breaks within cards */
+    .masonry-item * {
+      break-inside: avoid;
+    }
+  </style>
+</BaseLayout>
+
+
