@@ -4,6 +4,6 @@ import tailwind from '@astrojs/tailwind';
 export default defineConfig({
   integrations: [tailwind()],
   output: 'static',
-  site: 'https://resiliencecontinuum.com'
+  site: 'https://cnyke.github.io'
 });
 
