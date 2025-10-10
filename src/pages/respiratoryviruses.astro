@@ -7,38 +7,38 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 <BaseLayout title="Respiratory Viruses - Resilience Continuum" description="Data visualization exploring respiratory virus patterns and transmission dynamics">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Hero Section -->
-    <div class="text-center mb-12">
-      <h1 class="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
+    <div class="text-center mb-8 md:mb-12">
+      <h1 class="text-3xl sm:text-4xl md:text-6xl font-bold text-gray-900 mb-4 md:mb-6">
         Respiratory Viruses in Minnesota
       </h1>
-        <p class="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+        <p class="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed px-4">
           This data from October 9th, 2025 explores trends in viral respiratory illnesses. 
         </p>
-          <p class="text-lg text-gray-600 max-w-4xl mx-auto leading-relaxed mt-4">
-            Cold and flu season is from October through mid-May. These data visualizations explore viral trends using <a href="https://www.health.state.mn.us/diseases/respiratory/stats/index.html" class="text-blue-600 hover:text-blue-800" target="_blank" rel="noopener">Minnesota Department of Health data</a>. The first data visualization tracks hospitalizations due to RSV, influenza, and COVID-19. The second covers laboratory-confirmed viruses which cause cold-like symptoms. Note that seasonal coronavirus is distinct from SARS-CoV-2, the virus that causes COVID-19. You can filter by time period and pathogen using the dropdown menus.
+          <p class="text-base sm:text-lg text-gray-600 max-w-4xl mx-auto leading-relaxed mt-4 px-4">
+            Cold and flu season is from October through mid-May. These data visualizations explore viral trends using <a href="https://www.health.state.mn.us/diseases/respiratory/stats/index.html" class="text-blue-600 hover:text-blue-800 break-words" target="_blank" rel="noopener">Minnesota Department of Health data</a>. The first data visualization tracks hospitalizations due to RSV, influenza, and COVID-19. The second covers laboratory-confirmed viruses which cause cold-like symptoms. Note that seasonal coronavirus is distinct from SARS-CoV-2, the virus that causes COVID-19. You can filter by time period and pathogen using the dropdown menus.
           </p>
     </div>
 
     <!-- Hospitalization Data Chart -->
     <div class="mb-16">
       <div class="bg-white rounded-lg shadow-sm border overflow-hidden">
-        <div class="p-6 bg-gray-50 border-b">
-          <h2 class="text-2xl font-bold text-gray-900 mb-4">Statewide Hospitalizations Since 2022</h2>
-          <p class="text-gray-600 mb-4">
+        <div class="p-4 sm:p-6 bg-gray-50 border-b">
+          <h2 class="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">Statewide Hospitalizations Since 2022</h2>
+          <p class="text-sm sm:text-base text-gray-600 mb-4">
             Weekly hospitalization rates by pathogen from Minnesota Department of Health surveillance data.
           </p>
           
           <!-- Hospitalization Controls -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
               <label for="hosp-pathogen-filter" class="block text-sm font-medium text-gray-700 mb-1">Filter by Pathogen</label>
-              <select id="hosp-pathogen-filter" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500">
+              <select id="hosp-pathogen-filter" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500">
                 <option value="">All Pathogens</option>
               </select>
             </div>
             <div>
               <label for="hosp-date-range" class="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
-              <select id="hosp-date-range" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500">
+              <select id="hosp-date-range" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500">
                 <option value="all">All Time</option>
                 <option value="1year">Last 12 Months</option>
                 <option value="6months">Last 6 Months</option>
@@ -56,14 +56,14 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
         <!-- Chart container -->
         <div id="hosp-chart" class="hidden">
-          <div class="p-4">
-            <div id="hosp-container" class="w-full" style="height: 400px;"></div>
+          <div class="p-2 sm:p-4">
+            <div id="hosp-container" class="w-full chart-container"></div>
           </div>
           <!-- Citation for hospitalization data -->
           <div class="px-4 pb-4 text-xs text-gray-500 border-t bg-gray-50">
             <p class="mt-2">
               <strong>Data Source:</strong> Minnesota Department of Health. Hospitalization Data - Viral Respiratory Illness in Minnesota. 
-              <a href="https://www.health.state.mn.us/diseases/respiratory/stats/hosp.html" class="text-blue-600 hover:text-blue-800" target="_blank" rel="noopener">https://www.health.state.mn.us/diseases/respiratory/stats/hosp.html</a>
+              <a href="https://www.health.state.mn.us/diseases/respiratory/stats/hosp.html" class="text-blue-600 hover:text-blue-800 break-words" target="_blank" rel="noopener">https://www.health.state.mn.us/diseases/respiratory/stats/hosp.html</a>
             </p>
           </div>
         </div>
@@ -73,23 +73,23 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     <!-- Laboratory Data Chart -->
     <div class="mb-16">
       <div class="bg-white rounded-lg shadow-sm border overflow-hidden">
-        <div class="p-6 bg-gray-50 border-b">
-          <h2 class="text-2xl font-bold text-gray-900 mb-4">Laboratory System Molecular Data</h2>
-          <p class="text-gray-600 mb-4">
+        <div class="p-4 sm:p-6 bg-gray-50 border-b">
+          <h2 class="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">Laboratory System Molecular Data</h2>
+          <p class="text-sm sm:text-base text-gray-600 mb-4">
             Weekly laboratory detections by pathogen from Minnesota's molecular testing surveillance system.
           </p>
           
           <!-- Laboratory Controls -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
               <label for="lab-pathogen-filter" class="block text-sm font-medium text-gray-700 mb-1">Filter by Pathogen</label>
-              <select id="lab-pathogen-filter" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+              <select id="lab-pathogen-filter" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                 <option value="">All Pathogens</option>
               </select>
             </div>
             <div>
               <label for="lab-date-range" class="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
-              <select id="lab-date-range" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+              <select id="lab-date-range" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                 <option value="all">All Time</option>
                 <option value="6months">Last 6 Months</option>
                 <option value="3months">Last 3 Months</option>
@@ -107,14 +107,14 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
         <!-- Chart container -->
         <div id="lab-chart" class="hidden">
-          <div class="p-4">
-            <div id="lab-container" class="w-full" style="height: 400px;"></div>
+          <div class="p-2 sm:p-4">
+            <div id="lab-container" class="w-full chart-container"></div>
           </div>
           <!-- Citation for laboratory data -->
           <div class="px-4 pb-4 text-xs text-gray-500 border-t bg-gray-50">
             <p class="mt-2">
               <strong>Data Source:</strong> Minnesota Department of Health. Laboratory Data - Viral Respiratory Illness in Minnesota. 
-              <a href="https://www.health.state.mn.us/diseases/respiratory/stats/lab.html" class="text-blue-600 hover:text-blue-800" target="_blank" rel="noopener">https://www.health.state.mn.us/diseases/respiratory/stats/lab.html</a>
+              <a href="https://www.health.state.mn.us/diseases/respiratory/stats/lab.html" class="text-blue-600 hover:text-blue-800 break-words" target="_blank" rel="noopener">https://www.health.state.mn.us/diseases/respiratory/stats/lab.html</a>
             </p>
           </div>
         </div>
@@ -126,7 +126,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     <div class="mt-12 bg-white rounded-lg shadow-sm border p-6">
       <h3 class="text-lg font-semibold text-gray-900 mb-3">Data Sources</h3>
       <p class="text-sm text-gray-600 mb-3">
-        Respiratory Virus Hospitalization Surveillance Network (RESP-NET). (2025). Viral Respiratory Illness in Minnesota. [Data set]. Minnesota Department of Health. <a href="https://www.health.state.mn.us/diseases/respiratory/stats/index.html" class="text-blue-600 hover:text-blue-800" target="_blank" rel="noopener">https://www.health.state.mn.us/diseases/respiratory/stats/index.html</a>
+        Respiratory Virus Hospitalization Surveillance Network (RESP-NET). (2025). Viral Respiratory Illness in Minnesota. [Data set]. Minnesota Department of Health. <a href="https://www.health.state.mn.us/diseases/respiratory/stats/index.html" class="text-blue-600 hover:text-blue-800 break-words" target="_blank" rel="noopener">https://www.health.state.mn.us/diseases/respiratory/stats/index.html</a>
       </p>
     </div>
   </div>
@@ -143,19 +143,21 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     const pathogenColors = {
       // First Chart (Hospitalization) - Blue, Orange, Yellow
       'Total': '#6B7280',        // Gray for total
-      'COVID-19': '#1E40AF',     // Blue
+      'COVID-19': '#1E40AF',
+      'COVID': '#1E40AF',     // Blue
       'RSV': '#EA580C',          // Orange  
       'Influenza': '#EAB308',    // Yellow
       
       // Second Chart (Laboratory) - Red, Green, Purple, Teal, Pink
       'Adenovirus': '#610b00',   // Red
       'Human Metapneumovirus': '#16A34A',    // Green
-      'Parainfluenza Virus 1-4': '#7C3AED',  // Purple
+      'Parainfluenza Virus 1-4': '#EA580C',  // Orange
+      'Parainfluenza Virus 1': '#EA580C',
       'Rhinovirus': '#1192e8',   // Teal
       'Seasonal Coronavirus': '#EC4899',     // Pink
       
       // Legacy mappings for consistency
-      'Parainfluenza': '#7C3AED', 
+      'Parainfluenza': '#EA580C', 
       'Metapneumovirus': '#16A34A', 
       'Enterovirus': '#002d9c',   
       'Bocavirus': '#ee538b',     
@@ -435,30 +437,35 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
     // Create legend
     function createLegend(g: any, width: number, keys: string[]) {
+      const isMobile = window.innerWidth < 640;
+      const isTablet = window.innerWidth < 1024;
+      
       const legend = g.append('g')
         .attr('class', 'legend')
         .attr('transform', `translate(${width + 10}, 20)`);
 
-      keys.slice(0, 8).forEach((key, i) => {
+      // Limit legend items based on screen size
+      const maxItems = isMobile ? 4 : isTablet ? 6 : 8;
+      keys.slice(0, maxItems).forEach((key, i) => {
         const [pathogen, metric] = key.split('-');
         
         // Use the same color logic as the line drawing - always use predefined color
         const color = pathogenColors[pathogen as keyof typeof pathogenColors] || '#6B7280';
 
         const legendItem = legend.append('g')
-          .attr('transform', `translate(0, ${i * 20})`);
+          .attr('transform', `translate(0, ${i * (isMobile ? 16 : 20)})`);
 
         legendItem.append('line')
           .attr('x1', 0)
-          .attr('x2', 15)
+          .attr('x2', isMobile ? 12 : 15)
           .attr('stroke', color)
-          .attr('stroke-width', 2);
+          .attr('stroke-width', isMobile ? 1.5 : 2);
 
         legendItem.append('text')
-          .attr('x', 20)
+          .attr('x', isMobile ? 16 : 20)
           .attr('y', 0)
           .attr('dy', '0.35em')
-          .style('font-size', '11px')
+          .style('font-size', isMobile ? '9px' : '11px')
           .style('fill', '#374151')
           .text(pathogen);
       });
@@ -479,10 +486,19 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         return;
       }
       
-      // Set up dimensions with more space for legend
-      const margin = { top: 20, right: 180, bottom: 60, left: 80 };
-      const width = Math.max(300, container.clientWidth - margin.left - margin.right);
-      const height = 400 - margin.top - margin.bottom;
+      // Responsive dimensions based on screen size
+      const isMobile = window.innerWidth < 640; // sm breakpoint
+      const isTablet = window.innerWidth < 1024; // lg breakpoint
+      
+      // Adjust margins and legend space based on screen size
+      const margin = isMobile 
+        ? { top: 20, right: 20, bottom: 70, left: 50 }  // More space for x-axis labels on mobile
+        : isTablet 
+        ? { top: 20, right: 100, bottom: 80, left: 60 } // More space for x-axis labels on tablet
+        : { top: 20, right: 180, bottom: 80, left: 80 }; // More space for x-axis labels on desktop
+      
+      const width = Math.max(250, container.clientWidth - margin.left - margin.right);
+      const height = Math.max(200, container.clientHeight || 300) - margin.top - margin.bottom;
       
       // Validate data
       if (!data || data.length === 0) {
@@ -512,11 +528,12 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         .domain([0, valueExtent[1] * 1.1])
         .range([height, 0]);
 
-      // Create axes
+      // Create axes with responsive formatting
       const xAxis = d3.axisBottom(xScale)
         .tickFormat(d3.timeFormat('%b %Y'));
       
-      const yAxis = d3.axisLeft(yScale);
+      const yAxis = d3.axisLeft(yScale)
+        .tickFormat(isMobile ? d3.format('.0f') : d3.format('.1f'));
 
       g.append('g')
         .attr('class', 'x-axis')
@@ -524,13 +541,16 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         .call(xAxis)
         .selectAll('text')
         .style('text-anchor', 'end')
+        .style('font-size', isMobile ? '10px' : '12px')
         .attr('dx', '-.8em')
         .attr('dy', '.15em')
-        .attr('transform', 'rotate(-45)');
+        .attr('transform', isMobile ? 'rotate(-45)' : 'rotate(-45)');
 
       g.append('g')
         .attr('class', 'y-axis')
-        .call(yAxis);
+        .call(yAxis)
+        .selectAll('text')
+        .style('font-size', isMobile ? '10px' : '12px');
 
       // Group data by pathogen and metric
       const groupedData = d3.group(data, 
@@ -577,10 +597,12 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           .on('mouseout', hideTooltip);
       });
 
-      // Add legend
-      createLegend(g, width, Array.from(groupedData.keys()));
+      // Add legend only if there's space (not on mobile)
+      if (!isMobile) {
+        createLegend(g, width, Array.from(groupedData.keys()));
+      }
 
-      // Add axis labels
+      // Add axis labels with responsive sizing
       g.append('text')
         .attr('class', 'axis-label')
         .attr('transform', 'rotate(-90)')
@@ -588,15 +610,15 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         .attr('x', 0 - (height / 2))
         .attr('dy', '1em')
         .style('text-anchor', 'middle')
-        .style('font-size', '12px')
+        .style('font-size', isMobile ? '10px' : '12px')
         .style('fill', '#6B7280')
         .text(yAxisLabel);
 
       g.append('text')
         .attr('class', 'axis-label')
-        .attr('transform', `translate(${width / 2}, ${height + margin.bottom - 10})`)
+        .attr('transform', `translate(${width / 2}, ${height + margin.bottom - 5})`)
         .style('text-anchor', 'middle')
-        .style('font-size', '12px')
+        .style('font-size', isMobile ? '10px' : '12px')
         .style('fill', '#6B7280')
         .text('Date');
         
@@ -677,25 +699,44 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
     // Show tooltip on hover
     function showTooltip(event: any, d: any) {
+      const isMobile = window.innerWidth < 640;
+      
       const tooltip = d3.select('body').append('div')
         .attr('class', 'chart-tooltip')
         .style('position', 'absolute')
         .style('background', 'rgba(0, 0, 0, 0.8)')
         .style('color', 'white')
-        .style('padding', '8px 12px')
+        .style('padding', isMobile ? '6px 8px' : '8px 12px')
         .style('border-radius', '4px')
-        .style('font-size', '12px')
+        .style('font-size', isMobile ? '10px' : '12px')
         .style('pointer-events', 'none')
         .style('z-index', '1000')
+        .style('max-width', isMobile ? '200px' : 'none')
         .html(`
           <strong>${d.pathogen}</strong><br/>
           ${d.metric}: ${d.value.toLocaleString()}<br/>
           Date: ${d.date.toLocaleDateString()}
         `);
 
+      // Position tooltip to avoid going off-screen on mobile
+      const tooltipWidth = 200; // Approximate tooltip width
+      const tooltipHeight = 60; // Approximate tooltip height
+      let left = event.pageX + 10;
+      let top = event.pageY - 10;
+      
+      if (isMobile) {
+        // Adjust position to keep tooltip on screen
+        if (left + tooltipWidth > window.innerWidth) {
+          left = event.pageX - tooltipWidth - 10;
+        }
+        if (top < 0) {
+          top = event.pageY + 10;
+        }
+      }
+
       tooltip
-        .style('left', (event.pageX + 10) + 'px')
-        .style('top', (event.pageY - 10) + 'px');
+        .style('left', left + 'px')
+        .style('top', top + 'px');
     }
 
     // Hide tooltip
@@ -802,19 +843,72 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   </script>
 
   <style>
-    /* Placeholder styles for future interactive elements */
+    /* Mobile-first responsive styles */
     .disabled-filter {
       background-color: #f3f4f6;
       cursor: not-allowed;
     }
     
-    /* Future: Add styles for data visualization elements */
-    .virus-chart {
-      /* Chart styling will go here */
+    /* Chart container responsive behavior */
+    .chart-container {
+      min-height: 250px;
+      height: 300px;
     }
     
-    .data-table {
-      /* Table styling will go here */
+    @media (min-width: 640px) {
+      .chart-container {
+        height: 350px;
+      }
+    }
+    
+    @media (min-width: 1024px) {
+      .chart-container {
+        height: 400px;
+      }
+    }
+    
+    /* Mobile-optimized tooltips */
+    .chart-tooltip {
+      word-wrap: break-word;
+      white-space: normal;
+    }
+    
+    /* Responsive text sizing */
+    @media (max-width: 639px) {
+      .text-responsive {
+        font-size: 0.875rem;
+      }
+    }
+    
+    /* Ensure charts don't overflow on mobile */
+    svg {
+      max-width: 100%;
+      height: auto;
+    }
+    
+    /* Mobile-friendly form controls */
+    @media (max-width: 639px) {
+      select {
+        font-size: 14px;
+        padding: 8px 12px;
+      }
+      
+      label {
+        font-size: 14px;
+      }
+    }
+    
+    /* Ensure links wrap properly and don't overflow */
+    a {
+      word-break: break-all;
+      overflow-wrap: break-word;
+      hyphens: auto;
+    }
+    
+    /* Specific styling for long URLs */
+    a[href^="http"] {
+      word-break: break-all;
+      overflow-wrap: anywhere;
     }
   </style>
 </BaseLayout>
