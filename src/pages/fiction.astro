@@ -136,19 +136,42 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     }
     
     /* Card hover effects */
+    .masonry-item {
+      will-change: transform;
+      transform: translateZ(0);
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+    
     .masonry-item:hover {
-      transform: translateY(-2px);
+      transform: translateY(-2px) translateZ(0);
       box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
     }
     
     /* Image zoom effect on hover */
+    .masonry-item img {
+      will-change: transform;
+      transform: translateZ(0);
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+    
     .masonry-item:hover img {
-      transform: scale(1.05);
+      transform: scale(1.05) translateZ(0);
     }
     
     /* Ensure image container doesn't show overflow */
     .masonry-item .relative {
       overflow: hidden;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+    
+    /* Prevent text from flashing on hover */
+    .masonry-item .p-6 {
+      transform: translateZ(0);
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
     }
     
     /* Prevent column breaks within cards */
