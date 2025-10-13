@@ -170,12 +170,20 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     }
     
     /* Card hover effects */
+    .masonry-item {
+      will-change: transform;
+    }
+    
     .masonry-item:hover {
-      transform: translateY(-2px);
+      transform: translateY(-4px);
       box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
     }
     
     /* Image zoom effect on hover */
+    .masonry-item img {
+      will-change: transform;
+    }
+    
     .masonry-item:hover img {
       transform: scale(1.05);
     }
@@ -183,6 +191,8 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     /* Ensure image container doesn't show overflow */
     .masonry-item .relative {
       overflow: hidden;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
     }
     
     /* Prevent column breaks within cards */
