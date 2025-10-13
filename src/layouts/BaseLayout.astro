@@ -2,26 +2,95 @@
 export interface Props {
   title: string;
   description?: string;
+  image?: string;
+  type?: string;
+  author?: string;
 }
 
-const { title, description = "Resilience Continuum - Data Visualization and Design" } = Astro.props;
+const { 
+  title, 
+  description = "Resilience Continuum - Data Visualization and Design by Claire Nyquist. Exploring biology, public health, and epidemiology through interactive data visualizations, science communication, and creative storytelling.",
+  image = "/images/headshot.jpeg",
+  type = "website",
+  author = "Claire Nyquist"
+} = Astro.props;
 
-// Google Analytics Measurement ID - replace with your actual GA4 Measurement ID
-const GA_MEASUREMENT_ID = "G-C3S7RZW6F5"; // Replace with your actual Measurement ID
+// Google Analytics Measurement ID
+const GA_MEASUREMENT_ID = "G-C3S7RZW6F5";
+
+// Get current URL for canonical and OG tags
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const socialImageURL = new URL(image, Astro.site);
 ---
 
 <!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
   <head>
+    <!-- Basic Meta Tags -->
     <meta charset="UTF-8" />
-    <meta name="description" content={description} />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="author" content={author} />
+    <meta name="keywords" content="data visualization, public health, science communication, epidemiology, biology, Claire Nyquist, interactive data, design, science fiction" />
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href={canonicalURL} />
+    
+    <!-- Favicon and Icons -->
     <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/favicon.png" />
+    
+    <!-- Open Graph / Facebook Meta Tags -->
+    <meta property="og:type" content={type} />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={socialImageURL} />
+    <meta property="og:site_name" content="Resilience Continuum" />
+    <meta property="og:locale" content="en_US" />
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content={canonicalURL} />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={socialImageURL} />
+    <meta name="twitter:creator" content="@resiliencecontinuum" />
+    
+    <!-- DNS Prefetch & Preconnect for Performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com">
+    <link rel="dns-prefetch" href="https://unpkg.com">
+    
+    <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <title>{title}</title>
+    
+    <!-- Structured Data (Schema.org JSON-LD) -->
+    <script type="application/ld+json" set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": type === "article" ? "Article" : "WebSite",
+      "name": "Resilience Continuum",
+      "url": canonicalURL,
+      "description": description,
+      "author": {
+        "@type": "Person",
+        "name": author,
+        "email": "clairenyquist@gmail.com"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "Resilience Continuum",
+        "logo": {
+          "@type": "ImageObject",
+          "url": new URL("/favicon.png", Astro.site)
+        }
+      }
+    })} />
     
     <!-- Google Analytics -->
     {GA_MEASUREMENT_ID !== "G-XXXXXXXXXX" && (
