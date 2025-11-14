@@ -3,7 +3,7 @@ User-agent: *
 Allow: /
 
 # Sitemap location
-Sitemap: https://resiliencecontinuum.com/sitemap-index.xml
+Sitemap: https://clairenyquist.com/sitemap-index.xml
 
 # Disallow specific paths if needed (currently none)
 
