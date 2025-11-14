@@ -982,13 +982,12 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     
     /* Ensure links wrap properly and don't overflow */
     a {
-      word-break: break-all;
       overflow-wrap: break-word;
-      hyphens: auto;
+      word-break: normal;
     }
     
-    /* Specific styling for long URLs */
-    a[href^="http"] {
+    /* Specific styling for long URLs displayed as text */
+    a.break-words {
       word-break: break-all;
       overflow-wrap: anywhere;
     }
