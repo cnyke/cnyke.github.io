@@ -541,13 +541,20 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       }
     }
 
-    // Handle window resize
+    // Handle window resize - only if width changes (to avoid mobile address bar issues)
     let resizeTimeout: ReturnType<typeof setTimeout>;
+    let lastWidth = window.innerWidth;
+    
     window.addEventListener('resize', () => {
-      clearTimeout(resizeTimeout);
-      resizeTimeout = setTimeout(() => {
-        createTimeline();
-      }, 250);
+      const currentWidth = window.innerWidth;
+      // On mobile, height changes as address bar hides/shows, so we only re-render if width changes
+      if (currentWidth !== lastWidth) {
+        lastWidth = currentWidth;
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+          createTimeline();
+        }, 250);
+      }
     });
   </script>
 
