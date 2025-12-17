@@ -247,17 +247,21 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         return;
       }
 
-      // Get actual available width - on mobile, use window width minus page padding
+      // Get actual available width from container
       const isMobile = window.innerWidth < 640;
-      const containerWidth = isMobile 
-        ? window.innerWidth - 32 // Account for px-4 (16px each side)
-        : (container.clientWidth || 800);
+      const containerWidth = container.clientWidth || container.offsetWidth || window.innerWidth - 32;
+
+      // Calculate available viewport height for the chart
+      // Subtract header (~64px), title section (~100px), padding, and leave room for legend/footer
+      const viewportHeight = window.innerHeight;
+      const reservedSpace = isMobile ? 200 : 280; // Space for header, title, legend, etc.
+      const availableHeight = viewportHeight - reservedSpace;
 
       // Filter to show only 1990-2025
       const modelsToShow = allModels.filter(m => m.year >= 1990 && m.year <= 2025);
       
-      // Margins - minimal on mobile, more top margin on desktop
-      const margin = { top: isMobile ? 0 : 40, right: isMobile ? 5 : 20, bottom: isMobile ? 30 : 60, left: isMobile ? 20 : 30 };
+      // Margins - minimal on mobile, smaller on desktop to fit screen
+      const margin = { top: isMobile ? 0 : 20, right: isMobile ? 5 : 20, bottom: isMobile ? 30 : 40, left: isMobile ? 20 : 30 };
       
       // Calculate max models in any year to determine needed height
       const byYear: Map<number, number> = new Map();
@@ -266,20 +270,22 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       });
       const maxModelsInYear = Math.max(...byYear.values());
       
-      // Spacing controls
-      const ySpacing = isMobile ? 5 : 8; // Vertical spacing between dots in same year
-      const neededHeight = 10 + (maxModelsInYear * ySpacing) + margin.top + margin.bottom;
-      const svgHeight = Math.max(isMobile ? 700 : 600, neededHeight);
+      // Use viewport-based height to fill screen
+      const svgHeight = Math.max(isMobile ? 500 : 400, availableHeight);
       const height = svgHeight - margin.top - margin.bottom;
+      
+      // Calculate ySpacing dynamically to fit all dots in available height
+      const ySpacing = Math.max(3, Math.floor((height - 20) / maxModelsInYear));
       
       // Chart width - use full container
       const width = containerWidth - margin.left - margin.right;
 
-      // Create SVG - fits exactly in container
+      // Create SVG - fits exactly in container, 100% width
       const svg = d3.select(container)
         .append('svg')
-        .attr('width', containerWidth)
+        .attr('width', '100%')
         .attr('height', svgHeight)
+        .attr('viewBox', `0 0 ${containerWidth} ${svgHeight}`)
         .style('display', 'block');
 
       const g = svg.append('g')
@@ -335,7 +341,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       });
 
       // Group models by year, stack vertically
-      const groupedModels = groupByYear(modelsToShow, xScale, height, isMobile);
+      const groupedModels = groupByYear(modelsToShow, xScale, height, ySpacing);
 
       // Draw nodes - position by year (x) and stack index (y)
       const nodes = g.selectAll('.model-node')
@@ -375,10 +381,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
     }
 
-    function groupByYear(models: AIModel[], xScale: any, chartHeight: number, isMobile: boolean): any[] {
+    function groupByYear(models: AIModel[], xScale: any, chartHeight: number, ySpacing: number): any[] {
       // Group models by year, then stack each dot vertically from the bottom
       const startY = chartHeight - 10; // Start near the x-axis
-      const ySpacing = isMobile ? 5 : 8; // Vertical spacing between dots in same year
       
       // Define organization priority for sorting (lower number = closer to x-axis)
       // Gray "all others" dots closest to axis, named orgs stacked on top
