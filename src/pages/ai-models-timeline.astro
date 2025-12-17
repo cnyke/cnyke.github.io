@@ -9,25 +9,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       <h1 class="text-3xl sm:text-4xl md:text-6xl font-bold text-gray-900 mb-4 md:mb-6">
         AI Models Timeline
       </h1>
-      <p class="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed px-4">
-        The evolution of artificial intelligence through notable models
-      </p>
-      <p class="text-base sm:text-lg text-gray-600 max-w-4xl mx-auto leading-relaxed mt-4 px-4">
-        This interactive timeline visualizes the history of AI model development using data from <a href="https://epoch.ai" class="text-blue-600 hover:text-blue-800" target="_blank" rel="noopener">Epoch AI</a>. 
-        Hover over each node to see details about the model including its parameters, training data, and capabilities.
-      </p>
-    </div>
-
-    <!-- Legend -->
-    <div class="mb-6 bg-white rounded-lg shadow-sm border p-4">
-      <h3 class="text-sm font-semibold text-gray-700 mb-3">Organization Colors</h3>
-      <div class="flex flex-wrap gap-4 text-sm" id="legend-container">
-        <!-- Legend items will be populated by JavaScript -->
-      </div>
     </div>
 
     <!-- Timeline Container -->
-    <div class="bg-white rounded-lg shadow-sm border overflow-x-auto">
+    <div class="bg-white rounded-lg shadow-sm border overflow-hidden">
       <!-- Loading indicator -->
       <div id="timeline-loading" class="p-8 text-center">
         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
@@ -35,9 +20,26 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       </div>
 
       <!-- Timeline container -->
-      <div id="timeline-container" class="hidden">
+      <div id="timeline-container" class="hidden relative">
         <div id="timeline-chart" class="w-full"></div>
+        <div class="text-center text-gray-500 text-xs sm:text-sm py-2">Models per year</div>
       </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="mt-4 bg-white rounded-lg shadow-sm border p-4">
+      <h3 class="text-sm font-semibold text-gray-700 mb-3">Organization Colors</h3>
+      <div class="flex flex-wrap gap-4 text-sm" id="legend-container">
+        <!-- Legend items will be populated by JavaScript -->
+      </div>
+    </div>
+
+    <!-- Description -->
+    <div class="mt-4 text-center">
+      <p class="text-base sm:text-lg text-gray-600 max-w-4xl mx-auto leading-relaxed px-4">
+        This interactive timeline visualizes the history of AI model development using data from <a href="https://epoch.ai" class="text-blue-600 hover:text-blue-800" target="_blank" rel="noopener">Epoch AI</a>. 
+        Hover over each node to see details about the model including its parameters, training data, and capabilities.
+      </p>
     </div>
 
     <!-- Data Sources -->
@@ -245,111 +247,120 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         return;
       }
 
-      // Show all models
-      const modelsToShow = allModels;
+      // Get actual available width - on mobile, use window width minus page padding
+      const isMobile = window.innerWidth < 640;
+      const containerWidth = isMobile 
+        ? window.innerWidth - 32 // Account for px-4 (16px each side)
+        : (container.clientWidth || 800);
 
-      const containerWidth = container.clientWidth || 800;
-      const isMobile = containerWidth < 640;
+      // Filter to show only 1990-2025
+      const modelsToShow = allModels.filter(m => m.year >= 1990 && m.year <= 2025);
       
-      const margin = { top: 40, right: 20, bottom: 40, left: isMobile ? 45 : 60 };
+      // Margins - minimal on mobile, more top margin on desktop
+      const margin = { top: isMobile ? 0 : 40, right: isMobile ? 5 : 20, bottom: isMobile ? 30 : 60, left: isMobile ? 20 : 30 };
       
-      // Calculate max models in any year to determine needed width
+      // Calculate max models in any year to determine needed height
       const byYear: Map<number, number> = new Map();
       modelsToShow.forEach(m => {
         byYear.set(m.year, (byYear.get(m.year) || 0) + 1);
       });
       const maxModelsInYear = Math.max(...byYear.values());
-      const dotSpacing = 12;
-      const startX = 25;
-      const neededWidth = startX + (maxModelsInYear * dotSpacing) + margin.left + margin.right;
-      const svgWidth = Math.max(containerWidth, neededWidth);
-      const width = svgWidth - margin.left - margin.right;
       
-      // Chart height
-      const height = isMobile ? 800 : 1200;
+      // Spacing controls
+      const ySpacing = isMobile ? 5 : 8; // Vertical spacing between dots in same year
+      const neededHeight = 10 + (maxModelsInYear * ySpacing) + margin.top + margin.bottom;
+      const svgHeight = Math.max(isMobile ? 700 : 600, neededHeight);
+      const height = svgHeight - margin.top - margin.bottom;
+      
+      // Chart width - use full container
+      const width = containerWidth - margin.left - margin.right;
 
-      // Create SVG with calculated width
+      // Create SVG - fits exactly in container
       const svg = d3.select(container)
         .append('svg')
-        .attr('width', svgWidth)
-        .attr('height', height);
+        .attr('width', containerWidth)
+        .attr('height', svgHeight)
+        .style('display', 'block');
 
       const g = svg.append('g')
         .attr('transform', `translate(${margin.left},${margin.top})`);
 
-      // Time scale (vertical) - start from Jan 1 of earliest year to end of 2025
+      // Time scale (horizontal) - start from Jan 1 of earliest year to end of 2025
       const earliestYear = Math.min(...modelsToShow.map(m => m.year));
       const startDate = new Date(earliestYear, 0, 1); // January 1 of earliest year
       const endDate = new Date(2025, 11, 31); // December 31, 2025
-      const yScale = d3.scaleTime()
+      const xScale = d3.scaleTime()
         .domain([startDate, endDate])
-        .range([0, height - margin.top - margin.bottom]);
+        .range([0, width]);
 
-      // Draw timeline axis - show ticks every 5 years, stopping at 2025
+      // Draw timeline axis at bottom - show ticks every 10 years (20 on mobile)
+      const tickInterval = isMobile ? 20 : 10;
       const tickYears: Date[] = [];
-      for (let year = Math.ceil(earliestYear / 5) * 5; year <= 2025; year += 5) {
+      for (let year = Math.ceil(earliestYear / tickInterval) * tickInterval; year <= 2025; year += tickInterval) {
         tickYears.push(new Date(year, 0, 1));
       }
-      const yAxis = d3.axisLeft(yScale)
+      const xAxis = d3.axisBottom(xScale)
         .tickValues(tickYears)
         .tickFormat(d3.timeFormat('%Y'))
         .tickSizeOuter(0);
 
       g.append('g')
-        .attr('class', 'y-axis')
-        .call(yAxis)
+        .attr('class', 'x-axis')
+        .attr('transform', `translate(0,${height})`)
+        .call(xAxis)
         .selectAll('text')
-        .style('font-size', isMobile ? '10px' : '12px')
+        .style('font-size', isMobile ? '9px' : '12px')
         .style('fill', '#6b7280');
 
-      // Draw vertical timeline line
+      // Draw horizontal timeline line at bottom
       g.append('line')
         .attr('x1', 0)
-        .attr('y1', 0)
-        .attr('x2', 0)
-        .attr('y2', height - margin.top - margin.bottom)
+        .attr('y1', height)
+        .attr('x2', width)
+        .attr('y2', height)
         .attr('stroke', '#e5e7eb')
         .attr('stroke-width', 2);
 
-      // Add decade grid lines on the timeline (every 10 years for compressed view)
+      // Add vertical decade grid lines
       const decades = [...new Set(modelsToShow.map(m => Math.floor(m.year / 10) * 10))].sort();
       decades.forEach(decade => {
         const decadeDate = new Date(decade, 0, 1);
         g.append('line')
-          .attr('x1', -10)
-          .attr('x2', width)
-          .attr('y1', yScale(decadeDate))
-          .attr('y2', yScale(decadeDate))
+          .attr('x1', xScale(decadeDate))
+          .attr('x2', xScale(decadeDate))
+          .attr('y1', 0)
+          .attr('y2', height + 10)
           .attr('stroke', '#e5e7eb')
           .attr('stroke-width', 1);
       });
 
-      // Group models by similar dates to avoid overlap, spread across full width
-      const groupedModels = groupByDate(modelsToShow, yScale, width);
+      // Group models by year, stack vertically
+      const groupedModels = groupByYear(modelsToShow, xScale, height, isMobile);
 
-      // Draw nodes - position precisely at the year (not the exact date)
+      // Draw nodes - position by year (x) and stack index (y)
       const nodes = g.selectAll('.model-node')
         .data(groupedModels)
         .enter()
         .append('g')
         .attr('class', 'model-node')
         .attr('transform', (d: any) => {
-          // Use January 1 of the year for precise vertical alignment
           const yearDate = new Date(d.year, 0, 1);
-          return `translate(${d.xOffset}, ${yScale(yearDate)})`;
+          return `translate(${xScale(yearDate)}, ${d.yOffset})`;
         });
 
       // Node circles
+      const dotRadius = isMobile ? 5 : 6;
+      const hoverRadius = isMobile ? 10 : 12;
       nodes.append('circle')
-        .attr('r', isMobile ? 3 : 4)
+        .attr('r', dotRadius)
         .attr('fill', (d: AIModel) => getOrgColor(d.organization))
-        .attr('opacity', 0.8)
+        .attr('opacity', 0.5)
         .style('cursor', 'pointer')
         .on('mouseover', function(this: SVGCircleElement, event: MouseEvent, d: AIModel) {
           d3.select(this)
             .transition()
             .duration(200)
-            .attr('r', isMobile ? 6 : 8)
+            .attr('r', hoverRadius)
             .attr('opacity', 1);
           showTooltip(event, d);
         })
@@ -357,26 +368,42 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           d3.select(this)
             .transition()
             .duration(200)
-            .attr('r', isMobile ? 3 : 4)
-            .attr('opacity', 0.8);
+            .attr('r', dotRadius)
+            .attr('opacity', 0.5);
           hideTooltip();
         });
 
-      // Add x-axis label at top (centered on visible container, not full SVG width)
-      const visibleWidth = containerWidth - margin.left - margin.right;
-      g.append('text')
-        .attr('x', visibleWidth / 2)
-        .attr('y', -15)
-        .attr('text-anchor', 'middle')
-        .style('font-size', isMobile ? '11px' : '13px')
-        .style('fill', '#6b7280')
-        .text('Models per year');
     }
 
-    function groupByDate(models: AIModel[], yScale: any, chartWidth: number): any[] {
-      // Group models by year, then place each dot a fixed distance apart
-      const startX = 20; // Fixed start distance from y-axis
-      const dotSpacing = 9; // Fixed spacing between dots
+    function groupByYear(models: AIModel[], xScale: any, chartHeight: number, isMobile: boolean): any[] {
+      // Group models by year, then stack each dot vertically from the bottom
+      const startY = chartHeight - 10; // Start near the x-axis
+      const ySpacing = isMobile ? 5 : 8; // Vertical spacing between dots in same year
+      
+      // Define organization priority for sorting (lower number = closer to x-axis)
+      // Gray "all others" dots closest to axis, named orgs stacked on top
+      const orgPriority: Record<string, number> = {
+        'OpenAI': 80,
+        'Google': 70,
+        'Google DeepMind': 70,
+        'DeepMind': 70,
+        'Anthropic': 60,
+        'Meta': 50,
+        'Meta AI': 50,
+        'Microsoft': 40,
+        'NVIDIA': 30,
+        'xAI': 20
+      };
+      
+      function getOrgPriority(org: string): number {
+        if (!org) return 1; // Unknown/empty orgs at the bottom (closest to axis)
+        for (const [key, priority] of Object.entries(orgPriority)) {
+          if (org.includes(key) || key.includes(org)) {
+            return priority;
+          }
+        }
+        return 1; // All others at the bottom (closest to axis)
+      }
       
       // Group models by year
       const byYear: Map<number, AIModel[]> = new Map();
@@ -388,10 +415,13 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       const result: any[] = [];
       
       byYear.forEach((yearModels, year) => {
+        // Sort models within each year by organization
+        yearModels.sort((a, b) => getOrgPriority(a.organization) - getOrgPriority(b.organization));
+        
         yearModels.forEach((model, indexInYear) => {
-          // Each model in a year gets placed at startX + (index * dotSpacing)
-          const xOffset = startX + (indexInYear * dotSpacing);
-          result.push({ ...model, xOffset });
+          // Each model in a year gets stacked vertically upward from the axis
+          const yOffset = startY - (indexInYear * ySpacing);
+          result.push({ ...model, yOffset });
         });
       });
       
@@ -519,7 +549,13 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   <style>
     #timeline-chart {
       background: linear-gradient(180deg, #fafafa 0%, #f5f5f5 100%);
-      overflow-x: auto;
+      overflow: hidden;
+      max-width: 100%;
+    }
+    
+    #timeline-chart svg {
+      max-width: 100%;
+      display: block;
     }
 
     .model-node {
@@ -537,25 +573,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
     .timeline-tooltip {
       font-family: 'Lexend', system-ui, sans-serif;
-    }
-
-    /* Scrollbar styling */
-    #timeline-chart::-webkit-scrollbar {
-      height: 8px;
-    }
-
-    #timeline-chart::-webkit-scrollbar-track {
-      background: #f1f1f1;
-      border-radius: 4px;
-    }
-
-    #timeline-chart::-webkit-scrollbar-thumb {
-      background: #c1c1c1;
-      border-radius: 4px;
-    }
-
-    #timeline-chart::-webkit-scrollbar-thumb:hover {
-      background: #a1a1a1;
     }
   </style>
 </BaseLayout>
