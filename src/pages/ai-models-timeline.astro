@@ -1,0 +1,561 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="AI Models Timeline - Claire Nyquist" description="Interactive vertical timeline visualization of notable AI models from Epoch AI data, showing the evolution of artificial intelligence from early neural networks to modern large language models.">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Hero Section -->
+    <div class="text-center mb-8 md:mb-12">
+      <h1 class="text-3xl sm:text-4xl md:text-6xl font-bold text-gray-900 mb-4 md:mb-6">
+        AI Models Timeline
+      </h1>
+      <p class="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed px-4">
+        The evolution of artificial intelligence through notable models
+      </p>
+      <p class="text-base sm:text-lg text-gray-600 max-w-4xl mx-auto leading-relaxed mt-4 px-4">
+        This interactive timeline visualizes the history of AI model development using data from <a href="https://epoch.ai" class="text-blue-600 hover:text-blue-800" target="_blank" rel="noopener">Epoch AI</a>. 
+        Hover over each node to see details about the model including its parameters, training data, and capabilities.
+      </p>
+    </div>
+
+    <!-- Legend -->
+    <div class="mb-6 bg-white rounded-lg shadow-sm border p-4">
+      <h3 class="text-sm font-semibold text-gray-700 mb-3">Organization Colors</h3>
+      <div class="flex flex-wrap gap-4 text-sm" id="legend-container">
+        <!-- Legend items will be populated by JavaScript -->
+      </div>
+    </div>
+
+    <!-- Timeline Container -->
+    <div class="bg-white rounded-lg shadow-sm border overflow-x-auto">
+      <!-- Loading indicator -->
+      <div id="timeline-loading" class="p-8 text-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+        <p class="text-gray-600">Loading AI models data...</p>
+      </div>
+
+      <!-- Timeline container -->
+      <div id="timeline-container" class="hidden">
+        <div id="timeline-chart" class="w-full"></div>
+      </div>
+    </div>
+
+    <!-- Data Sources -->
+    <div class="mt-8 bg-white rounded-lg shadow-sm border p-6">
+      <h3 class="text-lg font-semibold text-gray-900 mb-3">Data Sources</h3>
+      <div class="text-sm text-gray-600 space-y-2">
+        <p>
+          Epoch AI, 'Data on AI Models'. Published online at epoch.ai. Retrieved from '<a href="https://epoch.ai/data/ai-models" class="text-blue-600 hover:text-blue-800" target="_blank" rel="noopener">https://epoch.ai/data/ai-models</a>' [online resource]. Accessed 14 Dec 2025.
+        </p>
+        <p class="text-xs text-gray-500">
+          Data is free to use under the <a href="https://creativecommons.org/licenses/by/4.0/" class="text-blue-600 hover:text-blue-800" target="_blank" rel="noopener">Creative Commons Attribution 4.0 International license</a>.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Load D3.js dynamically
+    function loadD3(): Promise<void> {
+      return new Promise((resolve, reject) => {
+        if ((window as any).d3) {
+          resolve();
+          return;
+        }
+        const script = document.createElement('script');
+        script.src = 'https://d3js.org/d3.v7.min.js';
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error('Failed to load D3.js'));
+        document.head.appendChild(script);
+      });
+    }
+
+    interface AIModel {
+      model: string;
+      organization: string;
+      publicationDate: Date;
+      domain: string;
+      task: string;
+      parameters: string;
+      parametersNotes: string;
+      trainingDatasetSize: string;
+      datasetNotes: string;
+      year: number;
+    }
+
+    let allModels: AIModel[] = [];
+    let d3: any;
+
+    // Color palette for organizations
+    const orgColors: Record<string, string> = {
+      'OpenAI': '#10a37f',
+      'Google': '#facc15',
+      'Google DeepMind': '#facc15',
+      'DeepMind': '#facc15',
+      'Anthropic': '#ef4444',
+      'Meta': '#a855f7',
+      'Meta AI': '#a855f7',
+      'Microsoft': '#3b82f6',
+      'NVIDIA': '#76b900',
+      'xAI': '#fb923c',
+      'default': '#9ca3af'
+    };
+
+    function getOrgColor(org: string): string {
+      // Handle empty or missing organization
+      if (!org || org.trim() === '') {
+        return orgColors['default'];
+      }
+      // Check for partial matches
+      for (const [key, color] of Object.entries(orgColors)) {
+        if (key !== 'default' && (org.includes(key) || key.includes(org))) {
+          return color;
+        }
+      }
+      return orgColors['default'];
+    }
+
+    document.addEventListener('DOMContentLoaded', async function() {
+      try {
+        await loadD3();
+        d3 = (window as any).d3;
+        console.log('D3 loaded successfully');
+        loadModelsData();
+      } catch (error) {
+        console.error('Failed to load D3:', error);
+        showError();
+      }
+    });
+
+    async function loadModelsData() {
+      try {
+        const response = await fetch('/data/EpochAI/ai_models/notable_ai_models.csv');
+        const csvText = await response.text();
+        const rawData = parseCSV(csvText);
+        
+        console.log('Raw data loaded:', rawData.length, 'rows');
+        
+        // Process and filter data
+        allModels = rawData
+          .map(row => {
+            const dateStr = row['Publication date'];
+            const date = dateStr ? new Date(dateStr) : null;
+            
+            return {
+              model: row['Model'] || '',
+              organization: row['Organization'] || '',
+              publicationDate: date!,
+              domain: row['Domain'] || '',
+              task: row['Task'] || '',
+              parameters: row['Parameters'] || '',
+              parametersNotes: row['Parameters notes'] || '',
+              trainingDatasetSize: row['Training dataset size (gradients)'] || '',
+              datasetNotes: row['Dataset size notes'] || '',
+              year: date ? date.getFullYear() : 0
+            };
+          })
+          .filter(m => m.model && m.publicationDate && !isNaN(m.publicationDate.getTime()) && m.year >= 1950)
+          .sort((a, b) => a.publicationDate.getTime() - b.publicationDate.getTime());
+
+        console.log('Processed models:', allModels.length);
+        
+        createLegend();
+        createTimeline();
+        hideLoading();
+        
+      } catch (error) {
+        console.error('Error loading data:', error);
+        showError();
+      }
+    }
+
+    function parseCSV(csvText: string): any[] {
+      const lines = csvText.split('\n');
+      if (lines.length < 2) return [];
+
+      const headers = parseCSVLine(lines[0]);
+      const data: any[] = [];
+
+      for (let i = 1; i < lines.length; i++) {
+        if (!lines[i].trim()) continue;
+        const values = parseCSVLine(lines[i]);
+        const row: any = {};
+        headers.forEach((header: string, index: number) => {
+          row[header.trim()] = values[index]?.trim() || '';
+        });
+        data.push(row);
+      }
+
+      return data;
+    }
+
+    function parseCSVLine(line: string): string[] {
+      const result: string[] = [];
+      let current = '';
+      let inQuotes = false;
+
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        if (char === '"') {
+          inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+          result.push(current);
+          current = '';
+        } else {
+          current += char;
+        }
+      }
+      result.push(current);
+      return result;
+    }
+
+    function createLegend() {
+      const legendContainer = document.getElementById('legend-container');
+      if (legendContainer) {
+        const topOrgs = ['OpenAI', 'Google', 'Anthropic', 'Meta', 'Microsoft', 'xAI', 'NVIDIA'];
+        topOrgs.forEach(org => {
+          const div = document.createElement('div');
+          div.className = 'flex items-center gap-2';
+          div.innerHTML = `
+            <div class="w-3 h-3 rounded-full" style="background: ${getOrgColor(org)};"></div>
+            <span class="text-gray-600">${org}</span>
+          `;
+          legendContainer.appendChild(div);
+        });
+        // Add "All other organizations" entry
+        const otherDiv = document.createElement('div');
+        otherDiv.className = 'flex items-center gap-2';
+        otherDiv.innerHTML = `
+          <div class="w-3 h-3 rounded-full" style="background: ${orgColors['default']};"></div>
+          <span class="text-gray-600">All other organizations</span>
+        `;
+        legendContainer.appendChild(otherDiv);
+      }
+    }
+
+    function createTimeline() {
+      const container = document.getElementById('timeline-chart');
+      if (!container) return;
+
+      // Clear existing
+      container.innerHTML = '';
+
+      if (allModels.length === 0) {
+        container.innerHTML = '<div class="p-8 text-center text-gray-600">No models to display</div>';
+        return;
+      }
+
+      // Show all models
+      const modelsToShow = allModels;
+
+      const containerWidth = container.clientWidth || 800;
+      const isMobile = containerWidth < 640;
+      
+      const margin = { top: 40, right: 20, bottom: 40, left: isMobile ? 45 : 60 };
+      
+      // Calculate max models in any year to determine needed width
+      const byYear: Map<number, number> = new Map();
+      modelsToShow.forEach(m => {
+        byYear.set(m.year, (byYear.get(m.year) || 0) + 1);
+      });
+      const maxModelsInYear = Math.max(...byYear.values());
+      const dotSpacing = 12;
+      const startX = 25;
+      const neededWidth = startX + (maxModelsInYear * dotSpacing) + margin.left + margin.right;
+      const svgWidth = Math.max(containerWidth, neededWidth);
+      const width = svgWidth - margin.left - margin.right;
+      
+      // Chart height
+      const height = isMobile ? 800 : 1200;
+
+      // Create SVG with calculated width
+      const svg = d3.select(container)
+        .append('svg')
+        .attr('width', svgWidth)
+        .attr('height', height);
+
+      const g = svg.append('g')
+        .attr('transform', `translate(${margin.left},${margin.top})`);
+
+      // Time scale (vertical) - start from Jan 1 of earliest year to end of 2025
+      const earliestYear = Math.min(...modelsToShow.map(m => m.year));
+      const startDate = new Date(earliestYear, 0, 1); // January 1 of earliest year
+      const endDate = new Date(2025, 11, 31); // December 31, 2025
+      const yScale = d3.scaleTime()
+        .domain([startDate, endDate])
+        .range([0, height - margin.top - margin.bottom]);
+
+      // Draw timeline axis - show ticks every 5 years, stopping at 2025
+      const tickYears: Date[] = [];
+      for (let year = Math.ceil(earliestYear / 5) * 5; year <= 2025; year += 5) {
+        tickYears.push(new Date(year, 0, 1));
+      }
+      const yAxis = d3.axisLeft(yScale)
+        .tickValues(tickYears)
+        .tickFormat(d3.timeFormat('%Y'))
+        .tickSizeOuter(0);
+
+      g.append('g')
+        .attr('class', 'y-axis')
+        .call(yAxis)
+        .selectAll('text')
+        .style('font-size', isMobile ? '10px' : '12px')
+        .style('fill', '#6b7280');
+
+      // Draw vertical timeline line
+      g.append('line')
+        .attr('x1', 0)
+        .attr('y1', 0)
+        .attr('x2', 0)
+        .attr('y2', height - margin.top - margin.bottom)
+        .attr('stroke', '#e5e7eb')
+        .attr('stroke-width', 2);
+
+      // Add decade grid lines on the timeline (every 10 years for compressed view)
+      const decades = [...new Set(modelsToShow.map(m => Math.floor(m.year / 10) * 10))].sort();
+      decades.forEach(decade => {
+        const decadeDate = new Date(decade, 0, 1);
+        g.append('line')
+          .attr('x1', -10)
+          .attr('x2', width)
+          .attr('y1', yScale(decadeDate))
+          .attr('y2', yScale(decadeDate))
+          .attr('stroke', '#e5e7eb')
+          .attr('stroke-width', 1);
+      });
+
+      // Group models by similar dates to avoid overlap, spread across full width
+      const groupedModels = groupByDate(modelsToShow, yScale, width);
+
+      // Draw nodes - position precisely at the year (not the exact date)
+      const nodes = g.selectAll('.model-node')
+        .data(groupedModels)
+        .enter()
+        .append('g')
+        .attr('class', 'model-node')
+        .attr('transform', (d: any) => {
+          // Use January 1 of the year for precise vertical alignment
+          const yearDate = new Date(d.year, 0, 1);
+          return `translate(${d.xOffset}, ${yScale(yearDate)})`;
+        });
+
+      // Node circles
+      nodes.append('circle')
+        .attr('r', isMobile ? 3 : 4)
+        .attr('fill', (d: AIModel) => getOrgColor(d.organization))
+        .attr('opacity', 0.8)
+        .style('cursor', 'pointer')
+        .on('mouseover', function(this: SVGCircleElement, event: MouseEvent, d: AIModel) {
+          d3.select(this)
+            .transition()
+            .duration(200)
+            .attr('r', isMobile ? 6 : 8)
+            .attr('opacity', 1);
+          showTooltip(event, d);
+        })
+        .on('mouseout', function(this: SVGCircleElement) {
+          d3.select(this)
+            .transition()
+            .duration(200)
+            .attr('r', isMobile ? 3 : 4)
+            .attr('opacity', 0.8);
+          hideTooltip();
+        });
+
+      // Add x-axis label at top (centered on visible container, not full SVG width)
+      const visibleWidth = containerWidth - margin.left - margin.right;
+      g.append('text')
+        .attr('x', visibleWidth / 2)
+        .attr('y', -15)
+        .attr('text-anchor', 'middle')
+        .style('font-size', isMobile ? '11px' : '13px')
+        .style('fill', '#6b7280')
+        .text('Models per year');
+    }
+
+    function groupByDate(models: AIModel[], yScale: any, chartWidth: number): any[] {
+      // Group models by year, then place each dot a fixed distance apart
+      const startX = 20; // Fixed start distance from y-axis
+      const dotSpacing = 9; // Fixed spacing between dots
+      
+      // Group models by year
+      const byYear: Map<number, AIModel[]> = new Map();
+      models.forEach(m => {
+        if (!byYear.has(m.year)) byYear.set(m.year, []);
+        byYear.get(m.year)!.push(m);
+      });
+      
+      const result: any[] = [];
+      
+      byYear.forEach((yearModels, year) => {
+        yearModels.forEach((model, indexInYear) => {
+          // Each model in a year gets placed at startX + (index * dotSpacing)
+          const xOffset = startX + (indexInYear * dotSpacing);
+          result.push({ ...model, xOffset });
+        });
+      });
+      
+      // Sort by date to maintain chronological order for rendering
+      return result.sort((a, b) => a.publicationDate.getTime() - b.publicationDate.getTime());
+    }
+
+    function showTooltip(event: MouseEvent, d: AIModel) {
+      const formatDate = (date: Date) => {
+        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+      };
+
+      const formatNumber = (str: string) => {
+        if (!str) return 'Not reported';
+        const num = parseFloat(str);
+        if (isNaN(num)) return str;
+        if (num >= 1e12) return (num / 1e12).toFixed(1) + ' trillion';
+        if (num >= 1e9) return (num / 1e9).toFixed(1) + ' billion';
+        if (num >= 1e6) return (num / 1e6).toFixed(1) + ' million';
+        if (num >= 1e3) return (num / 1e3).toFixed(1) + ' thousand';
+        return num.toLocaleString();
+      };
+
+      let content = `
+        <div class="font-semibold text-base mb-2" style="color: ${getOrgColor(d.organization)}">${d.model}</div>
+        <div class="space-y-1 text-sm">
+          <div><span class="text-gray-400">Organization:</span> ${d.organization}</div>
+          <div><span class="text-gray-400">Publication Date:</span> ${formatDate(d.publicationDate)}</div>
+          ${d.domain ? `<div><span class="text-gray-400">Domain:</span> ${d.domain}</div>` : ''}
+          ${d.task ? `<div><span class="text-gray-400">Task:</span> ${d.task.length > 100 ? d.task.substring(0, 100) + '...' : d.task}</div>` : ''}
+          <div><span class="text-gray-400">Parameters:</span> ${formatNumber(d.parameters)}${d.parametersNotes ? ` <span class="text-gray-500 text-xs">(${d.parametersNotes.substring(0, 50)}${d.parametersNotes.length > 50 ? '...' : ''})</span>` : ''}</div>
+          <div><span class="text-gray-400">Training Dataset Size:</span> ${formatNumber(d.trainingDatasetSize)}${d.datasetNotes ? ` <span class="text-gray-500 text-xs">(${d.datasetNotes.substring(0, 50)}${d.datasetNotes.length > 50 ? '...' : ''})</span>` : ''}</div>
+        </div>
+      `;
+
+      const isMobileView = window.innerWidth < 640;
+      const maxTooltipWidth = isMobileView ? Math.min(280, window.innerWidth - 20) : 350;
+      
+      const tooltip = d3.select('body').append('div')
+        .attr('class', 'timeline-tooltip')
+        .style('position', 'absolute')
+        .style('background', 'rgba(17, 24, 39, 0.95)')
+        .style('color', 'white')
+        .style('padding', isMobileView ? '10px 12px' : '12px 16px')
+        .style('border-radius', '8px')
+        .style('font-size', isMobileView ? '11px' : '12px')
+        .style('pointer-events', 'none')
+        .style('z-index', '1000')
+        .style('max-width', maxTooltipWidth + 'px')
+        .style('line-height', '1.5')
+        .style('box-shadow', '0 10px 25px rgba(0, 0, 0, 0.3)')
+        .html(content);
+
+      // Position tooltip with full edge detection
+      const tooltipNode = tooltip.node() as HTMLElement;
+      const tooltipRect = tooltipNode.getBoundingClientRect();
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const scrollY = window.scrollY;
+      const scrollX = window.scrollX;
+      const padding = 10;
+
+      let left = event.pageX + 15;
+      let top = event.pageY - 10;
+
+      // Adjust for right edge
+      if (left + tooltipRect.width > scrollX + viewportWidth - padding) {
+        left = event.pageX - tooltipRect.width - 15;
+      }
+      // Adjust for left edge
+      if (left < scrollX + padding) {
+        left = scrollX + padding;
+      }
+      // Adjust for bottom edge
+      if (top + tooltipRect.height > scrollY + viewportHeight - padding) {
+        top = event.pageY - tooltipRect.height - 10;
+      }
+      // Adjust for top edge
+      if (top < scrollY + padding) {
+        top = scrollY + padding;
+      }
+
+      tooltip
+        .style('left', left + 'px')
+        .style('top', top + 'px');
+    }
+
+    function hideTooltip() {
+      d3.selectAll('.timeline-tooltip').remove();
+    }
+
+    function hideLoading() {
+      const loading = document.getElementById('timeline-loading');
+      const container = document.getElementById('timeline-container');
+      if (loading) loading.style.display = 'none';
+      if (container) container.classList.remove('hidden');
+    }
+
+    function showError() {
+      const loading = document.getElementById('timeline-loading');
+      if (loading) {
+        loading.innerHTML = `
+          <div class="text-center">
+            <div class="w-16 h-16 bg-red-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+              <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+            <p class="text-red-600">Error loading AI models data</p>
+          </div>
+        `;
+      }
+    }
+
+    // Handle window resize
+    let resizeTimeout: ReturnType<typeof setTimeout>;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        createTimeline();
+      }, 250);
+    });
+  </script>
+
+  <style>
+    #timeline-chart {
+      background: linear-gradient(180deg, #fafafa 0%, #f5f5f5 100%);
+      overflow-x: auto;
+    }
+
+    .model-node {
+      transition: opacity 0.2s ease;
+    }
+
+    .model-node:hover {
+      opacity: 1 !important;
+    }
+
+    .y-axis path,
+    .y-axis line {
+      stroke: #e5e7eb;
+    }
+
+    .timeline-tooltip {
+      font-family: 'Lexend', system-ui, sans-serif;
+    }
+
+    /* Scrollbar styling */
+    #timeline-chart::-webkit-scrollbar {
+      height: 8px;
+    }
+
+    #timeline-chart::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 4px;
+    }
+
+    #timeline-chart::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 4px;
+    }
+
+    #timeline-chart::-webkit-scrollbar-thumb:hover {
+      background: #a1a1a1;
+    }
+  </style>
+</BaseLayout>
