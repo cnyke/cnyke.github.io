@@ -271,7 +271,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       const maxModelsInYear = Math.max(...byYear.values());
       
       // Use viewport-based height to fill screen
-      const svgHeight = Math.max(isMobile ? 500 : 400, availableHeight);
+      const svgHeight = Math.max(isMobile ? 500 : 800, availableHeight);
       const height = svgHeight - margin.top - margin.bottom;
       
       // Calculate ySpacing dynamically to fit all dots in available height
