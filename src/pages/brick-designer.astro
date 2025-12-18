@@ -1,0 +1,569 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import fs from 'fs';
+import path from 'path';
+
+// Read and parse colors.csv at build time
+const csvPath = path.join(process.cwd(), 'public/data/colors.csv');
+const csvContent = fs.readFileSync(csvPath, 'utf-8');
+const lines = csvContent.split(/\r?\n/).slice(1); // Skip header and handle CRLF
+
+const brickColors = lines
+  .map(line => {
+    const parts = line.split(',');
+    if (parts.length < 4) return null;
+    
+    const name = parts[1];
+    const rgb = parts[2]?.trim();
+    const numParts = parseInt(parts[3]);
+    
+    // Filter: only common colors, excluding transparent ones
+    const lowerName = name.toLowerCase();
+    if (isNaN(numParts) || numParts < 10000) return null;
+    if (lowerName.includes('trans') || lowerName.includes('clear')) return null;
+    if (!rgb || rgb.length !== 6 || rgb.includes('+')) return null;
+    
+    // Convert hex to RGB array
+    const r = parseInt(rgb.substring(0, 2), 16);
+    const g = parseInt(rgb.substring(2, 4), 16);
+    const b = parseInt(rgb.substring(4, 6), 16);
+    
+    if (isNaN(r) || isNaN(g) || isNaN(b)) return null;
+    
+    return { name, rgb: [r, g, b] };
+  })
+  .filter(color => color !== null);
+---
+
+<BaseLayout title="Brick Designer - Claire Nyquist" description="Transform your images into brick mosaic patterns with this interactive tool.">
+  <div class="max-w-4xl mx-auto px-4 py-12">
+    <div class="text-center mb-12">
+      <h1 class="text-4xl font-bold text-gray-900 mb-4">Brick Designer</h1>
+      <p class="text-lg text-gray-600 mb-8">Upload an image to generate a custom brick mosaic pattern. This tool uses only the most common brick colors, making it easier to build your creation using the bricks you already have at home on a standard base plate. If you don't have all the pieces, substitute a close color! See below for the parts inventory you'll need. If you make something, I'd love to see it! Share it with #brickdesigner.</p>
+      
+      <!-- Example Images -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl mx-auto">
+        <div class="space-y-2">
+          <div class="rounded-xl overflow-hidden shadow-md bg-gray-100 aspect-square">
+            <img src="/images/man1.jpeg" alt="Original Photo" class="w-full h-full object-cover" />
+          </div>
+          <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Original</p>
+        </div>
+        <div class="space-y-2">
+          <div class="rounded-xl overflow-hidden shadow-md bg-gray-100 aspect-square border-2 border-blue-500/20">
+            <img src="/images/man2.png" alt="Brick Mosaic" class="w-full h-full object-cover" />
+          </div>
+          <p class="text-[10px] text-blue-500 uppercase tracking-widest font-bold">Mosaic</p>
+        </div>
+        <div class="space-y-2">
+          <div class="rounded-xl overflow-hidden shadow-md bg-gray-100 aspect-square">
+            <img src="/images/dog1.JPG" alt="Original Photo" class="w-full h-full object-cover" />
+          </div>
+          <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Original</p>
+        </div>
+        <div class="space-y-2">
+          <div class="rounded-xl overflow-hidden shadow-md bg-gray-100 aspect-square border-2 border-blue-500/20">
+            <img src="/images/dog2.png" alt="Brick Mosaic" class="w-full h-full object-cover" />
+          </div>
+          <p class="text-[10px] text-blue-500 uppercase tracking-widest font-bold">Mosaic</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+      <div class="flex flex-col md:flex-row gap-8 items-start">
+        <!-- Controls -->
+        <div class="w-full md:w-1/3 space-y-6">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <label class="block text-sm font-medium text-gray-700">Upload Image</label>
+              <button 
+                id="clearImageBtn"
+                class="text-gray-400 hover:text-red-600 transition-colors p-1 rounded-md hidden"
+                title="Clear Image"
+              >
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            </div>
+            <input 
+              type="file" 
+              id="imageInput" 
+              accept="image/*"
+              class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+            />
+          </div>
+
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <label class="block text-sm font-medium text-gray-700">Grid Size</label>
+              <button 
+                id="resetGridBtn"
+                class="text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors"
+              >
+                Reset to 32x32
+              </button>
+            </div>
+            <div class="flex items-center gap-4">
+              <input 
+                type="range" 
+                id="gridSizeInput" 
+                min="8" 
+                max="128" 
+                value="32" 
+                class="flex-grow h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+              />
+              <span id="gridSizeDisplay" class="text-sm font-medium text-gray-900 w-8">32x32</span>
+            </div>
+          </div>
+
+          <div class="space-y-4 border-t border-gray-100 pt-4">
+            <div class="flex items-center justify-between">
+              <label class="block text-sm font-medium text-gray-700">Crop & Position</label>
+              <button 
+                id="resetCropBtn"
+                class="text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors"
+              >
+                Reset
+              </button>
+            </div>
+            <div>
+              <label class="block text-xs text-gray-500 mb-1">Zoom</label>
+              <input type="range" id="zoomInput" min="10" max="300" value="100" class="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer" />
+            </div>
+            <div>
+              <label class="block text-xs text-gray-500 mb-1">Move Horizontal</label>
+              <input type="range" id="offsetXInput" min="-100" max="100" value="0" class="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer" />
+            </div>
+            <div>
+              <label class="block text-xs text-gray-500 mb-1">Move Vertical</label>
+              <input type="range" id="offsetYInput" min="-100" max="100" value="0" class="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer" />
+            </div>
+          </div>
+
+          <div class="space-y-4 border-t border-gray-100 pt-4">
+            <div class="flex items-center justify-between">
+              <label class="block text-sm font-medium text-gray-700">Color Adjustments</label>
+              <button 
+                id="resetColorsBtn"
+                class="text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors"
+              >
+                Reset Colors
+              </button>
+            </div>
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <label class="block text-xs text-gray-500">Contrast</label>
+                <button 
+                  id="resetContrastBtn"
+                  class="text-[10px] font-medium text-blue-600 hover:text-blue-800 transition-colors"
+                >
+                  Reset
+                </button>
+              </div>
+              <input 
+                type="range" 
+                id="contrastInput" 
+                min="0" 
+                max="200" 
+                value="100" 
+                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+              />
+            </div>
+            <div class="grid grid-cols-1 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-red-700 mb-1">Red</label>
+                <input type="range" id="redInput" min="0" max="200" value="100" class="w-full h-1.5 bg-red-100 rounded-lg appearance-none cursor-pointer" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-green-700 mb-1">Green</label>
+                <input type="range" id="greenInput" min="0" max="200" value="100" class="w-full h-1.5 bg-green-100 rounded-lg appearance-none cursor-pointer" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-blue-700 mb-1">Blue</label>
+                <input type="range" id="blueInput" min="0" max="200" value="100" class="w-full h-1.5 bg-blue-100 rounded-lg appearance-none cursor-pointer" />
+              </div>
+            </div>
+          </div>
+
+          <button 
+            id="downloadBtn"
+            class="w-full bg-gray-900 text-white py-3 px-6 rounded-xl font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled
+          >
+            Download Pattern
+          </button>
+        </div>
+
+        <!-- Preview Area -->
+        <div class="w-full md:w-2/3 flex flex-col items-center justify-center bg-gray-50 rounded-xl p-4 min-h-[400px] border-2 border-dashed border-gray-200">
+          <div id="placeholder" class="text-gray-400 text-center">
+            <svg class="mx-auto h-12 w-12 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <p>Upload an image to see the brick preview</p>
+          </div>
+          <canvas id="outputCanvas" class="max-w-full h-auto shadow-lg hidden" width="1024" height="1024"></canvas>
+        </div>
+      </div>
+    </div>
+
+    // Brick Inventory Section
+    <div id="inventorySection" class="bg-white rounded-2xl shadow-xl p-8 hidden">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+        <h2 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          </svg>
+          Brick Inventory
+        </h2>
+        <div class="bg-blue-50 px-4 py-2 rounded-lg flex items-center gap-2 text-blue-700 text-sm">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Processed locally — your image never leaves your device.
+        </div>
+      </div>
+      <div id="inventoryList" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <!-- Counts will be injected here -->
+      </div>
+    </div>
+
+    <!-- Hidden processing canvas -->
+    <canvas id="processCanvas" width="32" height="32" class="hidden"></canvas>
+  </div>
+</BaseLayout>
+
+<script is:inline id="brick-data" type="application/json" set:html={JSON.stringify(brickColors)}></script>
+
+<script>
+  const imageInput = document.getElementById('imageInput') as HTMLInputElement;
+  const clearImageBtn = document.getElementById('clearImageBtn') as HTMLButtonElement;
+  const contrastInput = document.getElementById('contrastInput') as HTMLInputElement;
+  const resetContrastBtn = document.getElementById('resetContrastBtn') as HTMLButtonElement;
+  const gridSizeInput = document.getElementById('gridSizeInput') as HTMLInputElement;
+  const gridSizeDisplay = document.getElementById('gridSizeDisplay');
+  const resetGridBtn = document.getElementById('resetGridBtn') as HTMLButtonElement;
+  const zoomInput = document.getElementById('zoomInput') as HTMLInputElement;
+  const offsetXInput = document.getElementById('offsetXInput') as HTMLInputElement;
+  const offsetYInput = document.getElementById('offsetYInput') as HTMLInputElement;
+  const resetCropBtn = document.getElementById('resetCropBtn') as HTMLButtonElement;
+  const redInput = document.getElementById('redInput') as HTMLInputElement;
+  const greenInput = document.getElementById('greenInput') as HTMLInputElement;
+  const blueInput = document.getElementById('blueInput') as HTMLInputElement;
+  const resetColorsBtn = document.getElementById('resetColorsBtn') as HTMLButtonElement;
+  const downloadBtn = document.getElementById('downloadBtn') as HTMLButtonElement;
+  const outputCanvas = document.getElementById('outputCanvas') as HTMLCanvasElement;
+  const processCanvas = document.getElementById('processCanvas') as HTMLCanvasElement;
+  const placeholder = document.getElementById('placeholder');
+  const inventorySection = document.getElementById('inventorySection');
+  const inventoryList = document.getElementById('inventoryList');
+  
+  const ctx = outputCanvas.getContext('2d');
+  const pCtx = processCanvas.getContext('2d', { willReadFrequently: true });
+
+  const BRICK_COLORS = JSON.parse(document.getElementById('brick-data')?.textContent || '[]');
+
+  let currentImage: HTMLImageElement | null = null;
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
+  function getNearestColor(r: number, g: number, b: number) {
+    let minDistance = Infinity;
+    let nearest = BRICK_COLORS[0];
+
+    for (const color of BRICK_COLORS) {
+      const distance = Math.sqrt(
+        Math.pow(r - color.rgb[0], 2) +
+        Math.pow(g - color.rgb[1], 2) +
+        Math.pow(b - color.rgb[2], 2)
+      );
+      if (distance < minDistance) {
+        minDistance = distance;
+        nearest = color;
+      }
+    }
+    return nearest;
+  }
+
+  function adjustContrast(data: Uint8ClampedArray, contrast: number) {
+    const factor = (259 * (contrast + 255)) / (255 * (259 - contrast));
+    for (let i = 0; i < data.length; i += 4) {
+      data[i] = factor * (data[i] - 128) + 128;
+      data[i+1] = factor * (data[i+1] - 128) + 128;
+      data[i+2] = factor * (data[i+2] - 128) + 128;
+    }
+  }
+
+  function applyRGBGains(data: Uint8ClampedArray, rGain: number, gGain: number, bGain: number) {
+    for (let i = 0; i < data.length; i += 4) {
+      data[i] = data[i] * (rGain / 100);
+      data[i+1] = data[i+1] * (gGain / 100);
+      data[i+2] = data[i+2] * (bGain / 100);
+    }
+  }
+
+  function processImage() {
+    if (!currentImage || !ctx || !pCtx) return;
+
+    const gridSize = parseInt(gridSizeInput.value);
+    if (gridSizeDisplay) gridSizeDisplay.textContent = `${gridSize}x${gridSize}`;
+
+    // 1. Prepare process canvas
+    processCanvas.width = gridSize;
+    processCanvas.height = gridSize;
+    pCtx.clearRect(0, 0, gridSize, gridSize);
+    
+    // Calculate crop parameters
+    const zoom = parseInt(zoomInput.value) / 100;
+    const baseSize = Math.min(currentImage.width, currentImage.height);
+    const cropSize = baseSize / zoom;
+    
+    // User offsets (-100 to 100 as percentage of available space)
+    const offX = (parseInt(offsetXInput.value) / 100) * (currentImage.width - cropSize);
+    const offY = (parseInt(offsetYInput.value) / 100) * (currentImage.height - cropSize);
+
+    // Initial centering offset
+    const centerX = (currentImage.width - cropSize) / 2;
+    const centerY = (currentImage.height - cropSize) / 2;
+
+    const sx = Math.max(0, Math.min(currentImage.width - cropSize, centerX + offX));
+    const sy = Math.max(0, Math.min(currentImage.height - cropSize, centerY + offY));
+
+    pCtx.drawImage(currentImage, sx, sy, cropSize, cropSize, 0, 0, gridSize, gridSize);
+
+    // 2. Adjust contrast and RGB
+    const imageData = pCtx.getImageData(0, 0, gridSize, gridSize);
+    
+    // Apply RGB gains first
+    const rGain = parseInt(redInput.value);
+    const gGain = parseInt(greenInput.value);
+    const bGain = parseInt(blueInput.value);
+    applyRGBGains(imageData.data, rGain, gGain, bGain);
+
+    // Apply contrast
+    const contrast = parseInt(contrastInput.value) - 100;
+    adjustContrast(imageData.data, contrast);
+    
+    // 3. Render bricks
+    ctx.clearRect(0, 0, outputCanvas.width, outputCanvas.height);
+    const cellSize = outputCanvas.width / gridSize;
+    const counts = new Map();
+
+    for (let y = 0; y < gridSize; y++) {
+      for (let x = 0; x < gridSize; x++) {
+        const i = (y * gridSize + x) * 4;
+        const r = imageData.data[i];
+        const g = imageData.data[i+1];
+        const b = imageData.data[i+2];
+        
+        const color = getNearestColor(r, g, b);
+        
+        // Track counts
+        const count = counts.get(color.name) || { count: 0, rgb: color.rgb };
+        count.count++;
+        counts.set(color.name, count);
+
+        // Draw brick body
+        ctx.fillStyle = `rgb(${color.rgb.join(',')})`;
+        ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+        
+        // ... rest of loop ...
+        ctx.beginPath();
+        ctx.arc(
+          (x + 0.5) * cellSize, 
+          (y + 0.5) * cellSize, 
+          cellSize * 0.35, 
+          0, 
+          Math.PI * 2
+        );
+        ctx.fillStyle = 'rgba(0,0,0,0.1)';
+        ctx.fill();
+        
+        // Grid lines
+        ctx.strokeStyle = 'rgba(0,0,0,0.05)';
+        ctx.strokeRect(x * cellSize, y * cellSize, cellSize, cellSize);
+      }
+    }
+
+    renderInventory(counts);
+    placeholder?.classList.add('hidden');
+    outputCanvas.classList.remove('hidden');
+    inventorySection?.classList.remove('hidden');
+    clearImageBtn?.classList.remove('hidden');
+    downloadBtn.disabled = false;
+  }
+
+  function clearImage() {
+    currentImage = null;
+    imageInput.value = '';
+    placeholder?.classList.remove('hidden');
+    outputCanvas.classList.add('hidden');
+    inventorySection?.classList.add('hidden');
+    clearImageBtn?.classList.add('hidden');
+    downloadBtn.disabled = true;
+    
+    // Reset controls to defaults
+    gridSizeInput.value = '32';
+    zoomInput.value = '100';
+    offsetXInput.value = '0';
+    offsetYInput.value = '0';
+    contrastInput.value = '100';
+    redInput.value = '100';
+    greenInput.value = '100';
+    blueInput.value = '100';
+    
+    if (gridSizeDisplay) gridSizeDisplay.textContent = '32x32';
+  }
+
+  function renderInventory(counts: Map<string, any>) {
+    if (!inventoryList) return;
+    
+    const sortedCounts = Array.from(counts.entries())
+      .sort((a, b) => b[1].count - a[1].count);
+
+    inventoryList.innerHTML = '';
+    
+    sortedCounts.forEach(([name, data]) => {
+      const item = document.createElement('div');
+      item.className = 'flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100';
+      
+      const leftSide = document.createElement('div');
+      leftSide.className = 'flex items-center gap-3';
+      
+      const swatch = document.createElement('div');
+      swatch.className = 'w-6 h-6 rounded-md shadow-sm border border-black/10';
+      swatch.style.backgroundColor = `rgb(${data.rgb.join(',')})`;
+      
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'text-sm font-medium text-gray-700 truncate max-w-[120px]';
+      nameSpan.textContent = name;
+      nameSpan.title = name;
+      
+      const countSpan = document.createElement('span');
+      countSpan.className = 'text-sm font-bold text-gray-900';
+      countSpan.textContent = data.count.toString();
+      
+      leftSide.appendChild(swatch);
+      leftSide.appendChild(nameSpan);
+      item.appendChild(leftSide);
+      item.appendChild(countSpan);
+      
+      inventoryList.appendChild(item);
+    });
+  }
+
+  imageInput.addEventListener('change', (e) => {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+
+    // Defensive Check: File Type
+    if (!file.type.startsWith('image/')) {
+      alert('Please upload an image file (PNG, JPG, etc.).');
+      imageInput.value = '';
+      return;
+    }
+
+    // Defensive Check: File Size
+    if (file.size > MAX_FILE_SIZE) {
+      alert('The image is too large. Please upload an image smaller than 10MB.');
+      imageInput.value = '';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onerror = () => {
+        alert('There was an error loading the image. It might be corrupted or in an unsupported format.');
+        imageInput.value = '';
+      };
+      img.onload = () => {
+        // Defensive Check: Image Dimensions (prevent memory bombs)
+        if (img.width > 8192 || img.height > 8192) {
+          alert('Image dimensions are too large. Please use an image under 8000 pixels.');
+          imageInput.value = '';
+          return;
+        }
+
+        // Defensive Check: Extreme Aspect Ratio
+        const aspectRatio = img.width / img.height;
+        if (aspectRatio > 50 || aspectRatio < 0.02) {
+          alert('This image has an extreme aspect ratio and cannot be processed.');
+          imageInput.value = '';
+          return;
+        }
+
+        currentImage = img;
+        processImage();
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  contrastInput.addEventListener('input', () => {
+    if (currentImage) processImage();
+  });
+
+  clearImageBtn.addEventListener('click', clearImage);
+
+  resetGridBtn.addEventListener('click', () => {
+    gridSizeInput.value = '32';
+    if (currentImage) processImage();
+  });
+
+  resetCropBtn.addEventListener('click', () => {
+    zoomInput.value = '100';
+    offsetXInput.value = '0';
+    offsetYInput.value = '0';
+    if (currentImage) processImage();
+  });
+
+  resetContrastBtn.addEventListener('click', () => {
+    contrastInput.value = '100';
+    if (currentImage) processImage();
+  });
+
+  resetColorsBtn.addEventListener('click', () => {
+    redInput.value = '100';
+    greenInput.value = '100';
+    blueInput.value = '100';
+    if (currentImage) processImage();
+  });
+
+  [gridSizeInput, zoomInput, offsetXInput, offsetYInput, redInput, greenInput, blueInput].forEach(input => {
+    input.addEventListener('input', () => {
+      if (currentImage) processImage();
+    });
+  });
+
+  downloadBtn.addEventListener('click', () => {
+    const link = document.createElement('a');
+    link.download = 'brick-pattern.png';
+    link.href = outputCanvas.toDataURL();
+    link.click();
+  });
+</script>
+
+<style>
+  input[type="range"] {
+    accent-color: #111827;
+  }
+
+  #redInput { accent-color: #dc2626; }
+  #greenInput { accent-color: #16a34a; }
+  #blueInput { accent-color: #2563eb; }
+
+  input[type="range"]::-webkit-slider-thumb {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+  }
+
+  input[type="range"]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+  }
+</style>
