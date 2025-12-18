@@ -150,7 +150,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     .masonry-container {
       column-count: 1;
       column-gap: 2rem;
-      column-fill: balance;
+      /* Remove balance to prevent items from jumping columns */
+      column-fill: auto;
+      /* Stabilize the whole container */
+      transform: translateZ(0);
     }
     
     /* Responsive masonry columns */
@@ -168,11 +171,13 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     
     /* Masonry items */
     .masonry-item {
-      break-inside: avoid;
-      page-break-inside: avoid;
-      display: inline-block;
+      break-inside: avoid-column;
+      display: block;
       width: 100%;
       margin-bottom: 2rem;
+      /* Creates a separate stacking context */
+      isolation: isolate;
+      background: white;
     }
     
     /* Natural image sizing - no cropping */
