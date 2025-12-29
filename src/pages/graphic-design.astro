@@ -19,7 +19,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     <div class="mb-16">
       <div class="masonry-container">
         <!-- Gallery Item: Brick Designer -->
-        <a href="/brick-designer" class="masonry-item bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 mb-6 block">
+        <a href="/brick-designer" class="masonry-item bg-white rounded-lg overflow-hidden mb-6 block">
           <div class="relative">
             <img 
               src="/images/venus2.png" 
@@ -34,7 +34,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         </a>
 
         <!-- Gallery Item 1 -->
-        <a href="/public-health-review-cover" class="masonry-item bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 mb-6 block">
+        <a href="/public-health-review-cover" class="masonry-item bg-white rounded-lg overflow-hidden mb-6 block">
           <div class="relative">
             <img 
               src="/images/phr4.png" 
@@ -49,7 +49,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         </a>
 
         <!-- Gallery Item 3 -->
-        <a href="/skull-and-flies-painting" class="masonry-item bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 mb-6 block">
+        <a href="/skull-and-flies-painting" class="masonry-item bg-white rounded-lg overflow-hidden mb-6 block">
           <div class="relative">
             <img 
               src="/images/skullandflies.jpg" 
@@ -65,7 +65,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         </a>
 
         <!-- Gallery Item 4 -->
-        <a href="/whale-painting" class="masonry-item bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 mb-6 block">
+        <a href="/whale-painting" class="masonry-item bg-white rounded-lg overflow-hidden mb-6 block">
           <div class="relative">
             <img 
               src="/images/whale.jpg" 
@@ -81,7 +81,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         </a>
 
         <!-- Gallery Item 5 -->
-        <a href="/adaptator-evolution-game" class="masonry-item bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 mb-6 block">
+        <a href="/adaptator-evolution-game" class="masonry-item bg-white rounded-lg overflow-hidden mb-6 block">
           <div class="relative">
             <img 
               src="/images/adaptatorcreatures.png" 
@@ -96,7 +96,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         </a>
 
         <!-- Gallery Item 6 -->
-        <a href="/gene-editing-perspectives" class="masonry-item bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 mb-6 block">
+        <a href="/gene-editing-perspectives" class="masonry-item bg-white rounded-lg overflow-hidden mb-6 block">
           <div class="relative">
             <img 
               src="/images/child.png" 
@@ -111,7 +111,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         </a>
 
         <!-- Gallery Item 7 -->
-        <a href="/rainbow-bricks" class="masonry-item bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 mb-6 block">
+        <a href="/rainbow-bricks" class="masonry-item bg-white rounded-lg overflow-hidden mb-6 block">
           <div class="relative">
             <img 
               src="/images/lego.jpeg" 
@@ -127,7 +127,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         </a>
 
         <!-- Gallery Item 8 -->
-        <a href="/ppe-instructions" class="masonry-item bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 mb-6 block">
+        <a href="/ppe-instructions" class="masonry-item bg-white rounded-lg overflow-hidden mb-6 block">
           <div class="relative">
             <img 
               src="/images/ppemask.png" 
@@ -174,37 +174,35 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       break-inside: avoid-column;
       display: block;
       width: 100%;
-      margin-bottom: 2rem;
+      margin-bottom: 0.1rem;
       /* Creates a separate stacking context */
       isolation: isolate;
       background: white;
+      /* Prevent text flashing on hover by forcing GPU acceleration */
+      transform: translateZ(0);
+      backface-visibility: hidden;
     }
     
-    /* Natural image sizing - no cropping */
+    /* Natural image sizing - no cropping for masonry */
     .masonry-item img {
       display: block;
       width: 100%;
       height: auto;
       object-fit: contain;
       transition: transform 0.3s ease;
+      /* Performance hint for transformations */
+      will-change: transform;
+      backface-visibility: hidden;
     }
     
     /* Card hover effects */
-    .masonry-item {
-      /* No animation */
-    }
-    
     .masonry-item:hover {
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      /* No shadow */
     }
     
     /* Image zoom effect on hover */
-    .masonry-item img {
-      /* No animation */
-    }
-    
     .masonry-item:hover img {
-      /* No zoom */
+      transform: scale(1.03);
     }
     
     /* Ensure image container doesn't show overflow */
