@@ -10,7 +10,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         Graphic Design
       </h1>
       <p class="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-        With my training in visual communication, I aim to share complex ideas, elucidate data, and celebrate the splendor of nature. 
+        I bridge the gap between information design and storytelling. From public health to the natural world, I transform complex data into visual experiences that tell a clear, human story.
 
       </p>
     </div>
@@ -148,22 +148,15 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   <style>
     /* Masonry layout using CSS columns */
     .masonry-container {
-      column-count: 1;
+      /* Use column-width for more natural responsiveness in Chrome */
+      column-width: 320px;
       column-gap: 2rem;
-      /* Remove balance to prevent items from jumping columns */
-      column-fill: auto;
-      /* Stabilize the whole container */
-      transform: translateZ(0);
+      width: 100%;
+      max-width: 100%;
     }
     
-    /* Responsive masonry columns */
-    @media (min-width: 768px) {
-      .masonry-container {
-        column-count: 2;
-      }
-    }
-    
-    @media (min-width: 1024px) {
+    /* Ensure no more than 3 columns on large screens */
+    @media (min-width: 1200px) {
       .masonry-container {
         column-count: 3;
       }
@@ -171,16 +164,20 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     
     /* Masonry items */
     .masonry-item {
-      break-inside: avoid-column;
       display: block;
+      /* break-inside is the key for columns */
+      break-inside: avoid;
+      -webkit-column-break-inside: avoid;
+      page-break-inside: avoid;
+      
       width: 100%;
       margin-bottom: 0.1rem;
-      /* Creates a separate stacking context */
-      isolation: isolate;
       background: white;
-      /* Prevent text flashing on hover by forcing GPU acceleration */
-      transform: translateZ(0);
-      backface-visibility: hidden;
+      border-radius: 0.5rem;
+      overflow: hidden;
+      
+      /* Simplify stacking to avoid Chrome rendering bugs in columns */
+      position: relative;
     }
     
     /* Natural image sizing - no cropping for masonry */
@@ -190,9 +187,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       height: auto;
       object-fit: contain;
       transition: transform 0.3s ease;
-      /* Performance hint for transformations */
       will-change: transform;
-      backface-visibility: hidden;
     }
     
     /* Card hover effects */
