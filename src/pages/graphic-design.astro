@@ -152,8 +152,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       column-gap: 2rem;
       /* Remove balance to prevent items from jumping columns */
       column-fill: auto;
-      /* Stabilize the whole container */
-      transform: translateZ(0);
     }
     
     /* Responsive masonry columns */
@@ -171,10 +169,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     
     /* Masonry items */
     .masonry-item {
-      break-inside: avoid-column;
-      display: block;
+      break-inside: avoid;
+      display: inline-block;
       width: 100%;
-      margin-bottom: 0.1rem;
+      margin-bottom: 2rem;
       /* Creates a separate stacking context */
       isolation: isolate;
       background: white;
