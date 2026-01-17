@@ -142,7 +142,17 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         <!-- Coloring Tool (Bottom on Mobile, Left on Desktop) -->
         <div class="lg:col-span-1 space-y-6 order-3">
           <div class="p-6 bg-gray-50 rounded-xl border border-gray-100">
-            <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4">Coloring Tool</h3>
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wider mb-0">Coloring Tool</h3>
+              <button
+                type="button"
+                class="undo-btn lg:hidden text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors disabled:text-gray-300 disabled:hover:text-gray-300"
+                disabled
+                title="Undo last stroke"
+              >
+                Undo
+              </button>
+            </div>
             
             <div class="space-y-4">
               <div>
@@ -215,15 +225,14 @@ import BaseLayout from '../layouts/BaseLayout.astro';
                   Clear All Coloring
                 </button>
 
-                <button
-                  id="undoBtn"
-                  type="button"
-                  class="text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors disabled:text-gray-300 disabled:hover:text-gray-300"
-                  disabled
-                  title="Undo last stroke"
-                >
-                  Undo
-                </button>
+                    <button
+                      type="button"
+                      class="undo-btn hidden lg:block text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors disabled:text-gray-300 disabled:hover:text-gray-300"
+                      disabled
+                      title="Undo last stroke"
+                    >
+                      Undo
+                    </button>
               </div>
             </div>
 
@@ -311,7 +320,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   const dotDensityInput = document.getElementById('dotDensityInput') as HTMLInputElement;
   const dotDensityDisplay = document.getElementById('dotDensityDisplay');
   const clearPaintBtn = document.getElementById('clearPaintBtn') as HTMLButtonElement;
-  const undoBtn = document.getElementById('undoBtn') as HTMLButtonElement;
+  const undoBtns = document.querySelectorAll('.undo-btn');
   const colorSwatches = document.querySelectorAll('.color-swatch');
   const eraserBtn = document.getElementById('eraserBtn') as HTMLButtonElement;
   const brushCursor = document.getElementById('brushCursor');
@@ -372,8 +381,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   }
 
   function updateUndoUi() {
-    if (!undoBtn) return;
-    undoBtn.disabled = undoStack.length <= 1;
+    undoBtns.forEach(btn => {
+      (btn as HTMLButtonElement).disabled = undoStack.length <= 1;
+    });
   }
 
   function getBenDayDotSettings() {
@@ -564,11 +574,13 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     }
   });
 
-  undoBtn.addEventListener('click', () => {
-    if (undoStack.length <= 1) return;
-    undoStack.pop(); // drop current
-    restoreSnapshot(undoStack[undoStack.length - 1]);
-    updateUndoUi();
+  undoBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (undoStack.length <= 1) return;
+      undoStack.pop(); // drop current
+      restoreSnapshot(undoStack[undoStack.length - 1]);
+      updateUndoUi();
+    });
   });
 
   function getCanvasMousePos(e: MouseEvent | TouchEvent) {
