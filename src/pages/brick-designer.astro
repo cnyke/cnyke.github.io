@@ -41,6 +41,13 @@ const brickColors = lines
       <h1 class="text-4xl font-bold text-gray-900 mb-4">Brick Designer</h1>
       <p class="text-lg text-gray-600 mb-8">Upload an image to generate a custom brick mosaic pattern. This tool uses only the most common brick colors, making it easier to build your creation using the bricks you already have at home on a standard base plate. If you don't have all the pieces, substitute a close color! See below for the parts inventory you'll need. If you make something, I'd love to see it! Share it with #brickdesigner.</p>
       
+      <div class="max-w-fit mx-auto mb-8 bg-blue-50 px-4 py-2 rounded-lg flex items-center gap-2 text-blue-700 text-sm">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        Processed locally — your image never leaves your device.
+      </div>
+
       <!-- Example Images -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl mx-auto">
         <div class="space-y-2">
@@ -130,15 +137,12 @@ const brickColors = lines
             </div>
             <div>
               <label class="block text-xs text-gray-500 mb-1">Zoom</label>
-              <input type="range" id="zoomInput" min="10" max="300" value="100" class="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer" />
+              <input type="range" id="zoomInput" min="10" max="300" value="100" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" />
             </div>
-            <div>
-              <label class="block text-xs text-gray-500 mb-1">Move Horizontal</label>
-              <input type="range" id="offsetXInput" min="-100" max="100" value="0" class="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer" />
-            </div>
-            <div>
-              <label class="block text-xs text-gray-500 mb-1">Move Vertical</label>
-              <input type="range" id="offsetYInput" min="-100" max="100" value="0" class="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer" />
+            <p class="text-[10px] text-gray-500 italic">Drag to move your image horizontally or vertically.</p>
+            <div class="hidden">
+              <input type="range" id="offsetXInput" min="-100" max="100" value="0" />
+              <input type="range" id="offsetYInput" min="-100" max="100" value="0" />
             </div>
           </div>
 
@@ -174,15 +178,15 @@ const brickColors = lines
             <div class="grid grid-cols-1 gap-3">
               <div>
                 <label class="block text-xs font-medium text-red-700 mb-1">Red</label>
-                <input type="range" id="redInput" min="0" max="200" value="100" class="w-full h-1.5 bg-red-100 rounded-lg appearance-none cursor-pointer" />
+                <input type="range" id="redInput" min="0" max="200" value="100" class="w-full h-2 bg-red-100 rounded-lg appearance-none cursor-pointer" />
               </div>
               <div>
                 <label class="block text-xs font-medium text-green-700 mb-1">Green</label>
-                <input type="range" id="greenInput" min="0" max="200" value="100" class="w-full h-1.5 bg-green-100 rounded-lg appearance-none cursor-pointer" />
+                <input type="range" id="greenInput" min="0" max="200" value="100" class="w-full h-2 bg-green-100 rounded-lg appearance-none cursor-pointer" />
               </div>
               <div>
                 <label class="block text-xs font-medium text-blue-700 mb-1">Blue</label>
-                <input type="range" id="blueInput" min="0" max="200" value="100" class="w-full h-1.5 bg-blue-100 rounded-lg appearance-none cursor-pointer" />
+                <input type="range" id="blueInput" min="0" max="200" value="100" class="w-full h-2 bg-blue-100 rounded-lg appearance-none cursor-pointer" />
               </div>
             </div>
           </div>
@@ -217,12 +221,6 @@ const brickColors = lines
           </svg>
           Brick Inventory
         </h2>
-        <div class="bg-blue-50 px-4 py-2 rounded-lg flex items-center gap-2 text-blue-700 text-sm">
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          Processed locally — your image never leaves your device.
-        </div>
       </div>
       <div id="inventoryList" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         <!-- Counts will be injected here -->
@@ -531,11 +529,94 @@ const brickColors = lines
     if (currentImage) processImage();
   });
 
-  [gridSizeInput, zoomInput, offsetXInput, offsetYInput, redInput, greenInput, blueInput].forEach(input => {
+  [gridSizeInput, zoomInput, redInput, greenInput, blueInput].forEach(input => {
     input.addEventListener('input', () => {
       if (currentImage) processImage();
     });
   });
+
+  // Drag to reframe logic
+  let isDragging = false;
+  let lastX = 0;
+  let lastY = 0;
+
+  function handleStart(e: MouseEvent | TouchEvent) {
+    if (!currentImage) return;
+    isDragging = true;
+    const pos = getPos(e);
+    lastX = pos.x;
+    lastY = pos.y;
+    outputCanvas.style.cursor = 'grabbing';
+  }
+
+  function handleMove(e: MouseEvent | TouchEvent) {
+    if (!isDragging || !currentImage) return;
+    e.preventDefault();
+    
+    const pos = getPos(e);
+    const dx = pos.x - lastX;
+    const dy = pos.y - lastY;
+    
+    lastX = pos.x;
+    lastY = pos.y;
+
+    // We need to translate canvas movement to our -100 to 100 range
+    // The scale of movement depends on how much of the image is "hidden"
+    const zoom = parseInt(zoomInput.value) / 100;
+    const baseSize = Math.min(currentImage.width, currentImage.height);
+    const cropSize = baseSize / zoom;
+    
+    const availableX = currentImage.width - cropSize;
+    const availableY = currentImage.height - cropSize;
+    
+    // If there's no space to move, don't do anything
+    if (availableX <= 0 && availableY <= 0) return;
+
+    // Map canvas pixels to source image pixels
+    // outputCanvas is 1024x1024 internally, but may be scaled by CSS
+    const rect = outputCanvas.getBoundingClientRect();
+    const canvasToImageScale = cropSize / rect.width;
+    
+    if (availableX > 0) {
+      const moveX = dx * canvasToImageScale;
+      const currentVal = parseInt(offsetXInput.value);
+      // Subtract delta because dragging right means moving the crop left
+      const deltaVal = (moveX / availableX) * 100;
+      offsetXInput.value = Math.max(-100, Math.min(100, currentVal - deltaVal)).toString();
+    }
+    
+    if (availableY > 0) {
+      const moveY = dy * canvasToImageScale;
+      const currentVal = parseInt(offsetYInput.value);
+      // Subtract delta because dragging down means moving the crop up
+      const deltaVal = (moveY / availableY) * 100;
+      offsetYInput.value = Math.max(-100, Math.min(100, currentVal - deltaVal)).toString();
+    }
+
+    processImage();
+  }
+
+  function handleEnd() {
+    isDragging = false;
+    outputCanvas.style.cursor = 'grab';
+  }
+
+  function getPos(e: MouseEvent | TouchEvent) {
+    if (e instanceof MouseEvent) {
+      return { x: e.clientX, y: e.clientY };
+    } else {
+      return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    }
+  }
+
+  outputCanvas.style.cursor = 'grab';
+  outputCanvas.addEventListener('mousedown', handleStart);
+  window.addEventListener('mousemove', handleMove);
+  window.addEventListener('mouseup', handleEnd);
+
+  outputCanvas.addEventListener('touchstart', handleStart, { passive: false });
+  window.addEventListener('touchmove', handleMove, { passive: false });
+  window.addEventListener('touchend', handleEnd);
 
   downloadBtn.addEventListener('click', () => {
     // Using toBlob is more memory-efficient and avoids URL length limits

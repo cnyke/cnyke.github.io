@@ -1,0 +1,1283 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Comic Book Art - Claire Nyquist" description="Upload a photo or use the blank canvas to create comic book style art with Ben Day dots and edge detection.">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Back Navigation -->
+    <div class="mb-8">
+      <a href="/graphic-design" class="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium">
+        ← Back to Graphic Design
+      </a>
+    </div>
+
+    <!-- Project Header -->
+    <div class="text-center mb-12">
+      <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+        Comic Book Art
+      </h1>
+      <div class="text-lg text-gray-600 max-w-3xl mx-auto leading-relaxed space-y-4">
+        <p>
+          Upload a photo or use the blank canvas, then click and drag to draw.
+          Benjamin Henry Day, Jr. invented a printing process in 1879 which became characteristic of comic books.
+          “Ben Day Dots” are a cheap way to print the illusion of full color. Cyan, magenta, yellow, and key (black) inks were printed in dots on cheap newsprint paper.
+          This tool is inspired by Roy Lichtenstein, the comics of Fletcher Hanks, the animated “Into the Spider-Verse” and, of course, Wonder Woman.
+        </p>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 border border-gray-100">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        <!-- Settings (Top on Mobile, Left on Desktop) -->
+        <div class="lg:col-span-1 space-y-6 order-1">
+          <div class="p-6 bg-gray-50 rounded-xl border border-gray-100">
+            <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4">Settings</h3>
+            
+            <div class="space-y-4">
+              <div class="pt-2">
+                <button
+                  id="toggleProcessingBtn"
+                  type="button"
+                  class="text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors"
+                  aria-expanded="true"
+                  aria-controls="imageProcessingControls"
+                >
+                  Ready to color? Hide image processing controls
+                </button>
+              </div>
+
+              <div id="imageProcessingControls" class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Upload Image</label>
+                  <input 
+                    type="file" 
+                    id="imageInput" 
+                    accept="image/*"
+                    class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
+                  />
+                  <p class="text-[10px] text-gray-400 mt-1">Maximum file size: 5MB</p>
+                </div>
+
+                <div>
+                  <div class="flex items-center justify-between mb-2">
+                    <label class="block text-sm font-medium text-gray-700">Edge Threshold</label>
+                    <span id="thresholdDisplay" class="text-xs font-mono text-blue-600 font-bold">20</span>
+                  </div>
+                  <input 
+                    type="range" 
+                    id="thresholdInput" 
+                    min="1" 
+                    max="60" 
+                    value="20" 
+                    class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                  />
+                  <p class="text-[10px] text-gray-400 mt-1">Controls how much detail is captured in the outlines.</p>
+                </div>
+
+                <div>
+                  <div class="flex items-center justify-between mb-2">
+                    <label class="block text-sm font-medium text-gray-700">Edge Smoothing</label>
+                    <span id="smoothingDisplay" class="text-xs font-mono text-blue-600 font-bold">2</span>
+                  </div>
+                  <input
+                    type="range"
+                    id="smoothingInput"
+                    min="0"
+                    max="5"
+                    value="2"
+                    class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                  />
+                  <p class="text-[10px] text-gray-400 mt-1">Reduces texture noise so big object outlines read cleanly.</p>
+                </div>
+
+                <div>
+                  <div class="flex items-center justify-between mb-2">
+                    <label class="block text-sm font-medium text-gray-700">Speckle Cleanup</label>
+                    <span id="cleanupDisplay" class="text-xs font-mono text-blue-600 font-bold">30</span>
+                  </div>
+                  <input
+                    type="range"
+                    id="cleanupInput"
+                    min="0"
+                    max="200"
+                    value="30"
+                    class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                  />
+                  <p class="text-[10px] text-gray-400 mt-1">Removes tiny isolated edge fragments.</p>
+                </div>
+
+                <button 
+                  id="clearImageBtn"
+                  class="text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors"
+                >
+                  Clear Image
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Preview Area (Middle on Mobile, Right on Desktop) -->
+        <div class="lg:col-span-2 lg:row-span-2 flex flex-col items-center justify-center bg-gray-50 rounded-2xl p-0 lg:p-4 min-h-0 lg:min-h-[500px] border-2 border-dashed border-gray-200 relative overflow-hidden order-2">
+          <div id="placeholder" class="text-gray-400 text-center z-10">
+            <svg class="mx-auto h-16 w-16 mb-4 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <p class="text-lg font-medium">Upload a photo to start</p>
+            <p class="text-sm">High-contrast images work best!</p>
+          </div>
+          
+          <div id="canvasContainer" class="hidden w-full h-full flex items-center justify-center relative cursor-none touch-none">
+            <canvas id="outputCanvas" class="max-w-full h-auto shadow-2xl bg-white touch-none"></canvas>
+            <div id="brushCursor" class="pointer-events-none fixed z-50 rounded-full border border-gray-400/50 mix-blend-multiply hidden"></div>
+          </div>
+
+          <!-- Progress overlay -->
+          <div id="progressOverlay" class="absolute inset-0 bg-white/80 backdrop-blur-sm hidden flex-col items-center justify-center z-20">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+            <p class="text-blue-800 font-medium">Processing Image...</p>
+          </div>
+        </div>
+
+        <!-- Coloring Tool (Bottom on Mobile, Left on Desktop) -->
+        <div class="lg:col-span-1 space-y-6 order-3">
+          <div class="p-6 bg-gray-50 rounded-xl border border-gray-100">
+            <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4">Coloring Tool</h3>
+            
+            <div class="space-y-4">
+              <div>
+                <label class="block text-xs text-gray-500 mb-2">Palette</label>
+                <div class="flex gap-2">
+                  <button class="color-swatch w-8 h-8 rounded-full border-2 border-transparent active border-blue-600" data-color="C" style="background-color: #1A7EBE;" title="Blue"></button>
+                  <button class="color-swatch w-8 h-8 rounded-full border-2 border-transparent" data-color="M" style="background-color: #D92440;" title="Red"></button>
+                  <button class="color-swatch w-8 h-8 rounded-full border-2 border-transparent" data-color="Y" style="background-color: #F9DB25;" title="Yellow"></button>
+                  <button class="color-swatch w-8 h-8 rounded-full border-2 border-transparent" data-color="K" style="background-color: #000000;" title="Black"></button>
+                  <button id="eraserBtn" class="w-8 h-8 rounded-full border-2 border-gray-200 flex items-center justify-center bg-white hover:bg-gray-50" title="Eraser">
+                    <svg class="w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      <path d="M21.6 11.6L14.4 4.4a2 2 0 0 0-2.828 0l-8.9 8.9a2 2 0 0 0 0 2.828l3.3 3.3A2 2 0 0 0 7.386 20h11.214a1 1 0 1 0 0-2H13.6l8-8a2 2 0 0 0 0-2.4zM10.772 18H7.386l-3.3-3.3 5.2-5.2 5.6 5.6-4.114 3.9z"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <div class="flex items-center justify-between mb-2">
+                  <label class="block text-sm font-medium text-gray-700">Brush Size</label>
+                  <span id="brushSizeDisplay" class="text-xs font-mono text-blue-600 font-bold">50</span>
+                </div>
+                <input 
+                  type="range" 
+                  id="brushSizeInput" 
+                  min="25" 
+                  max="500" 
+                  value="50" 
+                  class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                />
+              </div>
+
+              <div>
+                <div class="flex items-center justify-between mb-2">
+                  <label class="block text-sm font-medium text-gray-700">Dot Size</label>
+                  <span id="benDayDisplay" class="text-xs font-mono text-blue-600 font-bold">5</span>
+                </div>
+                <input 
+                  type="range" 
+                  id="benDayInput" 
+                  min="1" 
+                  max="25" 
+                  value="5" 
+                  class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                />
+                <p class="text-[10px] text-gray-400 mt-1">Sets dot diameter. Use Dot Density to change spacing between dots.</p>
+              </div>
+
+              <div>
+                <div class="flex items-center justify-between mb-2">
+                  <label class="block text-sm font-medium text-gray-700">Dot Density</label>
+                  <span id="dotDensityDisplay" class="text-xs font-mono text-blue-600 font-bold">70</span>
+                </div>
+                <input
+                  type="range"
+                  id="dotDensityInput"
+                  min="0"
+                  max="100"
+                  value="70"
+                  class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                />
+                <p class="text-[10px] text-gray-400 mt-1">Drag right for denser dots (darker), left for fewer dots (lighter).</p>
+              </div>
+
+              <div class="flex items-center gap-6">
+                <button 
+                  id="clearPaintBtn"
+                  class="text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors"
+                >
+                  Clear All Coloring
+                </button>
+
+                <button
+                  id="undoBtn"
+                  type="button"
+                  class="text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors disabled:text-gray-300 disabled:hover:text-gray-300"
+                  disabled
+                  title="Undo last stroke"
+                >
+                  Undo
+                </button>
+              </div>
+            </div>
+
+            <div class="pt-6 mt-6 border-t border-gray-200">
+              <button 
+                id="downloadPngBtn"
+                class="w-full bg-gray-900 text-white py-3 px-6 rounded-xl font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                disabled
+              >
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Download PNG
+              </button>
+            </div>
+          </div>
+
+          <div class="p-4 bg-blue-50 rounded-xl text-blue-800 text-xs leading-relaxed">
+            <div class="flex gap-2">
+              <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p>The image is processed locally on your device.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gallery section (existing or modified) -->
+    <div class="mt-16 text-center">
+      <h2 class="text-2xl font-bold text-gray-900 mb-8">Sample Results</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- We can add some sample images here later if available -->
+        <div class="bg-gray-100 rounded-xl aspect-square flex items-center justify-center text-gray-400 border border-gray-200">
+           Sample 1 coming soon
+        </div>
+        <div class="bg-gray-100 rounded-xl aspect-square flex items-center justify-center text-gray-400 border border-gray-200">
+           Sample 2 coming soon
+        </div>
+        <div class="bg-gray-100 rounded-xl aspect-square flex items-center justify-center text-gray-400 border border-gray-200">
+           Sample 3 coming soon
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .color-swatch.active {
+      border-color: #3b82f6;
+      transform: scale(1.1);
+    }
+  </style>
+
+  <!-- Hidden processing elements -->
+  <canvas id="processCanvas" class="hidden"></canvas>
+</BaseLayout>
+
+<script>
+  // Load D3.js dynamically
+  function loadD3(): Promise<any> {
+    return new Promise((resolve, reject) => {
+      if ((window as any).d3) {
+        resolve((window as any).d3);
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = 'https://d3js.org/d3.v7.min.js';
+      script.onload = () => resolve((window as any).d3);
+      script.onerror = () => reject(new Error('Failed to load D3.js'));
+      document.head.appendChild(script);
+    });
+  }
+
+  let d3: any;
+  let currentImage: HTMLImageElement | null = null;
+  
+  const imageInput = document.getElementById('imageInput') as HTMLInputElement;
+  const thresholdInput = document.getElementById('thresholdInput') as HTMLInputElement;
+  const thresholdDisplay = document.getElementById('thresholdDisplay');
+  const smoothingInput = document.getElementById('smoothingInput') as HTMLInputElement;
+  const smoothingDisplay = document.getElementById('smoothingDisplay');
+  const cleanupInput = document.getElementById('cleanupInput') as HTMLInputElement;
+  const cleanupDisplay = document.getElementById('cleanupDisplay');
+  const clearImageBtn = document.getElementById('clearImageBtn') as HTMLButtonElement;
+  const toggleProcessingBtn = document.getElementById('toggleProcessingBtn') as HTMLButtonElement;
+  const imageProcessingControls = document.getElementById('imageProcessingControls');
+  const downloadPngBtn = document.getElementById('downloadPngBtn') as HTMLButtonElement;
+  const outputCanvas = document.getElementById('outputCanvas') as HTMLCanvasElement;
+  const canvasContainer = document.getElementById('canvasContainer');
+  const placeholder = document.getElementById('placeholder');
+  const progressOverlay = document.getElementById('progressOverlay');
+  const processCanvas = document.getElementById('processCanvas') as HTMLCanvasElement;
+  const pCtx = processCanvas.getContext('2d', { willReadFrequently: true });
+  const oCtx = outputCanvas.getContext('2d');
+
+  // Coloring Tool Elements
+  const brushSizeInput = document.getElementById('brushSizeInput') as HTMLInputElement;
+  const brushSizeDisplay = document.getElementById('brushSizeDisplay');
+  const benDayInput = document.getElementById('benDayInput') as HTMLInputElement;
+  const benDayDisplay = document.getElementById('benDayDisplay');
+  const dotDensityInput = document.getElementById('dotDensityInput') as HTMLInputElement;
+  const dotDensityDisplay = document.getElementById('dotDensityDisplay');
+  const clearPaintBtn = document.getElementById('clearPaintBtn') as HTMLButtonElement;
+  const undoBtn = document.getElementById('undoBtn') as HTMLButtonElement;
+  const colorSwatches = document.querySelectorAll('.color-swatch');
+  const eraserBtn = document.getElementById('eraserBtn') as HTMLButtonElement;
+  const brushCursor = document.getElementById('brushCursor');
+
+  let currentContours: any[] = [];
+  let currentWidth = 0;
+  let currentHeight = 0;
+  let originalRGB: Uint8ClampedArray | null = null;
+  let originalGrayscale: Float32Array | null = null;
+  let processingBuffer: Float32Array | null = null;
+  let tempBuffer: Float32Array | null = null;
+  let sobelBuffer: Float32Array | null = null;
+  let gxBuffer: Float32Array | null = null;
+  let gyBuffer: Float32Array | null = null;
+  let nmsBuffer: Float32Array | null = null;
+  let edgeStatusBuffer: Uint8Array | null = null;
+  let edgePixelsBuffer: Uint8Array | null = null;
+  let originalWidth = 0;
+  let originalHeight = 0;
+  let dpr = 1;
+
+  // Painting State
+  let isPainting = false;
+  let currentCMYK = 'C';
+  let isErasing = false;
+  let lastPos = { x: 0, y: 0 };
+  let needsRender = false;
+  const baseLayerOrder = ['C', 'M', 'Y', 'K'] as const;
+  type CmykKey = (typeof baseLayerOrder)[number];
+
+  // Undo stack for coloring layers
+  type PaintSnapshot = { drawing: ImageData };
+  const MAX_UNDO_STEPS = 8;
+  const undoStack: PaintSnapshot[] = [];
+
+  function captureSnapshot(): PaintSnapshot {
+    return {
+      drawing: drawingCtx.getImageData(0, 0, originalWidth, originalHeight)
+    };
+  }
+
+  function restoreSnapshot(s: PaintSnapshot) {
+    drawingCtx.putImageData(s.drawing, 0, 0);
+    needsRender = true;
+  }
+
+  function resetUndoStack() {
+    undoStack.length = 0;
+    undoStack.push(captureSnapshot());
+    updateUndoUi();
+  }
+
+  function commitUndoSnapshot() {
+    // Push post-operation snapshot (so undo restores the previous one).
+    undoStack.push(captureSnapshot());
+    if (undoStack.length > MAX_UNDO_STEPS) undoStack.splice(0, undoStack.length - MAX_UNDO_STEPS);
+    updateUndoUi();
+  }
+
+  function updateUndoUi() {
+    if (!undoBtn) return;
+    undoBtn.disabled = undoStack.length <= 1;
+  }
+
+  function getBenDayDotSettings() {
+    // Dot size is controlled directly; density controls spacing (pitch) only.
+    const dotSize = parseInt(benDayInput.value);
+
+    // Density adjusts how tightly the dot grid is packed (more dots per area => darker).
+    // 0..100 maps to a pitch multiplier of 2.0..0.05 (higher density => tighter spacing)
+    const densityUi = Math.max(0, Math.min(100, parseInt(dotDensityInput.value)));
+    const t = densityUi / 100;
+    const pitchMultiplier = 2.0 + (0.05 - 2.0) * t;
+
+    // Base pitch chosen to keep a Ben Day-ish relationship by default:
+    // when dotSize is 10, pitch is ~25 (close to the old defaults).
+    const basePitch = Math.max(dotSize + 1, Math.round(dotSize * 2.5));
+
+    // Allow pitch to get very small at high density so dots overlap and the brush can look solid.
+    // Keep a floor for performance / sanity.
+    const pitch = Math.max(2, Math.round(basePitch * pitchMultiplier));
+    const dotSpacing = pitch;
+    return { pitch, dotSize, dotSpacing };
+  }
+
+  function updateCanvasSize() {
+    dpr = window.devicePixelRatio || 1;
+    
+    // Set actual drawing size (for High-DPI)
+    // The internal width/height attributes define the intrinsic aspect ratio.
+    outputCanvas.width = Math.floor(currentWidth * dpr);
+    outputCanvas.height = Math.floor(currentHeight * dpr);
+
+    // Use CSS to handle responsive scaling without stretching.
+    // We set a max-width to the actual image size to prevent upscaling,
+    // and height: auto to maintain the aspect ratio if the container shrinks.
+    outputCanvas.style.maxWidth = `${currentWidth}px`;
+    outputCanvas.style.width = '100%';
+    outputCanvas.style.height = 'auto';
+  }
+  
+  // Offscreen canvas for all coloring dots
+  const drawingCanvas = document.createElement('canvas');
+  const drawingCtx = drawingCanvas.getContext('2d', { willReadFrequently: true })!;
+
+  // Offscreen canvas for the ink/outline layer (single-pixel edge map, composited on top)
+  const edgeCanvas = document.createElement('canvas');
+  const edgeCtx = edgeCanvas.getContext('2d', { willReadFrequently: true })!;
+
+  const CMYK_COLORS = {
+    C: '#1A7EBE',
+    M: '#D92440',
+    Y: '#F9DB25',
+    K: '#000000'
+  };
+
+  async function init() {
+    try {
+      // D3 is optional now (we render edges directly), so don't block the app if it fails to load.
+      try {
+        d3 = await loadD3();
+        console.log('D3 loaded');
+      } catch (err) {
+        console.warn('D3 failed to load (continuing without it):', err);
+      }
+      
+      // Initialize a blank canvas for drawing immediately
+      originalWidth = 800;
+      originalHeight = 600;
+      currentWidth = originalWidth;
+      currentHeight = originalHeight;
+      
+      drawingCanvas.width = originalWidth;
+      drawingCanvas.height = originalHeight;
+
+      edgeCanvas.width = originalWidth;
+      edgeCanvas.height = originalHeight;
+      edgeCtx.clearRect(0, 0, originalWidth, originalHeight);
+      
+      outputCanvas.width = originalWidth;
+      outputCanvas.height = originalHeight;
+      updateCanvasSize();
+      
+      placeholder?.classList.add('hidden');
+      canvasContainer?.classList.remove('hidden');
+      downloadPngBtn.disabled = false;
+      resetUndoStack();
+      renderOutput();
+      
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  init();
+
+  imageInput.addEventListener('change', async (e) => {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+
+    // Check file size (5MB limit)
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      alert('File is too large. Please upload an image smaller than 5MB.');
+      imageInput.value = '';
+      return;
+    }
+
+    progressOverlay?.classList.remove('hidden');
+    
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        currentImage = img;
+        
+        // Scale image to a reasonable processing size (max 1000px)
+        // for better performance and reliability across devices
+        const maxProcessingDim = 1000;
+        const scale = Math.min(1, maxProcessingDim / Math.max(img.width, img.height));
+        originalWidth = Math.floor(img.width * scale);
+        originalHeight = Math.floor(img.height * scale);
+        
+        drawingCanvas.width = originalWidth;
+        drawingCanvas.height = originalHeight;
+
+        edgeCanvas.width = originalWidth;
+        edgeCanvas.height = originalHeight;
+        edgeCtx.clearRect(0, 0, originalWidth, originalHeight);
+
+        processCanvas.width = originalWidth;
+        processCanvas.height = originalHeight;
+        pCtx!.drawImage(img, 0, 0, originalWidth, originalHeight);
+        
+        const imageData = pCtx!.getImageData(0, 0, originalWidth, originalHeight);
+        originalRGB = new Uint8ClampedArray(imageData.data);
+        originalGrayscale = new Float32Array(originalWidth * originalHeight);
+        for (let i = 0; i < imageData.data.length; i += 4) {
+          originalGrayscale[i / 4] = 0.299 * imageData.data[i] + 0.587 * imageData.data[i + 1] + 0.114 * imageData.data[i + 2];
+        }
+        
+        resetUndoStack();
+        processImage();
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  colorSwatches.forEach(swatch => {
+    swatch.addEventListener('click', () => {
+      colorSwatches.forEach(s => s.classList.remove('active', 'border-blue-600'));
+      eraserBtn.classList.remove('bg-blue-50', 'border-blue-600');
+      swatch.classList.add('active', 'border-blue-600');
+      currentCMYK = (swatch as HTMLElement).dataset.color || 'C';
+      
+      isErasing = false;
+      updateCursorStyle();
+      needsRender = true;
+    });
+  });
+
+  eraserBtn.addEventListener('click', () => {
+    colorSwatches.forEach(s => s.classList.remove('active', 'border-blue-600'));
+    eraserBtn.classList.add('bg-blue-50', 'border-blue-600');
+    isErasing = true;
+    updateCursorStyle();
+  });
+
+  brushSizeInput.addEventListener('input', () => {
+    if (brushSizeDisplay) brushSizeDisplay.textContent = brushSizeInput.value;
+    updateCursorStyle();
+  });
+
+  benDayInput.addEventListener('input', () => {
+    if (benDayDisplay) benDayDisplay.textContent = benDayInput.value;
+    updateCursorStyle();
+  });
+
+  dotDensityInput.addEventListener('input', () => {
+    if (dotDensityDisplay) dotDensityDisplay.textContent = dotDensityInput.value;
+    updateCursorStyle();
+  });
+
+  clearPaintBtn.addEventListener('click', () => {
+    if (confirm('Clear all coloring?')) {
+      drawingCtx.clearRect(0, 0, originalWidth, originalHeight);
+      commitUndoSnapshot();
+      renderOutput();
+    }
+  });
+
+  undoBtn.addEventListener('click', () => {
+    if (undoStack.length <= 1) return;
+    undoStack.pop(); // drop current
+    restoreSnapshot(undoStack[undoStack.length - 1]);
+    updateUndoUi();
+  });
+
+  function getCanvasMousePos(e: MouseEvent | TouchEvent) {
+    const rect = outputCanvas.getBoundingClientRect();
+    let clientX, clientY;
+    
+    if ('touches' in e) {
+      const touch = e.touches[0] || e.changedTouches[0];
+      clientX = touch.clientX;
+      clientY = touch.clientY;
+    } else {
+      clientX = (e as MouseEvent).clientX;
+      clientY = (e as MouseEvent).clientY;
+    }
+    
+    const x = (clientX - rect.left) * (currentWidth / rect.width);
+    const y = (clientY - rect.top) * (currentHeight / rect.height);
+    return { x, y };
+  }
+
+  function updateCursorStyle() {
+    if (!brushCursor) return;
+    
+    const brushSize = parseInt(brushSizeInput.value);
+    const { dotSize, dotSpacing } = getBenDayDotSettings();
+    
+    // Get display scale of canvas
+    const rect = outputCanvas.getBoundingClientRect();
+    const scale = rect.width / currentWidth || 1;
+    
+    const displayDotSize = dotSize * scale;
+    const displayBrushSize = brushSize * scale;
+    const displayDotSpacing = dotSpacing * scale;
+    
+    brushCursor.style.width = `${displayBrushSize}px`;
+    brushCursor.style.height = `${displayBrushSize}px`;
+    brushCursor.style.overflow = 'hidden';
+    
+    if (isErasing) {
+      brushCursor.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
+      brushCursor.style.border = '1px solid #999';
+      brushCursor.innerHTML = '';
+    } else {
+      brushCursor.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+      brushCursor.style.border = '1px dashed rgba(0,0,0,0.3)';
+      
+      const color = CMYK_COLORS[currentCMYK as keyof typeof CMYK_COLORS];
+      const angles: Record<string, number> = { 'C': 15, 'M': 75, 'Y': 0, 'K': 45 };
+      const angle = (angles[currentCMYK] || 0) * (Math.PI / 180);
+      const cos = Math.cos(angle);
+      const sin = Math.sin(angle);
+
+      // Generate a grid of dots that fills the brush circle
+      let dotsHtml = '';
+      const halfBrush = displayBrushSize / 2;
+      const step = displayDotSpacing;
+      
+      // Calculate bounds in rotated space to ensure full coverage
+      // We go slightly wider to ensure the grid is fully populated
+      const limit = halfBrush + step;
+      for (let u = -limit; u <= limit; u += step) {
+        for (let v = -limit; v <= limit; v += step) {
+          // Transform from grid space to cursor space
+          const x = u * cos - v * sin;
+          const y = u * sin + v * cos;
+          
+          // Show any dot that's even partially inside the brush
+          // Use a slightly larger radius for the check, then let overflow:hidden clip
+          if (Math.hypot(x, y) <= halfBrush + (displayDotSize / 2)) {
+            dotsHtml += `<div style="
+              width: ${displayDotSize}px;
+              height: ${displayDotSize}px;
+              background-color: ${color};
+              opacity: 0.6;
+              border-radius: 50%;
+              position: absolute;
+              left: 50%;
+              top: 50%;
+              transform: translate(calc(-50% + ${x}px), calc(-50% + ${y}px));
+            "></div>`;
+          }
+        }
+      }
+      brushCursor.innerHTML = dotsHtml;
+    }
+  }
+
+  function moveCursor(e: MouseEvent | TouchEvent) {
+    if (!brushCursor) return;
+    
+    let clientX, clientY;
+    if ('touches' in e) {
+      const touch = e.touches[0] || e.changedTouches[0];
+      if (!touch) return;
+      clientX = touch.clientX;
+      clientY = touch.clientY;
+    } else {
+      clientX = (e as MouseEvent).clientX;
+      clientY = (e as MouseEvent).clientY;
+    }
+    
+    brushCursor.style.left = `${clientX}px`;
+    brushCursor.style.top = `${clientY}px`;
+    brushCursor.style.transform = `translate(-50%, -50%)`;
+  }
+
+  outputCanvas.addEventListener('mouseenter', () => {
+    brushCursor?.classList.remove('hidden');
+    updateCursorStyle();
+  });
+
+  outputCanvas.addEventListener('mouseleave', () => {
+    brushCursor?.classList.add('hidden');
+  });
+
+  window.addEventListener('scroll', () => updateCursorStyle());
+  window.addEventListener('resize', () => updateCursorStyle());
+
+  function paint(e: MouseEvent | TouchEvent) {
+    if (!isPainting || !oCtx) return;
+    
+    const currentPos = getCanvasMousePos(e);
+    const brushSize = parseInt(brushSizeInput.value);
+    const { dotSize, dotSpacing } = getBenDayDotSettings();
+    
+    // Different angles for each color to simulate offset printing
+    const angles: Record<string, number> = { 'C': 15, 'M': 75, 'Y': 0, 'K': 45 };
+
+    if (isErasing) {
+      // More reliable erasing:
+      // - isolate state via save/restore
+      // - stamp a circle when there is little/no movement
+      drawingCtx.save();
+      drawingCtx.globalCompositeOperation = 'destination-out';
+      drawingCtx.globalAlpha = 1;
+      drawingCtx.lineWidth = brushSize;
+      drawingCtx.lineCap = 'round';
+      drawingCtx.lineJoin = 'round';
+      drawingCtx.strokeStyle = 'rgba(0,0,0,1)';
+      drawingCtx.fillStyle = 'rgba(0,0,0,1)';
+
+      const dx = currentPos.x - lastPos.x;
+      const dy = currentPos.y - lastPos.y;
+      const dist2 = dx * dx + dy * dy;
+      const r = brushSize / 2;
+
+      if (dist2 < 0.5) {
+        drawingCtx.beginPath();
+        drawingCtx.arc(currentPos.x, currentPos.y, r, 0, Math.PI * 2);
+        drawingCtx.fill();
+      } else {
+        drawingCtx.beginPath();
+        drawingCtx.moveTo(lastPos.x, lastPos.y);
+        drawingCtx.lineTo(currentPos.x, currentPos.y);
+        drawingCtx.stroke();
+
+        // Stamp end-caps
+        drawingCtx.beginPath();
+        drawingCtx.arc(currentPos.x, currentPos.y, r, 0, Math.PI * 2);
+        drawingCtx.fill();
+      }
+
+      drawingCtx.restore();
+    } else {
+      const angle = (angles[currentCMYK as keyof typeof angles] || 0) * (Math.PI / 180);
+      const cos = Math.cos(angle);
+      const sin = Math.sin(angle);
+
+      drawingCtx.fillStyle = CMYK_COLORS[currentCMYK as keyof typeof CMYK_COLORS];
+      
+      // Bounding box of the segment to limit iteration
+      const minX = Math.min(lastPos.x, currentPos.x) - brushSize;
+      const maxX = Math.max(lastPos.x, currentPos.x) + brushSize;
+      const minY = Math.min(lastPos.y, currentPos.y) - brushSize;
+      const maxY = Math.max(lastPos.y, currentPos.y) + brushSize;
+
+      // Calculate bounds in rotated space (u,v)
+      const corners = [
+        {x: minX, y: minY}, {x: maxX, y: minY},
+        {x: minX, y: maxY}, {x: maxX, y: maxY}
+      ];
+      let minU = Infinity, maxU = -Infinity, minV = Infinity, maxV = -Infinity;
+      corners.forEach(c => {
+        const u = c.x * cos + c.y * sin;
+        const v = -c.x * sin + c.y * cos;
+        minU = Math.min(minU, u); maxU = Math.max(maxU, u);
+        minV = Math.min(minV, v); maxV = Math.max(maxV, v);
+      });
+
+      // Iterate through the angled grid
+      for (let u = Math.floor(minU / dotSpacing) * dotSpacing; u <= maxU; u += dotSpacing) {
+        for (let v = Math.floor(minV / dotSpacing) * dotSpacing; v <= maxV; v += dotSpacing) {
+          // Transform back to canvas space
+          const px = u * cos - v * sin;
+          const py = u * sin + v * cos;
+          
+          // Check if this point is near the line segment
+          const dist = distToSegment(px, py, lastPos.x, lastPos.y, currentPos.x, currentPos.y);
+          
+          if (dist <= brushSize / 2) {
+            drawingCtx.beginPath();
+            drawingCtx.arc(px, py, dotSize / 2, 0, Math.PI * 2);
+            drawingCtx.fill();
+          }
+        }
+      }
+    }
+
+    lastPos = currentPos;
+    needsRender = true;
+  }
+
+  // Animation loop for smooth rendering
+  function animate() {
+    if (needsRender) {
+      renderOutput();
+      needsRender = false;
+    }
+    requestAnimationFrame(animate);
+  }
+  requestAnimationFrame(animate);
+
+  function distToSegment(px: number, py: number, x1: number, y1: number, x2: number, y2: number) {
+    const l2 = (x1 - x2) ** 2 + (y1 - y2) ** 2;
+    if (l2 === 0) return Math.hypot(px - x1, py - y1);
+    let t = ((px - x1) * (x2 - x1) + (py - y1) * (y2 - y1)) / l2;
+    t = Math.max(0, Math.min(1, t));
+    return Math.hypot(px - (x1 + t * (x2 - x1)), py - (y1 + t * (y2 - y1)));
+  }
+
+  outputCanvas.addEventListener('mousedown', (e) => { 
+    isPainting = true; 
+    lastPos = getCanvasMousePos(e);
+    paint(e); 
+  });
+
+  window.addEventListener('mousemove', (e) => {
+    if (isPainting) paint(e);
+    moveCursor(e);
+  });
+
+  window.addEventListener('mouseup', () => {
+    if (isPainting) commitUndoSnapshot();
+    isPainting = false;
+  });
+
+  outputCanvas.addEventListener('touchstart', (e) => { 
+    isPainting = true; 
+    lastPos = getCanvasMousePos(e);
+    paint(e); 
+    if (e.cancelable) e.preventDefault(); 
+  }, { passive: false });
+
+  window.addEventListener('touchmove', (e) => { 
+    if (isPainting) {
+      paint(e);
+      if (e.cancelable) e.preventDefault();
+    }
+    moveCursor(e);
+  }, { passive: false });
+
+  window.addEventListener('touchend', () => {
+    if (isPainting) commitUndoSnapshot();
+    isPainting = false;
+  });
+
+  thresholdInput.addEventListener('input', () => {
+    if (thresholdDisplay) thresholdDisplay.textContent = thresholdInput.value;
+    if (currentImage) debouncedProcess(100);
+  });
+
+  smoothingInput.addEventListener('input', () => {
+    if (smoothingDisplay) smoothingDisplay.textContent = smoothingInput.value;
+    if (currentImage) debouncedProcess(100);
+  });
+
+  cleanupInput.addEventListener('input', () => {
+    if (cleanupDisplay) cleanupDisplay.textContent = cleanupInput.value;
+    if (currentImage) debouncedProcess(100);
+  });
+
+  clearImageBtn.addEventListener('click', () => {
+    if (confirm('Clear uploaded image? This will also clear all coloring.')) {
+      currentImage = null;
+      originalRGB = null;
+      originalGrayscale = null;
+      imageInput.value = '';
+      
+      // Reset to default blank canvas size
+      originalWidth = 800;
+      originalHeight = 600;
+      currentWidth = originalWidth;
+      currentHeight = originalHeight;
+      
+      drawingCanvas.width = originalWidth;
+      drawingCanvas.height = originalHeight;
+      edgeCanvas.width = originalWidth;
+      edgeCanvas.height = originalHeight;
+      
+      drawingCtx.clearRect(0, 0, originalWidth, originalHeight);
+      edgeCtx.clearRect(0, 0, originalWidth, originalHeight);
+      
+      updateCanvasSize();
+      
+      placeholder?.classList.add('hidden');
+      canvasContainer?.classList.remove('hidden');
+      downloadPngBtn.disabled = false;
+      
+      resetUndoStack();
+      renderOutput();
+    }
+  });
+
+  toggleProcessingBtn.addEventListener('click', () => {
+    const isHidden = imageProcessingControls?.classList.toggle('hidden') ?? false;
+    toggleProcessingBtn.textContent = isHidden ? 'Show image processing controls' : 'Ready to color? Hide image processing controls';
+    toggleProcessingBtn.setAttribute('aria-expanded', (!isHidden).toString());
+  });
+
+  let timeout: any;
+  function debouncedProcess(ms: number = 150) {
+    clearTimeout(timeout);
+    timeout = setTimeout(processImage, ms);
+  }
+
+  function processImage() {
+    if (!currentImage || !originalGrayscale) return;
+    
+    progressOverlay?.classList.remove('hidden');
+    
+    setTimeout(() => {
+      if (!originalGrayscale) return;
+      try {
+        const width = originalWidth;
+        const height = originalHeight;
+        
+        // Only update dimensions if they actually changed
+        if (currentWidth !== width || currentHeight !== height) {
+          currentWidth = width;
+          currentHeight = height;
+          updateCanvasSize();
+        }
+
+        // Reuse buffers to save memory
+        if (!processingBuffer || processingBuffer.length !== width * height) {
+          processingBuffer = new Float32Array(width * height);
+          tempBuffer = new Float32Array(width * height);
+        }
+
+        if (originalRGB) {
+          for (let i = 0; i < originalRGB.length; i += 4) {
+            const r = originalRGB[i];
+            const g = originalRGB[i + 1];
+            const b = originalRGB[i + 2];
+            processingBuffer[i / 4] = 0.299 * r + 0.587 * g + 0.114 * b;
+          }
+        } else {
+          processingBuffer.set(originalGrayscale!);
+        }
+        
+        let grayscale = processingBuffer;
+
+        // --- Canny-style edge detection (single, clean ink lines) ---
+        const n = width * height;
+        const uiThreshold = parseInt(thresholdInput.value); // 1..60
+
+        // Quadratic mapping gives more precision at the low end (left side of slider)
+        // threshold = (uiThreshold / 60)^2 * 255
+        const threshold = Math.max(1, Math.round(Math.pow(uiThreshold / 60, 2) * 255));
+
+        const smoothingIters = parseInt(smoothingInput.value); // 0..5
+        const inkWeight = 1;
+        const minComponentSize = parseInt(cleanupInput.value); // 0..200
+
+        // Step 0: Pre-processing for "Comic" look
+        // Median filtering removes noise and small textures while keeping edges sharp.
+        if (smoothingIters > 0) {
+          const medianTemp = tempBuffer!;
+          for (let y = 1; y < height - 1; y++) {
+            const row = y * width;
+            for (let x = 1; x < width - 1; x++) {
+              const idx = row + x;
+              // Simple 3x3 median for speed
+              const v0 = grayscale[idx - width - 1], v1 = grayscale[idx - width], v2 = grayscale[idx - width + 1];
+              const v3 = grayscale[idx - 1], v4 = grayscale[idx], v5 = grayscale[idx + 1];
+              const v6 = grayscale[idx + width - 1], v7 = grayscale[idx + width], v8 = grayscale[idx + width + 1];
+              const vals = [v0, v1, v2, v3, v4, v5, v6, v7, v8].sort((a,b) => a-b);
+              medianTemp[idx] = vals[4];
+            }
+          }
+          grayscale.set(medianTemp);
+        }
+
+        // Step 1: Gaussian blur (5-tap separable). This helps suppress texture/detail
+        // so big object/person outlines dominate.
+        // Kernel: [1 4 6 4 1] / 16
+        const blurred = tempBuffer!;
+        for (let iter = 0; iter < smoothingIters; iter++) {
+          // Horizontal pass: grayscale -> blurred
+          for (let y = 0; y < height; y++) {
+            const row = y * width;
+            for (let x = 0; x < width; x++) {
+              const x0 = Math.max(0, x - 2);
+              const x1 = Math.max(0, x - 1);
+              const x2 = x;
+              const x3 = Math.min(width - 1, x + 1);
+              const x4 = Math.min(width - 1, x + 2);
+              blurred[row + x] =
+                (grayscale[row + x0] +
+                  4 * grayscale[row + x1] +
+                  6 * grayscale[row + x2] +
+                  4 * grayscale[row + x3] +
+                  grayscale[row + x4]) /
+                16;
+            }
+          }
+          // Vertical pass: blurred -> grayscale (in-place)
+          for (let y = 0; y < height; y++) {
+            const y0 = Math.max(0, y - 2);
+            const y1 = Math.max(0, y - 1);
+            const y2 = y;
+            const y3 = Math.min(height - 1, y + 1);
+            const y4 = Math.min(height - 1, y + 2);
+            const row = y * width;
+            const r0 = y0 * width;
+            const r1 = y1 * width;
+            const r2 = y2 * width;
+            const r3 = y3 * width;
+            const r4 = y4 * width;
+            for (let x = 0; x < width; x++) {
+              grayscale[row + x] =
+                (blurred[r0 + x] + 4 * blurred[r1 + x] + 6 * blurred[r2 + x] + 4 * blurred[r3 + x] + blurred[r4 + x]) /
+                16;
+            }
+          }
+        }
+
+        // Step 2: Gradients + magnitude
+        if (!gxBuffer || gxBuffer.length !== n) gxBuffer = new Float32Array(n);
+        if (!gyBuffer || gyBuffer.length !== n) gyBuffer = new Float32Array(n);
+        if (!sobelBuffer || sobelBuffer.length !== n) sobelBuffer = new Float32Array(n);
+        gxBuffer.fill(0);
+        gyBuffer.fill(0);
+        sobelBuffer.fill(0);
+
+        for (let y = 1; y < height - 1; y++) {
+          const row = y * width;
+          for (let x = 1; x < width - 1; x++) {
+            const idx = row + x;
+            const a00 = grayscale[(y - 1) * width + (x - 1)];
+            const a01 = grayscale[(y - 1) * width + x];
+            const a02 = grayscale[(y - 1) * width + (x + 1)];
+            const a10 = grayscale[row + (x - 1)];
+            const a12 = grayscale[row + (x + 1)];
+            const a20 = grayscale[(y + 1) * width + (x - 1)];
+            const a21 = grayscale[(y + 1) * width + x];
+            const a22 = grayscale[(y + 1) * width + (x + 1)];
+
+            const gx = -a00 + a02 - 2 * a10 + 2 * a12 - a20 + a22;
+            const gy = -a00 - 2 * a01 - a02 + a20 + 2 * a21 + a22;
+            gxBuffer[idx] = gx;
+            gyBuffer[idx] = gy;
+
+            // Normalize to 0..255-ish to match the existing slider semantics.
+            const mag = Math.min(255, (Math.abs(gx) + Math.abs(gy)) / 8);
+            sobelBuffer[idx] = mag;
+          }
+        }
+
+        // Step 3: Non-maximum suppression (thins edges to ~1px)
+        if (!nmsBuffer || nmsBuffer.length !== n) nmsBuffer = new Float32Array(n);
+        nmsBuffer.fill(0);
+
+        for (let y = 1; y < height - 1; y++) {
+          const row = y * width;
+          for (let x = 1; x < width - 1; x++) {
+            const idx = row + x;
+            const mag = sobelBuffer[idx];
+            if (mag === 0) continue;
+
+            const gx = gxBuffer[idx];
+            const gy = gyBuffer[idx];
+            let angle = (Math.atan2(gy, gx) * 180) / Math.PI; // [-180, 180]
+            if (angle < 0) angle += 180; // [0, 180)
+
+            let n1 = 0;
+            let n2 = 0;
+            // Quantize to 4 directions
+            if (angle < 22.5 || angle >= 157.5) {
+              // 0°
+              n1 = sobelBuffer[idx - 1];
+              n2 = sobelBuffer[idx + 1];
+            } else if (angle < 67.5) {
+              // 45°
+              n1 = sobelBuffer[idx - width + 1];
+              n2 = sobelBuffer[idx + width - 1];
+            } else if (angle < 112.5) {
+              // 90°
+              n1 = sobelBuffer[idx - width];
+              n2 = sobelBuffer[idx + width];
+            } else {
+              // 135°
+              n1 = sobelBuffer[idx - width - 1];
+              n2 = sobelBuffer[idx + width + 1];
+            }
+
+            if (mag >= n1 && mag >= n2) {
+              nmsBuffer[idx] = mag;
+            }
+          }
+        }
+
+        // Step 4: Hysteresis thresholding (connects broken outline segments)
+        const high = threshold;
+        const low = Math.max(1, Math.floor(high * 0.4));
+        if (!edgeStatusBuffer || edgeStatusBuffer.length !== n) edgeStatusBuffer = new Uint8Array(n);
+        edgeStatusBuffer.fill(0);
+
+        const queue = new Int32Array(n);
+        let qh = 0;
+        let qt = 0;
+
+        for (let i = 0; i < n; i++) {
+          const v = nmsBuffer[i];
+          if (v >= high) {
+            edgeStatusBuffer[i] = 2; // strong
+            queue[qt++] = i;
+          } else if (v >= low) {
+            edgeStatusBuffer[i] = 1; // weak
+          }
+        }
+
+        const neighborOffsets = [
+          -width - 1,
+          -width,
+          -width + 1,
+          -1,
+          1,
+          width - 1,
+          width,
+          width + 1
+        ];
+
+        while (qh < qt) {
+          const idx = queue[qh++];
+          const x = idx % width;
+          const y = (idx / width) | 0;
+          // Skip border to avoid bounds checks on neighbor offsets
+          if (x === 0 || x === width - 1 || y === 0 || y === height - 1) continue;
+
+          for (let k = 0; k < neighborOffsets.length; k++) {
+            const nidx = idx + neighborOffsets[k];
+            if (edgeStatusBuffer[nidx] === 1) {
+              edgeStatusBuffer[nidx] = 2;
+              queue[qt++] = nidx;
+            }
+          }
+        }
+
+        // Final edge pixels
+        if (!edgePixelsBuffer || edgePixelsBuffer.length !== n) edgePixelsBuffer = new Uint8Array(n);
+        edgePixelsBuffer.fill(0);
+        for (let i = 0; i < n; i++) {
+          if (edgeStatusBuffer[i] === 2) edgePixelsBuffer[i] = 255;
+        }
+
+        // Step 5: Edge Smoothing and Inking
+        // A "closing" operation and small dilation creates bolder, smoother comic lines.
+        const dialatedEdges = new Uint8Array(n);
+        const boldWeight = 1; // Base boldness
+        
+        for (let pass = 0; pass < boldWeight; pass++) {
+          dialatedEdges.set(edgePixelsBuffer);
+          for (let y = 1; y < height - 1; y++) {
+            const row = y * width;
+            for (let x = 1; x < width - 1; x++) {
+              const idx = row + x;
+              if (edgePixelsBuffer[idx]) continue;
+              
+              // Only dilate if gradient is strong enough (creates tapered ends)
+              if (sobelBuffer[idx] > threshold * 0.5) {
+                if (edgePixelsBuffer[idx-1] || edgePixelsBuffer[idx+1] || 
+                    edgePixelsBuffer[idx-width] || edgePixelsBuffer[idx+width]) {
+                  dialatedEdges[idx] = 255;
+                }
+              }
+            }
+          }
+          edgePixelsBuffer.set(dialatedEdges);
+        }
+
+        // Speckle cleanup: remove tiny connected components from the edge map
+        if (minComponentSize > 0) {
+          // Reuse edgeStatusBuffer as visited map (0 = unvisited, 1 = visited)
+          edgeStatusBuffer.fill(0);
+          const compQueue = new Int32Array(n);
+
+          for (let i = 0; i < n; i++) {
+            if (!edgePixelsBuffer[i] || edgeStatusBuffer[i]) continue;
+
+            let qh = 0;
+            let qt = 0;
+            edgeStatusBuffer[i] = 1;
+            compQueue[qt++] = i;
+
+            while (qh < qt) {
+              const idx = compQueue[qh++];
+              const x = idx % width;
+              const y = (idx / width) | 0;
+
+              for (let dy = -1; dy <= 1; dy++) {
+                const ny = y + dy;
+                if (ny < 0 || ny >= height) continue;
+                for (let dx = -1; dx <= 1; dx++) {
+                  if (dx === 0 && dy === 0) continue;
+                  const nx = x + dx;
+                  if (nx < 0 || nx >= width) continue;
+                  const nidx = ny * width + nx;
+                  if (!edgePixelsBuffer[nidx] || edgeStatusBuffer[nidx]) continue;
+                  edgeStatusBuffer[nidx] = 1;
+                  compQueue[qt++] = nidx;
+                }
+              }
+            }
+
+            if (qt < minComponentSize) {
+              for (let k = 0; k < qt; k++) {
+                edgePixelsBuffer[compQueue[k]] = 0;
+              }
+            }
+          }
+        }
+
+        // Render edges to the overlay canvas (transparent background, black ink)
+        edgeCanvas.width = width;
+        edgeCanvas.height = height;
+        const edgeImage = edgeCtx.createImageData(width, height);
+        const out = edgeImage.data;
+        for (let i = 0; i < n; i++) {
+          const a = edgePixelsBuffer[i];
+          if (!a) continue;
+          const j = i * 4;
+          out[j] = 0;
+          out[j + 1] = 0;
+          out[j + 2] = 0;
+          out[j + 3] = 255;
+        }
+        edgeCtx.putImageData(edgeImage, 0, 0);
+
+        // Keep contours empty (we now render a thinned edge map directly)
+        currentContours = [];
+
+        needsRender = true;
+        
+        placeholder?.classList.add('hidden');
+        canvasContainer?.classList.remove('hidden');
+        downloadPngBtn.disabled = false;
+      } catch (err) {
+        console.error("Processing error:", err);
+      } finally {
+        progressOverlay?.classList.add('hidden');
+      }
+    }, 1);
+  }
+
+  function renderOutput() {
+    if (!oCtx) return;
+
+    // Background (Always White)
+    oCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    oCtx.fillStyle = 'white';
+    oCtx.fillRect(0, 0, currentWidth, currentHeight);
+
+    // Draw all coloring dots in the order they were laid down
+    oCtx.drawImage(drawingCanvas, 0, 0, currentWidth, currentHeight);
+
+    // Ink layer (outlines) on top
+    oCtx.globalCompositeOperation = 'source-over';
+    oCtx.drawImage(edgeCanvas, 0, 0, currentWidth, currentHeight);
+  }
+
+  downloadPngBtn.addEventListener('click', () => {
+    outputCanvas.toBlob((blob) => {
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'comic-art.png';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }, 'image/png');
+  });
+</script>
