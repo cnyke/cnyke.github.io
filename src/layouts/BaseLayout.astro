@@ -144,6 +144,26 @@ const socialImageURL = new URL(image, Astro.site);
               </div>
             </div>
             
+            <!-- Tools Dropdown -->
+            <div class="relative group">
+              <button class="text-gray-700 hover:text-blue-600 transition-colors font-medium flex items-center space-x-1">
+                <span>Tools</span>
+                <svg class="w-4 h-4 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              <div class="absolute left-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                <div class="py-1">
+                  <a href="/brick-designer" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition-colors">
+                    Brick Designer
+                  </a>
+                  <a href="/comic-book-art" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition-colors">
+                    Comic Book Art
+                  </a>
+                </div>
+              </div>
+            </div>
+            
             <a href="/graphic-design" class="text-gray-700 hover:text-blue-600 transition-colors font-medium">
               Graphic Design
             </a>
@@ -188,6 +208,24 @@ const socialImageURL = new URL(image, Astro.site);
                 </a>
                 <a href="/mosquitoes" class="block text-gray-700 hover:text-blue-600 transition-colors py-2">
                   Mosquitoes
+                </a>
+              </div>
+            </div>
+            
+            <!-- Tools Dropdown for Mobile -->
+            <div>
+              <button id="mobile-tools-toggle" class="text-gray-700 hover:text-blue-600 transition-colors font-medium py-2 flex items-center justify-between w-full">
+                <span>Tools</span>
+                <svg id="mobile-tools-icon" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              <div id="mobile-tools-menu" class="hidden pl-4 space-y-2 mt-2">
+                <a href="/brick-designer" class="block text-gray-700 hover:text-blue-600 transition-colors py-2">
+                  Brick Designer
+                </a>
+                <a href="/comic-book-art" class="block text-gray-700 hover:text-blue-600 transition-colors py-2">
+                  Comic Book Art
                 </a>
               </div>
             </div>
@@ -247,6 +285,14 @@ const socialImageURL = new URL(image, Astro.site);
       document.getElementById('mobile-dataviz-toggle')?.addEventListener('click', () => {
         const submenu = document.getElementById('mobile-dataviz-menu');
         const icon = document.getElementById('mobile-dataviz-icon');
+        submenu?.classList.toggle('hidden');
+        icon?.classList.toggle('rotate-180');
+      });
+
+      // Mobile tools dropdown toggle
+      document.getElementById('mobile-tools-toggle')?.addEventListener('click', () => {
+        const submenu = document.getElementById('mobile-tools-menu');
+        const icon = document.getElementById('mobile-tools-icon');
         submenu?.classList.toggle('hidden');
         icon?.classList.toggle('rotate-180');
       });
