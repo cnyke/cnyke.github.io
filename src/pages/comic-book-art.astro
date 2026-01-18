@@ -61,14 +61,14 @@ import BaseLayout from '../layouts/BaseLayout.astro';
                 <div>
                   <div class="flex items-center justify-between mb-2">
                     <label class="block text-sm font-medium text-gray-700">Edge Threshold</label>
-                    <span id="thresholdDisplay" class="text-xs font-mono text-blue-600 font-bold">20</span>
+                    <span id="thresholdDisplay" class="text-xs font-mono text-blue-600 font-bold">8</span>
                   </div>
                   <input 
                     type="range" 
                     id="thresholdInput" 
                     min="1" 
                     max="60" 
-                    value="20" 
+                    value="8" 
                     class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
                   />
                   <p class="text-[10px] text-gray-400 mt-1">Controls how much detail is captured in the outlines.</p>
@@ -146,7 +146,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
               <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wider mb-0">Coloring Tool</h3>
               <button
                 type="button"
-                class="undo-btn lg:hidden text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors disabled:text-gray-300 disabled:hover:text-gray-300"
+                class="undo-btn text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors disabled:text-gray-300 disabled:hover:text-gray-300"
                 disabled
                 title="Undo last stroke"
               >
@@ -188,14 +188,14 @@ import BaseLayout from '../layouts/BaseLayout.astro';
               <div>
                 <div class="flex items-center justify-between mb-2">
                   <label class="block text-sm font-medium text-gray-700">Dot Size</label>
-                  <span id="benDayDisplay" class="text-xs font-mono text-blue-600 font-bold">5</span>
+                  <span id="benDayDisplay" class="text-xs font-mono text-blue-600 font-bold">3</span>
                 </div>
                 <input 
                   type="range" 
                   id="benDayInput" 
                   min="1" 
                   max="25" 
-                  value="5" 
+                  value="3" 
                   class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
                 />
                 <p class="text-[10px] text-gray-400 mt-1">Sets dot diameter. Use Dot Density to change spacing between dots.</p>
@@ -224,15 +224,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
                 >
                   Clear All Coloring
                 </button>
-
-                    <button
-                      type="button"
-                      class="undo-btn hidden lg:block text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors disabled:text-gray-300 disabled:hover:text-gray-300"
-                      disabled
-                      title="Undo last stroke"
-                    >
-                      Undo
-                    </button>
               </div>
             </div>
 
