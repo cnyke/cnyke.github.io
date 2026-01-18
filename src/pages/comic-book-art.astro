@@ -61,14 +61,14 @@ import BaseLayout from '../layouts/BaseLayout.astro';
                 <div>
                   <div class="flex items-center justify-between mb-2">
                     <label class="block text-sm font-medium text-gray-700">Edge Threshold</label>
-                    <span id="thresholdDisplay" class="text-xs font-mono text-blue-600 font-bold">20</span>
+                    <span id="thresholdDisplay" class="text-xs font-mono text-blue-600 font-bold">8</span>
                   </div>
                   <input 
                     type="range" 
                     id="thresholdInput" 
                     min="1" 
                     max="60" 
-                    value="20" 
+                    value="8" 
                     class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
                   />
                   <p class="text-[10px] text-gray-400 mt-1">Controls how much detail is captured in the outlines.</p>
@@ -142,7 +142,17 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         <!-- Coloring Tool (Bottom on Mobile, Left on Desktop) -->
         <div class="lg:col-span-1 space-y-6 order-3">
           <div class="p-6 bg-gray-50 rounded-xl border border-gray-100">
-            <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4">Coloring Tool</h3>
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wider mb-0">Coloring Tool</h3>
+              <button
+                type="button"
+                class="undo-btn text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors disabled:text-gray-300 disabled:hover:text-gray-300"
+                disabled
+                title="Undo last stroke"
+              >
+                Undo
+              </button>
+            </div>
             
             <div class="space-y-4">
               <div>
@@ -178,14 +188,14 @@ import BaseLayout from '../layouts/BaseLayout.astro';
               <div>
                 <div class="flex items-center justify-between mb-2">
                   <label class="block text-sm font-medium text-gray-700">Dot Size</label>
-                  <span id="benDayDisplay" class="text-xs font-mono text-blue-600 font-bold">5</span>
+                  <span id="benDayDisplay" class="text-xs font-mono text-blue-600 font-bold">3</span>
                 </div>
                 <input 
                   type="range" 
                   id="benDayInput" 
                   min="1" 
                   max="25" 
-                  value="5" 
+                  value="3" 
                   class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
                 />
                 <p class="text-[10px] text-gray-400 mt-1">Sets dot diameter. Use Dot Density to change spacing between dots.</p>
@@ -213,16 +223,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
                   class="text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors"
                 >
                   Clear All Coloring
-                </button>
-
-                <button
-                  id="undoBtn"
-                  type="button"
-                  class="text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors disabled:text-gray-300 disabled:hover:text-gray-300"
-                  disabled
-                  title="Undo last stroke"
-                >
-                  Undo
                 </button>
               </div>
             </div>
@@ -311,7 +311,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   const dotDensityInput = document.getElementById('dotDensityInput') as HTMLInputElement;
   const dotDensityDisplay = document.getElementById('dotDensityDisplay');
   const clearPaintBtn = document.getElementById('clearPaintBtn') as HTMLButtonElement;
-  const undoBtn = document.getElementById('undoBtn') as HTMLButtonElement;
+  const undoBtns = document.querySelectorAll('.undo-btn');
   const colorSwatches = document.querySelectorAll('.color-swatch');
   const eraserBtn = document.getElementById('eraserBtn') as HTMLButtonElement;
   const brushCursor = document.getElementById('brushCursor');
@@ -372,8 +372,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   }
 
   function updateUndoUi() {
-    if (!undoBtn) return;
-    undoBtn.disabled = undoStack.length <= 1;
+    undoBtns.forEach(btn => {
+      (btn as HTMLButtonElement).disabled = undoStack.length <= 1;
+    });
   }
 
   function getBenDayDotSettings() {
@@ -564,11 +565,13 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     }
   });
 
-  undoBtn.addEventListener('click', () => {
-    if (undoStack.length <= 1) return;
-    undoStack.pop(); // drop current
-    restoreSnapshot(undoStack[undoStack.length - 1]);
-    updateUndoUi();
+  undoBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (undoStack.length <= 1) return;
+      undoStack.pop(); // drop current
+      restoreSnapshot(undoStack[undoStack.length - 1]);
+      updateUndoUi();
+    });
   });
 
   function getCanvasMousePos(e: MouseEvent | TouchEvent) {
