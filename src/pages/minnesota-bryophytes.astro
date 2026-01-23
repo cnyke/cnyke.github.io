@@ -1,0 +1,661 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout 
+  title="Minnesota Bryophytes 3D Map | Claire Nyquist"
+  description="An interactive 3D visualization of bryophyte (moss) observations across Minnesota, using GBIF data. Height represents observation density, colors indicate taxonomic orders."
+>
+  <div class="min-h-screen bg-white">
+    <!-- Header -->
+    <div class="relative z-10 pt-8 pb-4 px-4 sm:px-6 lg:px-8">
+      <div class="max-w-7xl mx-auto">
+        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-700 via-emerald-600 to-teal-600 mb-2">
+          Minnesota Bryophytes
+        </h1>
+        <p class="text-slate-600 text-lg max-w-2xl">
+          A 3D map of moss and liverwort observations across Minnesota. Height represents observation density at each location.
+        </p>
+      </div>
+    </div>
+
+    <!-- Legend -->
+    <div id="legend" class="fixed top-24 right-4 z-20 bg-white/95 backdrop-blur-sm rounded-xl p-4 border border-slate-200 shadow-lg max-h-[60vh] overflow-y-auto">
+      <button id="legend-toggle" class="sm:hidden flex items-center justify-between w-full text-emerald-700 font-semibold text-sm uppercase tracking-wider">
+        <span>Orders</span>
+        <span id="legend-arrow" class="transition-transform">▼</span>
+      </button>
+      <h3 class="hidden sm:block text-emerald-700 font-semibold mb-3 text-sm uppercase tracking-wider">Orders</h3>
+      <div id="legend-content" class="sm:block">
+        <div id="legend-items" class="space-y-1.5 text-sm mt-3 sm:mt-0">
+          <!-- Populated by JS -->
+        </div>
+        <div class="mt-4 pt-3 border-t border-slate-200">
+          <p class="text-slate-500 text-xs">Height = observation count</p>
+          <p id="total-obs" class="text-emerald-700 text-xs mt-1"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="fixed bottom-4 left-4 z-20 bg-white/95 backdrop-blur-sm rounded-xl p-4 border border-slate-200 shadow-lg">
+      <h3 class="text-emerald-700 font-semibold mb-3 text-sm uppercase tracking-wider">Controls</h3>
+      <div id="desktop-controls" class="text-slate-600 text-xs space-y-1">
+        <p>🖱️ <span class="text-emerald-600 font-medium">Drag</span> to rotate</p>
+        <p>🔍 <span class="text-emerald-600 font-medium">Scroll</span> to zoom</p>
+        <p>⌨️ <span class="text-emerald-600 font-medium">Shift+Drag</span> to pan</p>
+      </div>
+      <div id="mobile-controls" class="text-slate-600 text-xs space-y-1 hidden">
+        <p>👆 <span class="text-emerald-600 font-medium">Drag</span> to rotate</p>
+        <p>🤏 <span class="text-emerald-600 font-medium">Pinch</span> to zoom</p>
+        <p>✌️ <span class="text-emerald-600 font-medium">Two-finger drag</span> to pan</p>
+      </div>
+      <div class="mt-3 pt-3 border-t border-slate-200">
+        <label class="flex items-center gap-2 text-emerald-700 text-xs cursor-pointer">
+          <input type="checkbox" id="log-scale" checked class="accent-emerald-600">
+          <span>Logarithmic scale</span>
+        </label>
+        <p class="text-slate-400 text-xs mt-1">Better shows variation in low-count areas</p>
+      </div>
+      <button id="reset-view" class="mt-3 w-full py-1.5 px-3 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 text-xs rounded-lg transition-colors">
+        Reset View
+      </button>
+    </div>
+
+    <!-- Explainer panel -->
+    <div id="explainer" class="sm:fixed sm:top-24 sm:left-4 sm:max-w-sm z-20 bg-white/95 backdrop-blur-sm rounded-xl p-5 border border-slate-200 shadow-lg mx-4 mt-4 sm:mx-0 sm:mt-0">
+      <button id="explainer-toggle" class="flex items-center justify-between gap-2 w-full text-left">
+        <h2 class="text-emerald-700 font-semibold text-base">About This Map</h2>
+        <span id="explainer-arrow" class="text-slate-400 text-sm transition-transform hidden sm:block">▼</span>
+      </button>
+      <div id="explainer-content" class="text-slate-600 text-sm mt-3 space-y-3">
+        <p>
+          This 3D visualization displays <strong class="text-emerald-700">bryophyte observations</strong> (mosses, liverworts, and hornworts) recorded across Minnesota from 1893 to 2025.
+        </p>
+        <p>
+          <strong class="text-emerald-700">Bar height</strong> represents the number of observations at each location (logarithmic scale)—taller bars indicate more documented sightings.
+        </p>
+        <p>
+          <strong class="text-emerald-700">Colors</strong> indicate the dominant taxonomic order at each location. Hover over a bar to see the full breakdown of all orders recorded there.
+        </p>
+        <p>
+          <strong class="text-emerald-700">A note on sampling bias:</strong> This map shows where observations were <em>recorded</em>, not necessarily where bryophytes are most abundant. Clusters often reflect researcher activity near cities, universities, and field stations rather than true species distribution.
+        </p>
+        <p class="text-xs text-slate-500 pt-2 border-t border-slate-100">
+          GBIF.org (21 January 2026) GBIF Occurrence Download <a href="https://doi.org/10.15468/dl.xkqqbg" target="_blank" rel="noopener" class="text-emerald-600 hover:underline">https://doi.org/10.15468/dl.xkqqbg</a>
+        </p>
+      </div>
+    </div>
+
+    <!-- Info panel for hover -->
+    <div id="info-panel" class="fixed bottom-4 right-4 sm:top-auto sm:bottom-4 sm:right-4 sm:left-auto z-20 bg-white/95 backdrop-blur-sm rounded-xl p-4 border border-slate-200 shadow-lg hidden min-w-[240px]">
+      <h3 class="text-emerald-700 font-semibold text-sm">Location Details</h3>
+      <div id="info-content" class="text-slate-600 text-sm mt-2 space-y-1">
+      </div>
+    </div>
+
+    <!-- Loading indicator -->
+    <div id="loading" class="fixed inset-0 z-30 bg-white flex items-center justify-center">
+      <div class="text-center">
+        <div class="relative w-24 h-24 mx-auto mb-4">
+          <div class="absolute inset-0 border-4 border-emerald-200 rounded-full"></div>
+          <div class="absolute inset-0 border-4 border-emerald-500 rounded-full animate-spin border-t-transparent"></div>
+          <div class="absolute inset-3 border-4 border-teal-200 rounded-full"></div>
+          <div class="absolute inset-3 border-4 border-teal-500 rounded-full animate-spin border-b-transparent" style="animation-direction: reverse;"></div>
+        </div>
+        <p class="text-emerald-700 text-lg font-medium">Loading Bryophyte Data...</p>
+        <p id="loading-status" class="text-slate-500 text-sm mt-2">Initializing...</p>
+      </div>
+    </div>
+
+    <!-- 3D Canvas -->
+    <div id="canvas-container" class="fixed inset-0 z-0"></div>
+  </div>
+
+  <!-- Three.js from unpkg for better compatibility -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    const loadingStatus = document.getElementById('loading-status');
+
+    // Mobile detection and control switching
+    const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    if (isMobile) {
+      document.getElementById('desktop-controls')?.classList.add('hidden');
+      document.getElementById('mobile-controls')?.classList.remove('hidden');
+    }
+
+    // Legend toggle for mobile
+    const legendToggle = document.getElementById('legend-toggle');
+    const legendContent = document.getElementById('legend-content');
+    const legendArrow = document.getElementById('legend-arrow');
+    let legendExpanded = !isMobile;
+
+    if (isMobile && legendContent) {
+      legendContent.classList.add('hidden');
+    }
+
+    legendToggle?.addEventListener('click', () => {
+      legendExpanded = !legendExpanded;
+      legendContent?.classList.toggle('hidden', !legendExpanded);
+      if (legendArrow) {
+        legendArrow.style.transform = legendExpanded ? 'rotate(180deg)' : 'rotate(0deg)';
+      }
+    });
+
+    // Explainer toggle (desktop only)
+    const explainerToggle = document.getElementById('explainer-toggle');
+    const explainerContent = document.getElementById('explainer-content');
+    const explainerArrow = document.getElementById('explainer-arrow');
+    let explainerExpanded = true;
+
+    explainerToggle?.addEventListener('click', () => {
+      if (!isMobile) {
+        explainerExpanded = !explainerExpanded;
+        explainerContent?.classList.toggle('hidden', !explainerExpanded);
+        if (explainerArrow) {
+          explainerArrow.style.transform = explainerExpanded ? 'rotate(0deg)' : 'rotate(-90deg)';
+        }
+      }
+    });
+
+    // Order color mapping - greens and browns for bryophytes
+    const orderColors = {
+      'Hypnales': '#2d6a4f',
+      'Dicranales': '#40916c',
+      'Sphagnales': '#52b788',
+      'Bryales': '#74c69d',
+      'Polytrichales': '#95d5b2',
+      'Pottiales': '#8b7355',
+      'Grimmiales': '#6b4423',
+      'Bartramiales': '#a0522d',
+      'Orthotrichales': '#556b2f',
+      'Hedwigiales': '#6b8e23',
+      'Funariales': '#9acd32',
+      'Aulacomniales': '#228b22',
+      'Splachnales': '#3cb371',
+      'Scouleriales': '#8fbc8f',
+      'Tetraphidales': '#90ee90',
+      'Timmiales': '#7b3f00',
+      'Encalyptales': '#d2691e',
+      'Bryoxiphiales': '#1e4620',
+      'Archidiales': '#4a7c59',
+      'Andreaeales': '#355e3b',
+      'Catoscopiales': '#2e8b57',
+      'Hookeriales': '#66cdaa',
+      'Diphysciales': '#20b2aa',
+      'Buxbaumiales': '#3d5a45',
+    };
+
+    const defaultColor = '#4a7c59';
+
+    // Load and parse CSV
+    loadingStatus.textContent = 'Fetching observation data...';
+    
+    let csvData;
+    try {
+      const response = await fetch('/data/GBIFBryophytaMinnesota.csv');
+      csvData = await response.text();
+    } catch (e) {
+      loadingStatus.textContent = 'Error loading data: ' + e.message;
+      throw e;
+    }
+
+    loadingStatus.textContent = 'Parsing observations...';
+
+    // Parse CSV
+    const lines = csvData.split('\n');
+    const headers = lines[0]?.split('\t');
+
+    // Find column indices with validation
+    const latIdx = headers?.indexOf('decimalLatitude') ?? -1;
+    const lngIdx = headers?.indexOf('decimalLongitude') ?? -1;
+    const orderIdx = headers?.indexOf('order') ?? -1;
+    const yearIdx = headers?.indexOf('year') ?? -1;
+
+    if (!headers || latIdx === -1 || lngIdx === -1) {
+      loadingStatus.textContent = 'Error: Invalid CSV format - missing required columns';
+      throw new Error('Invalid CSV format');
+    }
+
+    // Grid configuration for aggregation
+    const gridSize = 0.04; // ~4km grid cells for high resolution
+    const grid = new Map();
+
+    let totalObs = 0;
+    const orderCounts = {};
+    const totalLines = lines.length;
+
+    // Process each observation with progress updates
+    for (let i = 1; i < lines.length; i++) {
+      // Show progress every 5000 rows
+      if (i % 5000 === 0) {
+        loadingStatus.textContent = `Parsing observations... ${Math.round((i / totalLines) * 100)}%`;
+      }
+
+      const cols = lines[i].split('\t');
+      if (cols.length <= Math.max(latIdx, lngIdx, orderIdx)) continue;
+
+      const lat = parseFloat(cols[latIdx]);
+      const lng = parseFloat(cols[lngIdx]);
+      const order = cols[orderIdx] || 'Unknown';
+
+      if (isNaN(lat) || isNaN(lng)) continue;
+
+      // Grid key
+      const gridLat = Math.floor(lat / gridSize) * gridSize;
+      const gridLng = Math.floor(lng / gridSize) * gridSize;
+      const key = `${gridLat.toFixed(2)},${gridLng.toFixed(2)}`;
+
+      if (!grid.has(key)) {
+        grid.set(key, {
+          lat: gridLat + gridSize/2,
+          lng: gridLng + gridSize/2,
+          count: 0,
+          orders: {},
+          minYear: Infinity,
+          maxYear: -Infinity
+        });
+      }
+
+      const cell = grid.get(key);
+      cell.count++;
+      cell.orders[order] = (cell.orders[order] || 0) + 1;
+
+      // Track year range
+      if (yearIdx !== -1) {
+        const year = parseInt(cols[yearIdx]);
+        if (!isNaN(year)) {
+          cell.minYear = Math.min(cell.minYear, year);
+          cell.maxYear = Math.max(cell.maxYear, year);
+        }
+      }
+
+      orderCounts[order] = (orderCounts[order] || 0) + 1;
+      totalObs++;
+    }
+
+    loadingStatus.textContent = `Processed ${totalObs.toLocaleString()} observations in ${grid.size} locations...`;
+
+    // Update total observations
+    document.getElementById('total-obs').textContent = `Total: ${totalObs.toLocaleString()} observations`;
+
+    // Populate legend
+    const legendItems = document.getElementById('legend-items');
+    const sortedOrders = Object.entries(orderCounts)
+      .filter(([order]) => order && order !== 'Unknown' && order.trim() !== '')
+      .sort((a, b) => b[1] - a[1]);
+    
+    // Add classified orders
+    sortedOrders.forEach(([order, count]) => {
+      const color = orderColors[order] || defaultColor;
+      const item = document.createElement('div');
+      item.className = 'flex items-center gap-2';
+      item.innerHTML = `
+        <span class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: ${color}"></span>
+        <span class="text-slate-700 truncate">${order}</span>
+        <span class="text-slate-400 ml-auto">${count.toLocaleString()}</span>
+      `;
+      legendItems.appendChild(item);
+    });
+
+    // Add unclassified count if present
+    const unknownCount = orderCounts['Unknown'] || orderCounts[''] || 0;
+    if (unknownCount > 0) {
+      const item = document.createElement('div');
+      item.className = 'flex items-center gap-2 pt-2 mt-2 border-t border-slate-200';
+      item.innerHTML = `
+        <span class="w-3 h-3 rounded-full flex-shrink-0 border-2 border-dashed border-slate-400" style="background-color: ${defaultColor}"></span>
+        <span class="text-slate-500 italic truncate">Unclassified</span>
+        <span class="text-slate-400 ml-auto">${unknownCount.toLocaleString()}</span>
+      `;
+      legendItems.appendChild(item);
+    }
+
+    // Minnesota bounds
+    const MN_BOUNDS = {
+      minLat: 43.5,
+      maxLat: 49.4,
+      minLng: -97.2,
+      maxLng: -89.5
+    };
+
+    // Convert lat/lng to 3D coordinates with true aspect ratio
+    // Minnesota: ~5.9° latitude (407 miles), ~7.7° longitude (365 miles at 46.5°N)
+    // True aspect ratio is approximately 1.115:1 (taller than wide)
+    const MN_WIDTH = 50;  // base width in 3D units
+    const MN_HEIGHT = 56; // height scaled to true aspect ratio
+    
+    function latLngTo3D(lat, lng) {
+      const x = ((lng - MN_BOUNDS.minLng) / (MN_BOUNDS.maxLng - MN_BOUNDS.minLng) - 0.5) * MN_WIDTH;
+      const z = ((lat - MN_BOUNDS.minLat) / (MN_BOUNDS.maxLat - MN_BOUNDS.minLat) - 0.5) * -MN_HEIGHT;
+      return { x, z };
+    }
+
+    // Setup Three.js
+    loadingStatus.textContent = 'Building 3D scene...';
+
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xffffff);
+    scene.fog = new THREE.FogExp2(0xffffff, 0.006);
+
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 45, 55);
+    camera.lookAt(0, 0, 0);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    container.appendChild(renderer.domElement);
+
+    // Controls
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.minDistance = 20;
+    controls.maxDistance = 150;
+    controls.maxPolarAngle = Math.PI / 2.1;
+
+    // Lighting
+    const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+    scene.add(ambientLight);
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    directionalLight.position.set(30, 60, 30);
+    scene.add(directionalLight);
+
+    const directionalLight2 = new THREE.DirectionalLight(0x88ccaa, 0.4);
+    directionalLight2.position.set(-30, 40, -30);
+    scene.add(directionalLight2);
+
+    // Create base plane matching Minnesota's true aspect ratio
+    const planeGeometry = new THREE.PlaneGeometry(MN_WIDTH + 10, MN_HEIGHT + 10);
+    const planeMaterial = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+    });
+    const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+    plane.rotation.x = -Math.PI / 2;
+    plane.position.y = -0.5;
+    scene.add(plane);
+
+    // Grid helper - gray lines on white background
+    const gridHelper = new THREE.GridHelper(70, 35, 0x999999, 0xcccccc);
+    gridHelper.position.y = -0.4;
+    scene.add(gridHelper);
+
+    // Find max count for scaling
+    let maxCount = 0;
+    grid.forEach(cell => {
+      if (cell.count > maxCount) maxCount = cell.count;
+    });
+
+    // Height calculation functions (fixed max height of 10 units)
+    const maxHeight = 10;
+    const maxLogCount = Math.log(maxCount + 1);
+    function calcHeight(count, useLog) {
+      if (useLog) {
+        return Math.max(0.1, (Math.log(count + 1) / maxLogCount) * maxHeight);
+      }
+      return Math.max(0.1, (count / maxCount) * maxHeight);
+    }
+
+    // Create bars using InstancedMesh for better performance
+    const barGeometry = new THREE.CylinderGeometry(0.2, 0.2, 1, 12);
+    const barMaterial = new THREE.MeshStandardMaterial({
+      metalness: 0.4,
+      roughness: 0.5,
+    });
+
+    const instanceCount = grid.size;
+    const instancedMesh = new THREE.InstancedMesh(barGeometry, barMaterial, instanceCount);
+    instancedMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+
+    // Store instance data for raycasting and interaction
+    const instanceData = [];
+    const baseHeights = [];
+    const dummy = new THREE.Object3D();
+    const color = new THREE.Color();
+
+    let instanceIndex = 0;
+    grid.forEach((cell, key) => {
+      // Determine dominant order for color
+      let dominantOrder = '';
+      let maxOrderCount = 0;
+      Object.entries(cell.orders).forEach(([order, count]) => {
+        if (count > maxOrderCount && order && order.trim() !== '') {
+          maxOrderCount = count;
+          dominantOrder = order;
+        }
+      });
+
+      const barColor = orderColors[dominantOrder] || defaultColor;
+      const height = calcHeight(cell.count, true); // Start with log scale
+      const pos = latLngTo3D(cell.lat, cell.lng);
+
+      // Set instance transform
+      dummy.position.set(pos.x, height / 2, pos.z);
+      dummy.scale.set(1, height, 1);
+      dummy.updateMatrix();
+      instancedMesh.setMatrixAt(instanceIndex, dummy.matrix);
+
+      // Set instance color
+      color.set(barColor);
+      instancedMesh.setColorAt(instanceIndex, color);
+
+      // Store data for interaction
+      instanceData.push({
+        lat: cell.lat,
+        lng: cell.lng,
+        count: cell.count,
+        orders: cell.orders,
+        dominantOrder,
+        position: { x: pos.x, z: pos.z },
+        minYear: cell.minYear === Infinity ? null : cell.minYear,
+        maxYear: cell.maxYear === -Infinity ? null : cell.maxYear
+      });
+      baseHeights.push(height);
+
+      instanceIndex++;
+    });
+
+    instancedMesh.instanceMatrix.needsUpdate = true;
+    instancedMesh.instanceColor.needsUpdate = true;
+    scene.add(instancedMesh);
+
+    // Log scale control
+    let useLogScale = true;
+
+    function updateAllHeights() {
+      for (let i = 0; i < instanceCount; i++) {
+        const height = calcHeight(instanceData[i].count, useLogScale);
+        dummy.position.set(instanceData[i].position.x, height / 2, instanceData[i].position.z);
+        dummy.scale.set(1, height, 1);
+        dummy.updateMatrix();
+        instancedMesh.setMatrixAt(i, dummy.matrix);
+      }
+      instancedMesh.instanceMatrix.needsUpdate = true;
+    }
+
+    document.getElementById('log-scale').addEventListener('change', (e) => {
+      useLogScale = e.target.checked;
+      updateAllHeights();
+    });
+
+    // Reset view button
+    const initialCameraPosition = { x: 0, y: 45, z: 55 };
+    document.getElementById('reset-view')?.addEventListener('click', () => {
+      camera.position.set(initialCameraPosition.x, initialCameraPosition.y, initialCameraPosition.z);
+      controls.target.set(0, 0, 0);
+      controls.update();
+    });
+
+    // Raycaster for hover
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    const infoPanel = document.getElementById('info-panel');
+    const infoContent = document.getElementById('info-content');
+
+    function onMouseMove(event) {
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    }
+
+    window.addEventListener('mousemove', onMouseMove);
+
+    // Hide loading
+    loadingStatus.textContent = 'Ready!';
+    setTimeout(() => {
+      document.getElementById('loading').style.opacity = '0';
+      document.getElementById('loading').style.transition = 'opacity 0.5s';
+      setTimeout(() => {
+        document.getElementById('loading').style.display = 'none';
+      }, 500);
+    }, 300);
+
+    // Animation loop
+    let hoveredInstanceId = null;
+    const highlightColor = new THREE.Color();
+    const originalColors = new Map();
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      // Update controls
+      controls.update();
+
+      // Raycasting for hover on InstancedMesh
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObject(instancedMesh);
+
+      if (intersects.length > 0) {
+        const instanceId = intersects[0].instanceId;
+        if (hoveredInstanceId !== instanceId) {
+          // Reset previous highlight
+          if (hoveredInstanceId !== null && originalColors.has(hoveredInstanceId)) {
+            instancedMesh.setColorAt(hoveredInstanceId, originalColors.get(hoveredInstanceId));
+          }
+
+          hoveredInstanceId = instanceId;
+          const data = instanceData[instanceId];
+
+          // Store original color and set highlight
+          if (!originalColors.has(instanceId)) {
+            const origColor = new THREE.Color();
+            instancedMesh.getColorAt(instanceId, origColor);
+            originalColors.set(instanceId, origColor.clone());
+          }
+          highlightColor.copy(originalColors.get(instanceId)).multiplyScalar(1.8);
+          instancedMesh.setColorAt(instanceId, highlightColor);
+          instancedMesh.instanceColor.needsUpdate = true;
+
+          // Update info panel - show all orders
+          const sortedOrders = Object.entries(data.orders)
+            .sort((a, b) => b[1] - a[1]);
+
+          let ordersList = sortedOrders
+            .map(([order, count]) => {
+              const pct = ((count / data.count) * 100).toFixed(0);
+              const isUnknown = !order || order === 'Unknown' || order.trim() === '';
+              const label = isUnknown ? '<em>Unclassified</em>' : order;
+              const style = isUnknown ? 'text-slate-400' : 'text-emerald-600 font-medium';
+              return `<div class="flex justify-between"><span class="${style}">${label}</span><span class="text-slate-400">${count} (${pct}%)</span></div>`;
+            })
+            .join('');
+
+          // Format year range
+          let yearRange = '';
+          if (data.minYear && data.maxYear) {
+            yearRange = data.minYear === data.maxYear
+              ? `<p><span class="text-emerald-600 font-medium">Year:</span> ${data.minYear}</p>`
+              : `<p><span class="text-emerald-600 font-medium">Years:</span> ${data.minYear}–${data.maxYear}</p>`;
+          }
+
+          infoContent.innerHTML = `
+            <p><span class="text-emerald-600 font-medium">Location:</span> ${data.lat.toFixed(3)}°N, ${Math.abs(data.lng).toFixed(3)}°W</p>
+            <p class="text-lg font-semibold text-emerald-700">${data.count.toLocaleString()} observations</p>
+            ${yearRange}
+            <p class="mt-2 text-xs text-emerald-700 font-medium border-t border-slate-100 pt-2">Orders at this location:</p>
+            <div class="text-xs space-y-0.5 max-h-32 overflow-y-auto">${ordersList}</div>
+          `;
+          infoPanel.classList.remove('hidden');
+        }
+      } else {
+        if (hoveredInstanceId !== null && originalColors.has(hoveredInstanceId)) {
+          instancedMesh.setColorAt(hoveredInstanceId, originalColors.get(hoveredInstanceId));
+          instancedMesh.instanceColor.needsUpdate = true;
+          hoveredInstanceId = null;
+        }
+        infoPanel.classList.add('hidden');
+      }
+
+      renderer.render(scene, camera);
+    }
+
+    animate();
+
+    // Handle resize
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // Cleanup on page navigation to prevent memory leaks
+    window.addEventListener('beforeunload', () => {
+      renderer.dispose();
+      barGeometry.dispose();
+      barMaterial.dispose();
+      planeGeometry.dispose();
+      planeMaterial.dispose();
+      instancedMesh.dispose();
+      controls.dispose();
+    });
+  </script>
+
+  <style>
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .animate-spin {
+      animation: spin 1s linear infinite;
+    }
+    
+    /* Custom scrollbar for legend */
+    #legend::-webkit-scrollbar {
+      width: 6px;
+    }
+    #legend::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 3px;
+    }
+    #legend::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 3px;
+    }
+    #legend::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    @media (max-width: 640px) {
+      #legend {
+        max-width: 180px;
+        font-size: 11px;
+        top: 5rem;
+        right: 0.5rem;
+        padding: 0.75rem;
+        background: rgba(255, 255, 255, 0.98);
+      }
+    }
+  </style>
+</BaseLayout>
