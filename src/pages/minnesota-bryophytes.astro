@@ -327,6 +327,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
+    controls.zoomSpeed = 1.5;
     controls.minDistance = 20;
     controls.maxDistance = 150;
     controls.maxPolarAngle = Math.PI / 2.1;
