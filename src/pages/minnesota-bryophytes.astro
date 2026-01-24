@@ -2,8 +2,8 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 ---
 
-<BaseLayout 
-  title="Minnesota Bryophytes 3D Map | Claire Nyquist"
+<BaseLayout
+  title="Minnesota Bryophyta | Claire Nyquist"
   description="An interactive 3D visualization of bryophyte (moss) observations across Minnesota, using GBIF data. Height represents observation density, colors indicate taxonomic orders."
 >
   <div class="min-h-screen bg-white">
@@ -25,40 +25,10 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       </div>
     </div>
 
-    <!-- Controls -->
-    <div class="fixed bottom-4 left-4 z-20 bg-white/95 backdrop-blur-sm rounded-xl p-4 border border-slate-200 shadow-lg">
-      <button id="controls-toggle" class="flex items-center justify-between gap-2 w-full text-left">
-        <h3 class="text-emerald-700 font-semibold text-sm uppercase tracking-wider">Controls</h3>
-        <span id="controls-arrow" class="text-slate-400 text-sm transition-transform">▼</span>
-      </button>
-      <div id="controls-content" class="mt-3">
-        <div id="desktop-controls" class="text-slate-600 text-xs space-y-1">
-          <p>🖱️ <span class="text-emerald-600 font-medium">Drag</span> to rotate</p>
-          <p>🔍 <span class="text-emerald-600 font-medium">Scroll</span> to zoom</p>
-          <p>⌨️ <span class="text-emerald-600 font-medium">Shift+Drag</span> to pan</p>
-        </div>
-        <div id="mobile-controls" class="text-slate-600 text-xs space-y-1 hidden">
-          <p>👆 <span class="text-emerald-600 font-medium">Drag</span> to rotate</p>
-          <p>🤏 <span class="text-emerald-600 font-medium">Pinch</span> to zoom</p>
-          <p>✌️ <span class="text-emerald-600 font-medium">Two-finger drag</span> to pan</p>
-        </div>
-        <div class="mt-3 pt-3 border-t border-slate-200">
-          <label class="flex items-center gap-2 text-emerald-700 text-xs cursor-pointer">
-            <input type="checkbox" id="log-scale" checked class="accent-emerald-600">
-            <span>Logarithmic scale</span>
-          </label>
-          <p class="text-slate-400 text-xs mt-1">Better shows variation in low-count areas</p>
-        </div>
-        <button id="reset-view" class="mt-3 w-full py-1.5 px-3 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 text-xs rounded-lg transition-colors">
-          Reset View
-        </button>
-      </div>
-    </div>
-
     <!-- Explainer panel -->
     <div id="explainer" class="fixed top-20 left-4 right-4 sm:right-auto sm:max-w-sm z-20 bg-white/95 backdrop-blur-sm rounded-xl p-5 border border-slate-200 shadow-lg">
       <button id="explainer-toggle" class="flex items-center justify-between gap-2 w-full text-left">
-        <h2 class="text-emerald-700 font-semibold text-base">About This Map</h2>
+        <h2 class="text-emerald-700 font-semibold text-base">Minnesota Bryophyta</h2>
         <span id="explainer-arrow" class="text-slate-400 text-sm transition-transform">▼</span>
       </button>
       <div id="explainer-content" class="text-slate-600 text-sm mt-3 space-y-3">
@@ -69,7 +39,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
           <strong class="text-emerald-700">Bar height</strong> represents the number of observations at each location (logarithmic scale)—taller bars indicate more documented sightings.
         </p>
         <p>
-          <strong class="text-emerald-700">Colors</strong> indicate the dominant taxonomic order at each location. Hover over a bar to see the full breakdown of all orders recorded there.
+          <strong class="text-emerald-700">Colors</strong> are stacked within each bar to show all taxonomic orders recorded at that location, with segment heights proportional to observation counts. Hover over a bar to see the breakdown.
         </p>
         <p>
           <strong class="text-emerald-700">A note on sampling bias:</strong> This map shows where observations were <em>recorded</em>, not necessarily where bryophytes are most abundant. Clusters often reflect researcher activity near cities, universities, and field stations rather than true species distribution.
@@ -77,6 +47,13 @@ import BaseLayout from "../layouts/BaseLayout.astro";
         <p class="text-xs text-slate-500 pt-2 border-t border-slate-100">
           GBIF.org (21 January 2026) GBIF Occurrence Download <a href="https://doi.org/10.15468/dl.xkqqbg" target="_blank" rel="noopener" class="text-emerald-600 hover:underline">https://doi.org/10.15468/dl.xkqqbg</a>
         </p>
+        <div class="pt-3 mt-3 border-t border-slate-100">
+          <label class="flex items-center gap-2 text-emerald-700 text-sm cursor-pointer">
+            <input type="checkbox" id="log-scale" checked class="accent-emerald-600">
+            <span>Logarithmic scale</span>
+          </label>
+          <p class="text-slate-400 text-xs mt-1">Better shows variation in low-count areas</p>
+        </div>
       </div>
     </div>
 
@@ -121,12 +98,8 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 
     const loadingStatus = document.getElementById('loading-status');
 
-    // Mobile detection and control switching
+    // Mobile detection for legend behavior
     const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-    if (isMobile) {
-      document.getElementById('desktop-controls')?.classList.add('hidden');
-      document.getElementById('mobile-controls')?.classList.remove('hidden');
-    }
 
     // Legend toggle for mobile
     const legendToggle = document.getElementById('legend-toggle');
@@ -157,20 +130,6 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       explainerContent?.classList.toggle('hidden', !explainerExpanded);
       if (explainerArrow) {
         explainerArrow.style.transform = explainerExpanded ? 'rotate(0deg)' : 'rotate(-90deg)';
-      }
-    });
-
-    // Controls toggle
-    const controlsToggle = document.getElementById('controls-toggle');
-    const controlsContent = document.getElementById('controls-content');
-    const controlsArrow = document.getElementById('controls-arrow');
-    let controlsExpanded = true;
-
-    controlsToggle?.addEventListener('click', () => {
-      controlsExpanded = !controlsExpanded;
-      controlsContent?.classList.toggle('hidden', !controlsExpanded);
-      if (controlsArrow) {
-        controlsArrow.style.transform = controlsExpanded ? 'rotate(0deg)' : 'rotate(-90deg)';
       }
     });
 
@@ -415,63 +374,82 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       return Math.max(0.1, (count / maxCount) * maxHeight);
     }
 
-    // Create bars using InstancedMesh for better performance
+    // Count total segments needed (each order in each cell = 1 segment)
+    let totalSegments = 0;
+    grid.forEach(cell => {
+      totalSegments += Object.keys(cell.orders).length;
+    });
+
+    // Create stacked bars using InstancedMesh
     const barGeometry = new THREE.CylinderGeometry(0.2, 0.2, 1, 12);
     const barMaterial = new THREE.MeshStandardMaterial({
       metalness: 0.4,
       roughness: 0.5,
     });
 
-    const instanceCount = grid.size;
-    const instancedMesh = new THREE.InstancedMesh(barGeometry, barMaterial, instanceCount);
+    const instancedMesh = new THREE.InstancedMesh(barGeometry, barMaterial, totalSegments);
     instancedMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
 
-    // Store instance data for raycasting and interaction
-    const instanceData = [];
-    const baseHeights = [];
+    // Store data for interaction and updates
+    const cellData = []; // One entry per grid cell
+    const segmentData = []; // One entry per segment, maps to cellData
     const dummy = new THREE.Object3D();
     const color = new THREE.Color();
 
     let instanceIndex = 0;
+    let cellIndex = 0;
     grid.forEach((cell, key) => {
-      // Determine dominant order for color
-      let dominantOrder = '';
-      let maxOrderCount = 0;
-      Object.entries(cell.orders).forEach(([order, count]) => {
-        if (count > maxOrderCount && order && order.trim() !== '') {
-          maxOrderCount = count;
-          dominantOrder = order;
-        }
-      });
-
-      const barColor = orderColors[dominantOrder] || defaultColor;
-      const height = calcHeight(cell.count, true); // Start with log scale
       const pos = latLngTo3D(cell.lat, cell.lng);
 
-      // Set instance transform
-      dummy.position.set(pos.x, height / 2, pos.z);
-      dummy.scale.set(1, height, 1);
-      dummy.updateMatrix();
-      instancedMesh.setMatrixAt(instanceIndex, dummy.matrix);
+      // Sort orders by count (largest at bottom for stability)
+      const sortedOrders = Object.entries(cell.orders)
+        .sort((a, b) => b[1] - a[1]);
 
-      // Set instance color
-      color.set(barColor);
-      instancedMesh.setColorAt(instanceIndex, color);
-
-      // Store data for interaction
-      instanceData.push({
+      // Store cell data
+      cellData.push({
         lat: cell.lat,
         lng: cell.lng,
         count: cell.count,
         orders: cell.orders,
-        dominantOrder,
         position: { x: pos.x, z: pos.z },
         minYear: cell.minYear === Infinity ? null : cell.minYear,
-        maxYear: cell.maxYear === -Infinity ? null : cell.maxYear
+        maxYear: cell.maxYear === -Infinity ? null : cell.maxYear,
+        segmentIndices: [] // Will store indices of all segments for this cell
       });
-      baseHeights.push(height);
 
-      instanceIndex++;
+      // Create stacked segments for each order
+      const totalHeight = calcHeight(cell.count, true);
+      let currentY = 0;
+
+      sortedOrders.forEach(([order, orderCount]) => {
+        const segmentHeight = (orderCount / cell.count) * totalHeight;
+        const segmentColor = orderColors[order] || defaultColor;
+
+        // Position segment (y is center of segment)
+        dummy.position.set(pos.x, currentY + segmentHeight / 2, pos.z);
+        dummy.scale.set(1, segmentHeight, 1);
+        dummy.updateMatrix();
+        instancedMesh.setMatrixAt(instanceIndex, dummy.matrix);
+
+        // Set color
+        color.set(segmentColor);
+        instancedMesh.setColorAt(instanceIndex, color);
+
+        // Store segment data
+        segmentData.push({
+          cellIndex,
+          order,
+          orderCount,
+          segmentHeight,
+          baseY: currentY
+        });
+
+        cellData[cellIndex].segmentIndices.push(instanceIndex);
+        currentY += segmentHeight;
+        instanceIndex++;
+      });
+
+      cellIndex++;
     });
 
     instancedMesh.instanceMatrix.needsUpdate = true;
@@ -482,10 +460,24 @@ import BaseLayout from "../layouts/BaseLayout.astro";
     let useLogScale = true;
 
     function updateAllHeights() {
-      for (let i = 0; i < instanceCount; i++) {
-        const height = calcHeight(instanceData[i].count, useLogScale);
-        dummy.position.set(instanceData[i].position.x, height / 2, instanceData[i].position.z);
-        dummy.scale.set(1, height, 1);
+      for (let i = 0; i < segmentData.length; i++) {
+        const seg = segmentData[i];
+        const cell = cellData[seg.cellIndex];
+        const totalHeight = calcHeight(cell.count, useLogScale);
+
+        // Recalculate this segment's height and position
+        const segmentHeight = (seg.orderCount / cell.count) * totalHeight;
+
+        // Calculate baseY by summing heights of previous segments in same cell
+        let baseY = 0;
+        for (const prevIdx of cell.segmentIndices) {
+          if (prevIdx === i) break;
+          const prevSeg = segmentData[prevIdx];
+          baseY += (prevSeg.orderCount / cell.count) * totalHeight;
+        }
+
+        dummy.position.set(cell.position.x, baseY + segmentHeight / 2, cell.position.z);
+        dummy.scale.set(1, segmentHeight, 1);
         dummy.updateMatrix();
         instancedMesh.setMatrixAt(i, dummy.matrix);
       }
@@ -495,14 +487,6 @@ import BaseLayout from "../layouts/BaseLayout.astro";
     document.getElementById('log-scale').addEventListener('change', (e) => {
       useLogScale = e.target.checked;
       updateAllHeights();
-    });
-
-    // Reset view button
-    const initialCameraPosition = { x: 0, y: 45, z: 55 };
-    document.getElementById('reset-view')?.addEventListener('click', () => {
-      camera.position.set(initialCameraPosition.x, initialCameraPosition.y, initialCameraPosition.z);
-      controls.target.set(0, 0, 0);
-      controls.update();
     });
 
     // Raycaster for hover
@@ -529,7 +513,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
     }, 300);
 
     // Animation loop
-    let hoveredInstanceId = null;
+    let hoveredCellIndex = null;
     const highlightColor = new THREE.Color();
     const originalColors = new Map();
 
@@ -545,23 +529,33 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 
       if (intersects.length > 0) {
         const instanceId = intersects[0].instanceId;
-        if (hoveredInstanceId !== instanceId) {
-          // Reset previous highlight
-          if (hoveredInstanceId !== null && originalColors.has(hoveredInstanceId)) {
-            instancedMesh.setColorAt(hoveredInstanceId, originalColors.get(hoveredInstanceId));
+        const seg = segmentData[instanceId];
+        const currentCellIndex = seg.cellIndex;
+
+        if (hoveredCellIndex !== currentCellIndex) {
+          // Reset previous highlight (all segments of previous cell)
+          if (hoveredCellIndex !== null) {
+            const prevCell = cellData[hoveredCellIndex];
+            for (const segIdx of prevCell.segmentIndices) {
+              if (originalColors.has(segIdx)) {
+                instancedMesh.setColorAt(segIdx, originalColors.get(segIdx));
+              }
+            }
           }
 
-          hoveredInstanceId = instanceId;
-          const data = instanceData[instanceId];
+          hoveredCellIndex = currentCellIndex;
+          const data = cellData[currentCellIndex];
 
-          // Store original color and set highlight
-          if (!originalColors.has(instanceId)) {
-            const origColor = new THREE.Color();
-            instancedMesh.getColorAt(instanceId, origColor);
-            originalColors.set(instanceId, origColor.clone());
+          // Highlight all segments of this cell
+          for (const segIdx of data.segmentIndices) {
+            if (!originalColors.has(segIdx)) {
+              const origColor = new THREE.Color();
+              instancedMesh.getColorAt(segIdx, origColor);
+              originalColors.set(segIdx, origColor.clone());
+            }
+            highlightColor.copy(originalColors.get(segIdx)).multiplyScalar(1.5);
+            instancedMesh.setColorAt(segIdx, highlightColor);
           }
-          highlightColor.copy(originalColors.get(instanceId)).multiplyScalar(1.8);
-          instancedMesh.setColorAt(instanceId, highlightColor);
           instancedMesh.instanceColor.needsUpdate = true;
 
           // Update info panel - show all orders
@@ -573,8 +567,9 @@ import BaseLayout from "../layouts/BaseLayout.astro";
               const pct = ((count / data.count) * 100).toFixed(0);
               const isUnknown = !order || order === 'Unknown' || order.trim() === '';
               const label = isUnknown ? '<em>Unclassified</em>' : order;
-              const style = isUnknown ? 'text-slate-400' : 'text-emerald-600 font-medium';
-              return `<div class="flex justify-between"><span class="${style}">${label}</span><span class="text-slate-400">${count} (${pct}%)</span></div>`;
+              const orderColor = orderColors[order] || defaultColor;
+              const style = isUnknown ? 'text-slate-400' : '';
+              return `<div class="flex justify-between items-center"><span class="flex items-center gap-1.5 ${style}"><span class="w-2 h-2 rounded-full flex-shrink-0" style="background-color: ${orderColor}"></span>${label}</span><span class="text-slate-400">${count} (${pct}%)</span></div>`;
             })
             .join('');
 
@@ -596,10 +591,15 @@ import BaseLayout from "../layouts/BaseLayout.astro";
           infoPanel.classList.remove('hidden');
         }
       } else {
-        if (hoveredInstanceId !== null && originalColors.has(hoveredInstanceId)) {
-          instancedMesh.setColorAt(hoveredInstanceId, originalColors.get(hoveredInstanceId));
+        if (hoveredCellIndex !== null) {
+          const prevCell = cellData[hoveredCellIndex];
+          for (const segIdx of prevCell.segmentIndices) {
+            if (originalColors.has(segIdx)) {
+              instancedMesh.setColorAt(segIdx, originalColors.get(segIdx));
+            }
+          }
           instancedMesh.instanceColor.needsUpdate = true;
-          hoveredInstanceId = null;
+          hoveredCellIndex = null;
         }
         infoPanel.classList.add('hidden');
       }

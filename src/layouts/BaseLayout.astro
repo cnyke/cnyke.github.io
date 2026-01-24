@@ -9,14 +9,14 @@ export interface Props {
 
 const { 
   title, 
-  description = "Resilience Continuum - Data Visualization and Design by Claire Nyquist. Exploring biology, public health, and epidemiology through interactive data visualizations, science communication, and creative storytelling.",
+  description = "Claire Nyquist - Data Visualization and Design. Exploring biology, public health, and epidemiology through interactive data visualizations, science communication, and creative storytelling.",
   image = "/images/headshot.jpeg",
   type = "website",
   author = "Claire Nyquist"
 } = Astro.props;
 
 // Google Analytics Measurement ID
-const GA_MEASUREMENT_ID = "G-C3S7RZW6F5";
+const GA_MEASUREMENT_ID = "G-7PZ8NQ5JQD";
 
 // Get current URL for canonical and OG tags
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
@@ -47,7 +47,7 @@ const socialImageURL = new URL(image, Astro.site);
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:image" content={socialImageURL} />
-    <meta property="og:site_name" content="Resilience Continuum" />
+    <meta property="og:site_name" content="Claire Nyquist" />
     <meta property="og:locale" content="en_US" />
     
     <!-- Twitter Card Meta Tags -->
@@ -56,7 +56,7 @@ const socialImageURL = new URL(image, Astro.site);
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={socialImageURL} />
-    <meta name="twitter:creator" content="@resiliencecontinuum" />
+    <meta name="twitter:creator" content="@clairenyquist" />
     
     <!-- DNS Prefetch & Preconnect for Performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -74,7 +74,7 @@ const socialImageURL = new URL(image, Astro.site);
     <script type="application/ld+json" set:html={JSON.stringify({
       "@context": "https://schema.org",
       "@type": type === "article" ? "Article" : "WebSite",
-      "name": "Resilience Continuum",
+      "name": "Claire Nyquist",
       "url": canonicalURL,
       "description": description,
       "author": {
@@ -84,7 +84,7 @@ const socialImageURL = new URL(image, Astro.site);
       },
       "publisher": {
         "@type": "Organization",
-        "name": "Resilience Continuum",
+        "name": "Claire Nyquist",
         "logo": {
           "@type": "ImageObject",
           "url": new URL("/favicon.png", Astro.site)
@@ -93,7 +93,7 @@ const socialImageURL = new URL(image, Astro.site);
     })} />
     
     <!-- Google Analytics -->
-    {GA_MEASUREMENT_ID !== "G-XXXXXXXXXX" && (
+    {GA_MEASUREMENT_ID && GA_MEASUREMENT_ID !== "G-XXXXXXXXXX" && (
       <>
         <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}></script>
         <script is:inline define:vars={{ GA_MEASUREMENT_ID }}>
@@ -112,7 +112,7 @@ const socialImageURL = new URL(image, Astro.site);
           <!-- Logo/Title -->
           <div class="flex-shrink-0">
             <a href="/" class="text-xl font-semibold text-gray-900 hover:text-blue-600 transition-colors">
-              Resilience Continuum
+              Claire Nyquist
             </a>
           </div>
           
@@ -126,20 +126,22 @@ const socialImageURL = new URL(image, Astro.site);
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
-              <div class="absolute left-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                <div class="py-1">
-                  <a href="/" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition-colors">
-                    Respiratory Viruses
-                  </a>
-                  <a href="/ai-models-timeline" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition-colors">
-                    AI Models Timeline
-                  </a>
-                  <a href="/octopuses" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition-colors">
-                    Octopuses
-                  </a>
-                  <a href="/minnesota-bryophytes" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition-colors">
-                    Minnesota Bryophytes
-                  </a>
+              <div class="absolute left-0 top-full pt-2 w-56 hidden group-hover:block z-50">
+                <div class="rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+                  <div class="py-1">
+                    <a href="/" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition-colors">
+                      Respiratory Viruses
+                    </a>
+                    <a href="/ai-models-timeline" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition-colors">
+                      AI Models Timeline
+                    </a>
+                    <a href="/octopuses" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition-colors">
+                      Octopuses
+                    </a>
+                    <a href="/minnesota-bryophytes" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition-colors">
+                      Minnesota Bryophyta
+                    </a>
+                  </div>
                 </div>
               </div>
             </div>
@@ -152,14 +154,16 @@ const socialImageURL = new URL(image, Astro.site);
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
-              <div class="absolute left-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                <div class="py-1">
-                  <a href="/brick-designer" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition-colors">
-                    Brick Designer
-                  </a>
-                  <a href="/comic-book-art" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition-colors">
-                    Comic Book Art
-                  </a>
+              <div class="absolute left-0 top-full pt-2 w-56 hidden group-hover:block z-50">
+                <div class="rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+                  <div class="py-1">
+                    <a href="/brick-designer" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition-colors">
+                      Brick Designer
+                    </a>
+                    <a href="/comic-book-art" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition-colors">
+                      Comic Book Art
+                    </a>
+                  </div>
                 </div>
               </div>
             </div>
@@ -207,7 +211,7 @@ const socialImageURL = new URL(image, Astro.site);
                   Octopuses
                 </a>
                 <a href="/minnesota-bryophytes" class="block text-gray-700 hover:text-blue-600 transition-colors py-2">
-                  Minnesota Bryophytes
+                  Minnesota Bryophyta
                 </a>
               </div>
             </div>
@@ -255,7 +259,7 @@ const socialImageURL = new URL(image, Astro.site);
           <div>
             <h3 class="text-lg font-semibold text-gray-900 mb-4">Background</h3>
             <p class="text-gray-600 leading-relaxed">
-              Resilience Continuum is a project by Claire Nyquist which explores science through data visualization, fiction, and graphic design.
+              Claire Nyquist explores science and public health through data visualization and graphic design.
             </p>
           </div>
           
@@ -269,7 +273,7 @@ const socialImageURL = new URL(image, Astro.site);
         </div>
         
         <div class="mt-8 pt-8 border-t border-gray-300 text-center text-gray-500">
-          <p>&copy; 2025 Resilience Continuum. All rights reserved.</p>
+          <p>&copy; 2025 Claire Nyquist. All rights reserved.</p>
         </div>
       </div>
     </footer>
