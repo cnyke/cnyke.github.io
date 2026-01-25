@@ -1,0 +1,118 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Exoplanet Discoveries - Claire Nyquist" description="Data visualization exploring exoplanet discoveries, showing distance from Earth and discovery methods over time.">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Back Navigation -->
+    <div class="mb-8">
+      <a href="/graphic-design" class="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium">
+        ← Back to Graphic Design
+      </a>
+    </div>
+
+    <!-- Project Header -->
+    <div class="text-center mb-12">
+      <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+        Exoplanet Discoveries
+      </h1>
+      <p class="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+        Exoplanets are planets orbiting stars that are not our sun.
+      </p>
+      <p class="text-lg text-gray-600 max-w-4xl mx-auto leading-relaxed mt-4">
+        They help us understand possible environments for other forms of life. These two visualizations, built using R, show how exoplanet detection has changed since scientists discovered the first planets orbiting other star systems in the mid-1990s. Each point represents a confirmed exoplanet, with colors indicating the discovery method used and point size representing planet mass. As detection methods have become more sensitive, we are able to detect exoplanets farther and farther away, especially via the transit method (light dims as exoplanets pass in front of their star) or the microlensing method (where light from extrasolar stars and planets is bent due to gravity of objects in space). These two images show the same data with different scales.
+      </p>
+    </div>
+
+    <!-- Project Gallery -->
+    <div class="mb-16">
+      <div class="masonry-container">
+
+        <!-- Gallery Item 1 - All Exoplanet Discoveries -->
+        <div class="masonry-item bg-white rounded-lg overflow-hidden mb-6">
+          <img
+            src="/images/exoHighRes1.png"
+            alt="Exoplanet Discoveries - scatter plot showing all confirmed exoplanet discoveries up to 30,000 light-years"
+            class="w-full h-auto object-contain"
+          />
+        </div>
+
+        <!-- Gallery Item 2 - Near Earth Exoplanets -->
+        <div class="masonry-item bg-white rounded-lg overflow-hidden mb-6">
+          <img
+            src="/images/exoHighRes2.png"
+            alt="Near Earth Exoplanets - scatter plot showing exoplanet discoveries within 4000 light-years"
+            class="w-full h-auto object-contain"
+          />
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Data Sources -->
+    <div class="bg-white rounded-lg shadow-sm border p-6 mb-8">
+      <h3 class="text-lg font-semibold text-gray-900 mb-3">Data Sources</h3>
+      <div class="text-sm text-gray-600 space-y-2">
+        <p>
+          This 2021 visualization has made use of the NASA Exoplanet Archive, which is operated by the California Institute of Technology, under contract with the National Aeronautics and Space Administration under the Exoplanet Exploration Program.
+        </p>
+        <p>
+          R Core Team (2022). R: A language and environment for statistical computing. R Foundation for Statistical Computing, Vienna, Austria. <a href="https://www.R-project.org/" class="text-blue-600 hover:text-blue-800" target="_blank" rel="noopener">https://www.R-project.org/</a>
+        </p>
+      </div>
+    </div>
+
+
+    <!-- Navigation -->
+    <div class="mt-12 pt-8 border-t border-gray-200">
+      <div class="flex justify-between items-center">
+        <a href="/graphic-design" class="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium">
+          ← Back to Graphic Design
+        </a>
+        <div class="text-sm text-gray-500">
+          Data Visualization
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    /* Single column layout */
+    .masonry-container {
+      width: 100%;
+      max-width: 100%;
+    }
+
+    /* Masonry items */
+    .masonry-item {
+      display: block;
+      width: 100%;
+      margin-bottom: 2rem;
+      background: white;
+      border-radius: 0.5rem;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Natural image sizing - no cropping */
+    .masonry-item img {
+      display: block;
+      width: 100%;
+      height: auto;
+      object-fit: contain;
+    }
+
+    /* Ensure image container doesn't show overflow */
+    .masonry-item .relative {
+      overflow: hidden;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    /* Text container stability */
+    .masonry-item .p-6 {
+      background: white;
+      position: relative;
+      z-index: 10;
+    }
+  </style>
+</BaseLayout>
