@@ -95,6 +95,9 @@ import BaseLayout from "../layouts/BaseLayout.astro";
   <script type="module">
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { Line2 } from 'three/addons/lines/Line2.js';
+    import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
+    import { LineGeometry } from 'three/addons/lines/LineGeometry.js';
 
     const loadingStatus = document.getElementById('loading-status');
 
@@ -354,10 +357,62 @@ import BaseLayout from "../layouts/BaseLayout.astro";
     plane.position.y = -0.5;
     scene.add(plane);
 
-    // Grid helper - gray lines on white background
-    const gridHelper = new THREE.GridHelper(70, 35, 0x999999, 0xcccccc);
-    gridHelper.position.y = -0.4;
-    scene.add(gridHelper);
+    // Load Minnesota counties GeoJSON and draw boundaries
+    const boundaryColor = 0xcccccc; // Light gray matching the old grid
+
+    async function loadMinnesotaBoundaries() {
+      try {
+        const response = await fetch('/data/mn-counties.json');
+        const geojson = await response.json();
+
+        const lineMaterial = new LineMaterial({
+          color: boundaryColor,
+          linewidth: 1.2, // Width in pixels
+          resolution: new THREE.Vector2(window.innerWidth, window.innerHeight)
+        });
+
+        geojson.features.forEach(feature => {
+          const geometry = feature.geometry;
+
+          function processCoordinates(coords) {
+            // Handle both Polygon and MultiPolygon
+            if (typeof coords[0][0] === 'number') {
+              // This is a ring of coordinates
+              const positions = [];
+              coords.forEach(coord => {
+                const pos = latLngTo3D(coord[1], coord[0]);
+                positions.push(pos.x, -0.3, pos.z);
+              });
+              const lineGeometry = new LineGeometry();
+              lineGeometry.setPositions(positions);
+              const line = new Line2(lineGeometry, lineMaterial);
+              line.computeLineDistances();
+              scene.add(line);
+            } else {
+              // Nested array - recurse
+              coords.forEach(ring => processCoordinates(ring));
+            }
+          }
+
+          if (geometry.type === 'Polygon') {
+            geometry.coordinates.forEach(ring => processCoordinates(ring));
+          } else if (geometry.type === 'MultiPolygon') {
+            geometry.coordinates.forEach(polygon => {
+              polygon.forEach(ring => processCoordinates(ring));
+            });
+          }
+        });
+
+        // Update resolution on resize
+        window.addEventListener('resize', () => {
+          lineMaterial.resolution.set(window.innerWidth, window.innerHeight);
+        });
+      } catch (e) {
+        console.error('Error loading Minnesota boundaries:', e);
+      }
+    }
+
+    loadMinnesotaBoundaries();
 
     // Find max count for scaling
     let maxCount = 0;
