@@ -1,0 +1,49 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Bryophyta Sketchbook - Claire Nyquist" description="Sketchbook studies of bryophytes (mosses, liverworts, and hornworts)">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Back Navigation -->
+    <div class="mb-8">
+      <a href="/minnesota-bryophytes" class="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium">
+        ← Back to Minnesota Bryophyta
+      </a>
+    </div>
+
+    <!-- Project Header -->
+    <div class="text-center mb-12">
+      <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+        Bryophyta Sketchbook
+      </h1>
+      <p class="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+        This sketch captures the initial concept for Minnesota Bryophyta, a visualization that explores the intersection of biodiversity and organic form. While originally envisioned as a global 3D-printed installation, the project evolved into a focused study of Minnesota's local ecology. The work is deeply informed by citizen science via iNaturalist and data from the Global Biodiversity Information Facility (GBIF). Artistically, it draws from Shane Hope's <em>Public Panopticon Powder</em>—specifically his use of 3D-printed data abstractions—while Robin Wall Kimmerer's <em>Gathering Moss</em> served as the foundational inspiration for my interest in bryophytes. The final visualization is designed to be tactile and "furry," mimicking the way moss colonizes a landscape as data spreads across the state.
+      </p>
+    </div>
+
+    <!-- Featured Image -->
+    <div class="mb-12">
+      <div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300">
+        <div class="relative">
+          <img
+            src="/images/bryophytasketchbook.jpeg"
+            alt="Bryophyta sketchbook studies"
+            class="w-full h-auto object-contain"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="mt-12 pt-8 border-t border-gray-200">
+      <div class="flex justify-between items-center">
+        <a href="/minnesota-bryophytes" class="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium">
+          ← Back to Minnesota Bryophyta
+        </a>
+        <div class="text-sm text-gray-500">
+          Sketchbook
+        </div>
+      </div>
+    </div>
+  </div>
+</BaseLayout>
