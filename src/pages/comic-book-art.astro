@@ -339,6 +339,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   let isErasing = false;
   let lastPos = { x: 0, y: 0 };
   let needsRender = false;
+  let currentCursorRotation = 0;
   const baseLayerOrder = ['C', 'M', 'Y', 'K'] as const;
   type CmykKey = (typeof baseLayerOrder)[number];
 
@@ -362,6 +363,19 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     undoStack.length = 0;
     undoStack.push(captureSnapshot());
     updateUndoUi();
+  }
+
+  function nullifyBuffers() {
+    processingBuffer = null;
+    tempBuffer = null;
+    sobelBuffer = null;
+    gxBuffer = null;
+    gyBuffer = null;
+    nmsBuffer = null;
+    edgeStatusBuffer = null;
+    edgePixelsBuffer = null;
+    originalRGB = null;
+    originalGrayscale = null;
   }
 
   function commitUndoSnapshot() {
@@ -421,6 +435,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   // Offscreen canvas for the ink/outline layer (single-pixel edge map, composited on top)
   const edgeCanvas = document.createElement('canvas');
   const edgeCtx = edgeCanvas.getContext('2d', { willReadFrequently: true })!;
+
+  // Offscreen canvas for generating the cursor pattern
+  const cursorPatternCanvas = document.createElement('canvas');
+  const cpCtx = cursorPatternCanvas.getContext('2d');
 
   const CMYK_COLORS = {
     C: '#1A7EBE',
@@ -608,54 +626,37 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     
     brushCursor.style.width = `${displayBrushSize}px`;
     brushCursor.style.height = `${displayBrushSize}px`;
-    brushCursor.style.overflow = 'hidden';
     
     if (isErasing) {
       brushCursor.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
       brushCursor.style.border = '1px solid #999';
+      brushCursor.style.backgroundImage = 'none';
       brushCursor.innerHTML = '';
+      currentCursorRotation = 0;
     } else {
-      brushCursor.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+      brushCursor.style.backgroundColor = 'transparent';
       brushCursor.style.border = '1px dashed rgba(0,0,0,0.3)';
       
       const color = CMYK_COLORS[currentCMYK as keyof typeof CMYK_COLORS];
       const angles: Record<string, number> = { 'C': 15, 'M': 75, 'Y': 0, 'K': 45 };
-      const angle = (angles[currentCMYK] || 0) * (Math.PI / 180);
-      const cos = Math.cos(angle);
-      const sin = Math.sin(angle);
+      currentCursorRotation = angles[currentCMYK as keyof typeof angles] || 0;
 
-      // Generate a grid of dots that fills the brush circle
-      let dotsHtml = '';
-      const halfBrush = displayBrushSize / 2;
-      const step = displayDotSpacing;
-      
-      // Calculate bounds in rotated space to ensure full coverage
-      // We go slightly wider to ensure the grid is fully populated
-      const limit = halfBrush + step;
-      for (let u = -limit; u <= limit; u += step) {
-        for (let v = -limit; v <= limit; v += step) {
-          // Transform from grid space to cursor space
-          const x = u * cos - v * sin;
-          const y = u * sin + v * cos;
-          
-          // Show any dot that's even partially inside the brush
-          // Use a slightly larger radius for the check, then let overflow:hidden clip
-          if (Math.hypot(x, y) <= halfBrush + (displayDotSize / 2)) {
-            dotsHtml += `<div style="
-              width: ${displayDotSize}px;
-              height: ${displayDotSize}px;
-              background-color: ${color};
-              opacity: 0.6;
-              border-radius: 50%;
-              position: absolute;
-              left: 50%;
-              top: 50%;
-              transform: translate(calc(-50% + ${x}px), calc(-50% + ${y}px));
-            "></div>`;
-          }
-        }
+      // Use a CSS background pattern for the dots - MUCH faster than DOM nodes
+      if (cpCtx) {
+        const patternSize = Math.max(2, Math.round(displayDotSpacing));
+        cursorPatternCanvas.width = patternSize;
+        cursorPatternCanvas.height = patternSize;
+        cpCtx.clearRect(0, 0, patternSize, patternSize);
+        cpCtx.fillStyle = color;
+        cpCtx.globalAlpha = 0.6;
+        cpCtx.beginPath();
+        cpCtx.arc(patternSize / 2, patternSize / 2, Math.max(0.5, displayDotSize / 2), 0, Math.PI * 2);
+        cpCtx.fill();
+        
+        brushCursor.style.backgroundImage = `url(${cursorPatternCanvas.toDataURL()})`;
+        brushCursor.style.backgroundRepeat = 'repeat';
       }
-      brushCursor.innerHTML = dotsHtml;
+      brushCursor.innerHTML = '';
     }
   }
 
@@ -675,7 +676,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     
     brushCursor.style.left = `${clientX}px`;
     brushCursor.style.top = `${clientY}px`;
-    brushCursor.style.transform = `translate(-50%, -50%)`;
+    brushCursor.style.transform = `translate(-50%, -50%) rotate(${currentCursorRotation}deg)`;
   }
 
   outputCanvas.addEventListener('mouseenter', () => {
@@ -856,8 +857,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   clearImageBtn.addEventListener('click', () => {
     if (confirm('Clear uploaded image? This will also clear all coloring.')) {
       currentImage = null;
-      originalRGB = null;
-      originalGrayscale = null;
+      nullifyBuffers();
       imageInput.value = '';
       
       // Reset to default blank canvas size

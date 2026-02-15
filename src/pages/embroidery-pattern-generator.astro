@@ -1,0 +1,729 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Embroidery Pattern Generator - Claire Nyquist" description="Transform your images into embroidery patterns with this interactive tool.">
+  <div class="max-w-5xl mx-auto px-4 py-12">
+    <div class="text-center mb-12">
+      <h1 class="text-4xl font-bold text-gray-900 mb-4">Embroidery Pattern Generator</h1>
+      <p class="text-lg text-gray-600 mb-8">Upload an image to generate a custom embroidery pattern. The tool removes the background and converts your image into stitch lines that can be used as an embroidery template.</p>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+      <div class="flex flex-col md:flex-row gap-8">
+        <!-- Controls -->
+        <div class="w-full md:w-1/3 space-y-6">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <label class="block text-sm font-medium text-gray-700">Upload Image</label>
+              <button
+                id="clearImageBtn"
+                class="text-gray-400 hover:text-red-600 transition-colors p-1 rounded-md hidden"
+                title="Clear Image"
+              >
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            </div>
+            <input
+              type="file"
+              id="imageInput"
+              accept="image/*"
+              class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Number of Colors</label>
+            <select
+              id="colorCountSelect"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="2">2 Colors</option>
+              <option value="3">3 Colors</option>
+              <option value="4">4 Colors</option>
+              <option value="5">5 Colors</option>
+              <option value="6" selected>6 Colors</option>
+              <option value="8">8 Colors</option>
+              <option value="10">10 Colors</option>
+              <option value="12">12 Colors</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Stitch Density</label>
+            <input
+              type="range"
+              id="stitchDensityInput"
+              min="2"
+              max="6"
+              value="4"
+              class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+            />
+            <div class="flex justify-between text-xs text-gray-500 mt-1">
+              <span>Sparse</span>
+              <span>Dense</span>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Stitch Length</label>
+            <input
+              type="range"
+              id="stitchLengthInput"
+              min="4"
+              max="16"
+              value="8"
+              class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+            />
+            <div class="flex justify-between text-xs text-gray-500 mt-1">
+              <span>Short</span>
+              <span>Long</span>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Background Removal</label>
+            <div class="space-y-2">
+              <label class="flex items-center gap-2">
+                <input type="radio" name="bgRemoval" value="auto" checked class="text-blue-600">
+                <span class="text-sm text-gray-600">Auto-detect corners</span>
+              </label>
+              <label class="flex items-center gap-2">
+                <input type="radio" name="bgRemoval" value="white" class="text-blue-600">
+                <span class="text-sm text-gray-600">Remove white</span>
+              </label>
+              <label class="flex items-center gap-2">
+                <input type="radio" name="bgRemoval" value="none" class="text-blue-600">
+                <span class="text-sm text-gray-600">Keep background</span>
+              </label>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Background Tolerance</label>
+            <input
+              type="range"
+              id="bgToleranceInput"
+              min="10"
+              max="80"
+              value="30"
+              class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+            />
+            <div class="flex justify-between text-xs text-gray-500 mt-1">
+              <span>Strict</span>
+              <span>Loose</span>
+            </div>
+          </div>
+
+          <div class="flex gap-2">
+            <button
+              id="generateBtn"
+              class="flex-1 bg-blue-600 text-white py-3 px-6 rounded-xl font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled
+            >
+              Generate Pattern
+            </button>
+          </div>
+
+          <button
+            id="downloadBtn"
+            class="w-full bg-gray-900 text-white py-3 px-6 rounded-xl font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled
+          >
+            Download Pattern PNG
+          </button>
+        </div>
+
+        <!-- Preview Area -->
+        <div class="w-full md:w-2/3 space-y-4">
+          <!-- Original Image Preview -->
+          <div class="bg-gray-50 rounded-xl p-4 border-2 border-dashed border-gray-200">
+            <p class="text-xs font-medium text-gray-500 mb-2">Original Image</p>
+            <div id="originalPlaceholder" class="text-gray-400 text-center py-8">
+              <svg class="mx-auto h-12 w-12 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <p>Upload an image to begin</p>
+            </div>
+            <canvas id="originalCanvas" class="max-w-full h-auto hidden mx-auto" style="max-height: 200px;"></canvas>
+          </div>
+
+          <!-- Pattern Output -->
+          <div class="bg-gray-50 rounded-xl p-4 border-2 border-gray-200">
+            <p class="text-xs font-medium text-gray-500 mb-2">Embroidery Pattern</p>
+            <div id="patternPlaceholder" class="text-gray-400 text-center py-16">
+              <svg class="mx-auto h-12 w-12 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+              </svg>
+              <p>Pattern will appear here</p>
+            </div>
+            <canvas id="patternCanvas" class="max-w-full h-auto hidden mx-auto shadow-lg"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Color Palette Display -->
+    <div id="paletteSection" class="bg-white rounded-2xl shadow-xl p-8 hidden">
+      <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+        </svg>
+        Thread Palette
+      </h2>
+      <p class="text-gray-600 mb-4">Use these colors for your embroidery threads. Each color shows its hex code for easy matching.</p>
+      <div id="paletteList" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        <!-- Colors will be injected here -->
+      </div>
+      <div class="mt-6 bg-blue-50 px-4 py-3 rounded-lg flex items-center gap-2 text-blue-700 text-sm">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        All processing happens locally in your browser. Your image never leaves your device.
+      </div>
+    </div>
+
+    <!-- Hidden canvases for processing -->
+    <canvas id="processCanvas" class="hidden"></canvas>
+    <canvas id="bgRemovedCanvas" class="hidden"></canvas>
+  </div>
+</BaseLayout>
+
+<script>
+  const imageInput = document.getElementById('imageInput') as HTMLInputElement;
+  const clearImageBtn = document.getElementById('clearImageBtn') as HTMLButtonElement;
+  const colorCountSelect = document.getElementById('colorCountSelect') as HTMLSelectElement;
+  const stitchDensityInput = document.getElementById('stitchDensityInput') as HTMLInputElement;
+  const stitchLengthInput = document.getElementById('stitchLengthInput') as HTMLInputElement;
+  const bgToleranceInput = document.getElementById('bgToleranceInput') as HTMLInputElement;
+  const generateBtn = document.getElementById('generateBtn') as HTMLButtonElement;
+  const downloadBtn = document.getElementById('downloadBtn') as HTMLButtonElement;
+
+  const originalCanvas = document.getElementById('originalCanvas') as HTMLCanvasElement;
+  const patternCanvas = document.getElementById('patternCanvas') as HTMLCanvasElement;
+  const processCanvas = document.getElementById('processCanvas') as HTMLCanvasElement;
+  const bgRemovedCanvas = document.getElementById('bgRemovedCanvas') as HTMLCanvasElement;
+
+  const originalPlaceholder = document.getElementById('originalPlaceholder');
+  const patternPlaceholder = document.getElementById('patternPlaceholder');
+  const paletteSection = document.getElementById('paletteSection');
+  const paletteList = document.getElementById('paletteList');
+
+  const originalCtx = originalCanvas.getContext('2d');
+  const patternCtx = patternCanvas.getContext('2d');
+  const processCtx = processCanvas.getContext('2d', { willReadFrequently: true });
+  const bgRemovedCtx = bgRemovedCanvas.getContext('2d', { willReadFrequently: true });
+
+  let currentImage: HTMLImageElement | null = null;
+  let currentPalette: number[][] = [];
+  const MAX_FILE_SIZE = 15 * 1024 * 1024;
+  const MAX_DIMENSION = 800;
+
+  // Color distance using LAB color space approximation for better perceptual matching
+  function colorDistance(r1: number, g1: number, b1: number, r2: number, g2: number, b2: number): number {
+    // Weighted Euclidean distance (gives more weight to green, which human eyes are more sensitive to)
+    const rMean = (r1 + r2) / 2;
+    const dr = r1 - r2;
+    const dg = g1 - g2;
+    const db = b1 - b2;
+    return Math.sqrt((2 + rMean / 256) * dr * dr + 4 * dg * dg + (2 + (255 - rMean) / 256) * db * db);
+  }
+
+  // K-means++ initialization for better color quantization
+  function kMeansPlusPlusInit(pixels: number[][], k: number): number[][] {
+    const centers: number[][] = [];
+
+    // Pick first center randomly
+    const firstIdx = Math.floor(Math.random() * pixels.length);
+    centers.push([...pixels[firstIdx]]);
+
+    for (let i = 1; i < k; i++) {
+      // Calculate distances to nearest center for each pixel
+      const distances: number[] = pixels.map(pixel => {
+        let minDist = Infinity;
+        for (const center of centers) {
+          const dist = colorDistance(pixel[0], pixel[1], pixel[2], center[0], center[1], center[2]);
+          minDist = Math.min(minDist, dist);
+        }
+        return minDist * minDist; // Square for probability weighting
+      });
+
+      // Choose next center with probability proportional to distance squared
+      const totalDist = distances.reduce((a, b) => a + b, 0);
+      let random = Math.random() * totalDist;
+      let nextIdx = 0;
+
+      for (let j = 0; j < distances.length; j++) {
+        random -= distances[j];
+        if (random <= 0) {
+          nextIdx = j;
+          break;
+        }
+      }
+
+      centers.push([...pixels[nextIdx]]);
+    }
+
+    return centers;
+  }
+
+  // K-means color quantization
+  function quantizeColors(imageData: ImageData, numColors: number): number[][] {
+    const pixels: number[][] = [];
+    const data = imageData.data;
+
+    // Sample pixels (skip transparent ones)
+    for (let i = 0; i < data.length; i += 4) {
+      if (data[i + 3] > 128) { // Only consider non-transparent pixels
+        pixels.push([data[i], data[i + 1], data[i + 2]]);
+      }
+    }
+
+    if (pixels.length === 0) return [[0, 0, 0]];
+    if (pixels.length < numColors) numColors = pixels.length;
+
+    // Initialize centers using k-means++
+    let centers = kMeansPlusPlusInit(pixels, numColors);
+
+    // Run k-means iterations
+    for (let iter = 0; iter < 20; iter++) {
+      // Assign pixels to nearest center
+      const clusters: number[][][] = Array.from({ length: numColors }, () => []);
+
+      for (const pixel of pixels) {
+        let minDist = Infinity;
+        let nearestIdx = 0;
+
+        for (let c = 0; c < centers.length; c++) {
+          const dist = colorDistance(pixel[0], pixel[1], pixel[2], centers[c][0], centers[c][1], centers[c][2]);
+          if (dist < minDist) {
+            minDist = dist;
+            nearestIdx = c;
+          }
+        }
+
+        clusters[nearestIdx].push(pixel);
+      }
+
+      // Update centers
+      const newCenters: number[][] = [];
+      for (let c = 0; c < numColors; c++) {
+        if (clusters[c].length > 0) {
+          const avg = [0, 0, 0];
+          for (const pixel of clusters[c]) {
+            avg[0] += pixel[0];
+            avg[1] += pixel[1];
+            avg[2] += pixel[2];
+          }
+          newCenters.push([
+            Math.round(avg[0] / clusters[c].length),
+            Math.round(avg[1] / clusters[c].length),
+            Math.round(avg[2] / clusters[c].length)
+          ]);
+        } else {
+          newCenters.push(centers[c]);
+        }
+      }
+
+      centers = newCenters;
+    }
+
+    // Sort by luminance for consistent ordering
+    centers.sort((a, b) => {
+      const lumA = 0.299 * a[0] + 0.587 * a[1] + 0.114 * a[2];
+      const lumB = 0.299 * b[0] + 0.587 * b[1] + 0.114 * b[2];
+      return lumA - lumB;
+    });
+
+    return centers;
+  }
+
+  // Get background color from corners
+  function detectBackgroundColor(imageData: ImageData): number[] {
+    const data = imageData.data;
+    const w = imageData.width;
+    const h = imageData.height;
+
+    // Sample corners
+    const corners = [
+      [0, 0], [w - 1, 0], [0, h - 1], [w - 1, h - 1],
+      [1, 1], [w - 2, 1], [1, h - 2], [w - 2, h - 2]
+    ];
+
+    const colors: number[][] = [];
+    for (const [x, y] of corners) {
+      const i = (y * w + x) * 4;
+      if (data[i + 3] > 128) {
+        colors.push([data[i], data[i + 1], data[i + 2]]);
+      }
+    }
+
+    if (colors.length === 0) return [255, 255, 255];
+
+    // Average corner colors
+    const avg = [0, 0, 0];
+    for (const c of colors) {
+      avg[0] += c[0];
+      avg[1] += c[1];
+      avg[2] += c[2];
+    }
+
+    return [
+      Math.round(avg[0] / colors.length),
+      Math.round(avg[1] / colors.length),
+      Math.round(avg[2] / colors.length)
+    ];
+  }
+
+  // Remove background based on color similarity
+  function removeBackground(imageData: ImageData, bgColor: number[], tolerance: number): ImageData {
+    const data = new Uint8ClampedArray(imageData.data);
+    const toleranceSquared = tolerance * tolerance * 3;
+
+    for (let i = 0; i < data.length; i += 4) {
+      const dr = data[i] - bgColor[0];
+      const dg = data[i + 1] - bgColor[1];
+      const db = data[i + 2] - bgColor[2];
+      const distSquared = dr * dr + dg * dg + db * db;
+
+      if (distSquared < toleranceSquared) {
+        data[i + 3] = 0; // Make transparent
+      }
+    }
+
+    return new ImageData(data, imageData.width, imageData.height);
+  }
+
+  // Find nearest palette color
+  function getNearestPaletteColor(r: number, g: number, b: number, palette: number[][]): number[] {
+    let minDist = Infinity;
+    let nearest = palette[0];
+
+    for (const color of palette) {
+      const dist = colorDistance(r, g, b, color[0], color[1], color[2]);
+      if (dist < minDist) {
+        minDist = dist;
+        nearest = color;
+      }
+    }
+
+    return nearest;
+  }
+
+  // Generate stitch pattern
+  function generateStitchPattern(
+    imageData: ImageData,
+    palette: number[][],
+    stitchDensity: number,
+    stitchLength: number
+  ): void {
+    const w = imageData.width;
+    const h = imageData.height;
+    const data = imageData.data;
+
+    // Set up pattern canvas
+    const scale = 2; // Upscale for better detail
+    patternCanvas.width = w * scale;
+    patternCanvas.height = h * scale;
+
+    if (!patternCtx) return;
+
+    // White background
+    patternCtx.fillStyle = '#ffffff';
+    patternCtx.fillRect(0, 0, patternCanvas.width, patternCanvas.height);
+
+    // Create a map of which pixels belong to which color
+    const colorMap: number[][] = [];
+    for (let y = 0; y < h; y++) {
+      colorMap[y] = [];
+      for (let x = 0; x < w; x++) {
+        const i = (y * w + x) * 4;
+        if (data[i + 3] < 128) {
+          colorMap[y][x] = -1; // Transparent
+        } else {
+          const nearest = getNearestPaletteColor(data[i], data[i + 1], data[i + 2], palette);
+          colorMap[y][x] = palette.findIndex(c => c[0] === nearest[0] && c[1] === nearest[1] && c[2] === nearest[2]);
+        }
+      }
+    }
+
+    // Draw stitches for each color
+    patternCtx.lineCap = 'round';
+    patternCtx.lineWidth = 1.5;
+
+    // Different stitch angles for different colors
+    const angles = [0, 45, 90, 135, 22.5, 67.5, 112.5, 157.5, 11.25, 33.75, 56.25, 78.75];
+
+    for (let colorIdx = 0; colorIdx < palette.length; colorIdx++) {
+      const color = palette[colorIdx];
+      patternCtx.strokeStyle = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
+
+      const angle = angles[colorIdx % angles.length] * Math.PI / 180;
+      const dx = Math.cos(angle) * stitchLength * scale;
+      const dy = Math.sin(angle) * stitchLength * scale;
+
+      // Draw stitches
+      for (let y = 0; y < h; y += stitchDensity) {
+        for (let x = 0; x < w; x += stitchDensity) {
+          // Check if this region belongs to this color
+          let belongsToColor = false;
+          for (let cy = y; cy < Math.min(y + stitchDensity, h); cy++) {
+            for (let cx = x; cx < Math.min(x + stitchDensity, w); cx++) {
+              if (colorMap[cy][cx] === colorIdx) {
+                belongsToColor = true;
+                break;
+              }
+            }
+            if (belongsToColor) break;
+          }
+
+          if (belongsToColor) {
+            const centerX = (x + stitchDensity / 2) * scale;
+            const centerY = (y + stitchDensity / 2) * scale;
+
+            // Add slight randomness for natural look
+            const offsetX = (Math.random() - 0.5) * scale;
+            const offsetY = (Math.random() - 0.5) * scale;
+
+            patternCtx.beginPath();
+            patternCtx.moveTo(centerX - dx / 2 + offsetX, centerY - dy / 2 + offsetY);
+            patternCtx.lineTo(centerX + dx / 2 + offsetX, centerY + dy / 2 + offsetY);
+            patternCtx.stroke();
+          }
+        }
+      }
+    }
+
+    // Draw outline
+    patternCtx.strokeStyle = '#333333';
+    patternCtx.lineWidth = 1;
+
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        if (colorMap[y][x] >= 0) {
+          // Check if this is an edge pixel
+          const isEdge =
+            (x === 0 || colorMap[y][x - 1] < 0) ||
+            (x === w - 1 || colorMap[y][x + 1] < 0) ||
+            (y === 0 || colorMap[y - 1]?.[x] < 0) ||
+            (y === h - 1 || colorMap[y + 1]?.[x] < 0);
+
+          if (isEdge) {
+            patternCtx.fillStyle = '#333333';
+            patternCtx.fillRect(x * scale, y * scale, scale, scale);
+          }
+        }
+      }
+    }
+  }
+
+  function renderPalette(palette: number[][]): void {
+    if (!paletteList) return;
+
+    paletteList.innerHTML = '';
+
+    palette.forEach((color, idx) => {
+      const hex = '#' + color.map(c => c.toString(16).padStart(2, '0')).join('');
+
+      const item = document.createElement('div');
+      item.className = 'flex flex-col items-center p-3 bg-gray-50 rounded-xl border border-gray-100';
+
+      const swatch = document.createElement('div');
+      swatch.className = 'w-12 h-12 rounded-lg shadow-md border border-black/10 mb-2';
+      swatch.style.backgroundColor = `rgb(${color.join(',')})`;
+
+      const label = document.createElement('span');
+      label.className = 'text-xs font-medium text-gray-500';
+      label.textContent = `Color ${idx + 1}`;
+
+      const hexCode = document.createElement('span');
+      hexCode.className = 'text-xs font-mono text-gray-700 mt-1';
+      hexCode.textContent = hex.toUpperCase();
+
+      item.appendChild(swatch);
+      item.appendChild(label);
+      item.appendChild(hexCode);
+      paletteList.appendChild(item);
+    });
+  }
+
+  function processImage(): void {
+    if (!currentImage || !processCtx || !bgRemovedCtx || !originalCtx) return;
+
+    // Scale image to reasonable size
+    let w = currentImage.width;
+    let h = currentImage.height;
+
+    if (w > MAX_DIMENSION || h > MAX_DIMENSION) {
+      const scale = MAX_DIMENSION / Math.max(w, h);
+      w = Math.round(w * scale);
+      h = Math.round(h * scale);
+    }
+
+    // Draw original
+    originalCanvas.width = w;
+    originalCanvas.height = h;
+    originalCtx.drawImage(currentImage, 0, 0, w, h);
+
+    // Process canvas
+    processCanvas.width = w;
+    processCanvas.height = h;
+    processCtx.drawImage(currentImage, 0, 0, w, h);
+
+    let imageData = processCtx.getImageData(0, 0, w, h);
+
+    // Background removal
+    const bgMode = (document.querySelector('input[name="bgRemoval"]:checked') as HTMLInputElement)?.value || 'auto';
+    const tolerance = parseInt(bgToleranceInput.value);
+
+    if (bgMode !== 'none') {
+      let bgColor: number[];
+      if (bgMode === 'white') {
+        bgColor = [255, 255, 255];
+      } else {
+        bgColor = detectBackgroundColor(imageData);
+      }
+      imageData = removeBackground(imageData, bgColor, tolerance);
+    }
+
+    // Store background-removed image
+    bgRemovedCanvas.width = w;
+    bgRemovedCanvas.height = h;
+    bgRemovedCtx.putImageData(imageData, 0, 0);
+
+    // Quantize colors
+    const numColors = parseInt(colorCountSelect.value);
+    currentPalette = quantizeColors(imageData, numColors);
+
+    // Generate stitch pattern
+    const stitchDensity = parseInt(stitchDensityInput.value);
+    const stitchLength = parseInt(stitchLengthInput.value);
+    generateStitchPattern(imageData, currentPalette, stitchDensity, stitchLength);
+
+    // Update UI
+    renderPalette(currentPalette);
+
+    originalPlaceholder?.classList.add('hidden');
+    originalCanvas.classList.remove('hidden');
+    patternPlaceholder?.classList.add('hidden');
+    patternCanvas.classList.remove('hidden');
+    paletteSection?.classList.remove('hidden');
+    downloadBtn.disabled = false;
+  }
+
+  function clearImage(): void {
+    currentImage = null;
+    imageInput.value = '';
+    currentPalette = [];
+
+    originalPlaceholder?.classList.remove('hidden');
+    originalCanvas.classList.add('hidden');
+    patternPlaceholder?.classList.remove('hidden');
+    patternCanvas.classList.add('hidden');
+    paletteSection?.classList.add('hidden');
+    clearImageBtn?.classList.add('hidden');
+    generateBtn.disabled = true;
+    downloadBtn.disabled = true;
+  }
+
+  imageInput.addEventListener('change', (e) => {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Please upload an image file (PNG, JPG, etc.).');
+      imageInput.value = '';
+      return;
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      alert('The image is too large. Please upload an image smaller than 15MB.');
+      imageInput.value = '';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onerror = () => {
+        alert('There was an error loading the image.');
+        imageInput.value = '';
+      };
+      img.onload = () => {
+        if (img.width > 8192 || img.height > 8192) {
+          alert('Image dimensions are too large. Please use an image under 8000 pixels.');
+          imageInput.value = '';
+          return;
+        }
+
+        currentImage = img;
+        generateBtn.disabled = false;
+        clearImageBtn?.classList.remove('hidden');
+
+        // Auto-generate on upload
+        processImage();
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  clearImageBtn.addEventListener('click', clearImage);
+
+  generateBtn.addEventListener('click', () => {
+    if (currentImage) processImage();
+  });
+
+  // Re-generate when settings change
+  [colorCountSelect, stitchDensityInput, stitchLengthInput, bgToleranceInput].forEach(input => {
+    input.addEventListener('change', () => {
+      if (currentImage) processImage();
+    });
+  });
+
+  document.querySelectorAll('input[name="bgRemoval"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+      if (currentImage) processImage();
+    });
+  });
+
+  downloadBtn.addEventListener('click', () => {
+    patternCanvas.toBlob((blob) => {
+      if (!blob) {
+        alert('Could not generate image.');
+        return;
+      }
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.download = 'embroidery-pattern.png';
+      link.href = url;
+      document.body.appendChild(link);
+      link.click();
+
+      setTimeout(() => {
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }, 100);
+    }, 'image/png');
+  });
+</script>
+
+<style>
+  input[type="range"] {
+    accent-color: #2563eb;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+  }
+
+  input[type="range"]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+  }
+</style>
