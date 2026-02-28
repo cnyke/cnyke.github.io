@@ -6,7 +6,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   <div class="max-w-5xl mx-auto px-4 py-12">
     <div class="text-center mb-12">
       <h1 class="text-4xl font-bold text-gray-900 mb-4">Embroidery Pattern Generator</h1>
-      <p class="text-lg text-gray-600 mb-8">Upload an image to generate a custom embroidery pattern. The tool removes the background and converts your image into stitch lines that can be used as an embroidery template.</p>
+      <p class="text-lg text-gray-600 mb-8">Upload an image to generate a custom embroidery pattern. The tool produces a printable stitch guide (black outlines showing where each color goes) and a finished preview (what the completed piece will look like).</p>
     </div>
 
     <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
@@ -127,13 +127,22 @@ import BaseLayout from '../layouts/BaseLayout.astro';
             </button>
           </div>
 
-          <button
-            id="downloadBtn"
-            class="w-full bg-gray-900 text-white py-3 px-6 rounded-xl font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled
-          >
-            Download Pattern PNG
-          </button>
+          <div class="space-y-2">
+            <button
+              id="downloadOutlineBtn"
+              class="w-full bg-gray-900 text-white py-3 px-6 rounded-xl font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled
+            >
+              Download Stitch Guide PNG
+            </button>
+            <button
+              id="downloadFinishedBtn"
+              class="w-full bg-gray-700 text-white py-3 px-6 rounded-xl font-medium hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled
+            >
+              Download Finished Preview PNG
+            </button>
+          </div>
         </div>
 
         <!-- Preview Area -->
@@ -150,14 +159,26 @@ import BaseLayout from '../layouts/BaseLayout.astro';
             <canvas id="originalCanvas" class="max-w-full h-auto hidden mx-auto" style="max-height: 200px;"></canvas>
           </div>
 
-          <!-- Pattern Output -->
+          <!-- Stitch Guide Output -->
           <div class="bg-gray-50 rounded-xl p-4 border-2 border-gray-200">
-            <p class="text-xs font-medium text-gray-500 mb-2">Embroidery Pattern</p>
+            <p class="text-xs font-medium text-gray-500 mb-1">Stitch Guide <span class="text-gray-400 font-normal">(print this — outlines show where each color goes)</span></p>
+            <div id="outlinePlaceholder" class="text-gray-400 text-center py-16">
+              <svg class="mx-auto h-12 w-12 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+              </svg>
+              <p>Stitch guide will appear here</p>
+            </div>
+            <canvas id="outlineCanvas" class="max-w-full h-auto hidden mx-auto shadow-lg"></canvas>
+          </div>
+
+          <!-- Finished Preview Output -->
+          <div class="bg-gray-50 rounded-xl p-4 border-2 border-gray-200">
+            <p class="text-xs font-medium text-gray-500 mb-1">Finished Preview <span class="text-gray-400 font-normal">(what the completed embroidery will look like)</span></p>
             <div id="patternPlaceholder" class="text-gray-400 text-center py-16">
               <svg class="mx-auto h-12 w-12 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
               </svg>
-              <p>Pattern will appear here</p>
+              <p>Finished preview will appear here</p>
             </div>
             <canvas id="patternCanvas" class="max-w-full h-auto hidden mx-auto shadow-lg"></canvas>
           </div>
@@ -199,19 +220,23 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   const stitchLengthInput = document.getElementById('stitchLengthInput') as HTMLInputElement;
   const bgToleranceInput = document.getElementById('bgToleranceInput') as HTMLInputElement;
   const generateBtn = document.getElementById('generateBtn') as HTMLButtonElement;
-  const downloadBtn = document.getElementById('downloadBtn') as HTMLButtonElement;
+  const downloadOutlineBtn = document.getElementById('downloadOutlineBtn') as HTMLButtonElement;
+  const downloadFinishedBtn = document.getElementById('downloadFinishedBtn') as HTMLButtonElement;
 
   const originalCanvas = document.getElementById('originalCanvas') as HTMLCanvasElement;
+  const outlineCanvas = document.getElementById('outlineCanvas') as HTMLCanvasElement;
   const patternCanvas = document.getElementById('patternCanvas') as HTMLCanvasElement;
   const processCanvas = document.getElementById('processCanvas') as HTMLCanvasElement;
   const bgRemovedCanvas = document.getElementById('bgRemovedCanvas') as HTMLCanvasElement;
 
   const originalPlaceholder = document.getElementById('originalPlaceholder');
+  const outlinePlaceholder = document.getElementById('outlinePlaceholder');
   const patternPlaceholder = document.getElementById('patternPlaceholder');
   const paletteSection = document.getElementById('paletteSection');
   const paletteList = document.getElementById('paletteList');
 
   const originalCtx = originalCanvas.getContext('2d');
+  const outlineCtx = outlineCanvas.getContext('2d');
   const patternCtx = patternCanvas.getContext('2d');
   const processCtx = processCanvas.getContext('2d', { willReadFrequently: true });
   const bgRemovedCtx = bgRemovedCanvas.getContext('2d', { willReadFrequently: true });
@@ -412,6 +437,228 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     return nearest;
   }
 
+  // Smooth a color map by repeatedly applying a majority-vote filter.
+  // This merges tiny scattered color patches into clean, large regions —
+  // producing coloring-book style outlines instead of noisy pixel borders.
+  function smoothColorMap(colorMap: number[][], w: number, h: number, radius: number, iterations: number): number[][] {
+    let map = colorMap;
+    for (let iter = 0; iter < iterations; iter++) {
+      const next: number[][] = Array.from({ length: h }, (_, y) => [...map[y]]);
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          if (map[y][x] < 0) continue;
+          const counts = new Map<number, number>();
+          for (let dy = -radius; dy <= radius; dy++) {
+            for (let dx = -radius; dx <= radius; dx++) {
+              const ny = y + dy, nx = x + dx;
+              if (ny >= 0 && ny < h && nx >= 0 && nx < w) {
+                const c = map[ny][nx];
+                if (c >= 0) counts.set(c, (counts.get(c) ?? 0) + 1);
+              }
+            }
+          }
+          let maxCount = 0, majority = map[y][x];
+          for (const [color, count] of counts) {
+            if (count > maxCount) { maxCount = count; majority = color; }
+          }
+          next[y][x] = majority;
+        }
+      }
+      map = next;
+    }
+    return map;
+  }
+
+  // Generate printable stitch guide using Sobel edge detection.
+  // This traces real structural boundaries (leaf edges, color transitions) rather
+  // than arbitrary color-quantization blobs, producing coloring-book style outlines.
+  function generateOutlineImage(imageData: ImageData, palette: number[][]): void {
+    const w = imageData.width;
+    const h = imageData.height;
+    const data = imageData.data;
+    const scale = 2;
+
+    outlineCanvas.width = w * scale;
+    outlineCanvas.height = h * scale;
+    if (!outlineCtx) return;
+
+    outlineCtx.fillStyle = '#ffffff';
+    outlineCtx.fillRect(0, 0, outlineCanvas.width, outlineCanvas.height);
+
+    // Composite the subject onto white so the silhouette blends cleanly into the background.
+    // Then apply a light blur to suppress texture noise while keeping structural edges.
+    const whiteEl = document.createElement('canvas');
+    whiteEl.width = w; whiteEl.height = h;
+    const whiteCtx = whiteEl.getContext('2d')!;
+    whiteCtx.fillStyle = 'white';
+    whiteCtx.fillRect(0, 0, w, h);
+    whiteCtx.drawImage(bgRemovedCanvas, 0, 0);
+
+    const blurEl = document.createElement('canvas');
+    blurEl.width = w; blurEl.height = h;
+    const blurCtx2 = blurEl.getContext('2d', { willReadFrequently: true })!;
+    // Light blur: suppresses pixel-level texture (~3-5px) but keeps leaf boundaries intact
+    const blurRadius = Math.max(3, Math.round(Math.min(w, h) / 150));
+    blurCtx2.filter = `blur(${blurRadius}px)`;
+    blurCtx2.drawImage(whiteEl, 0, 0);
+    const bp = blurCtx2.getImageData(0, 0, w, h).data;
+
+    // Convert to grayscale for edge detection
+    const gray = new Float32Array(w * h);
+    for (let i = 0; i < w * h; i++) {
+      const pi = i * 4;
+      gray[i] = 0.299 * bp[pi] + 0.587 * bp[pi + 1] + 0.114 * bp[pi + 2];
+    }
+
+    // Sobel: compute gradient magnitude and direction at each pixel
+    const magn = new Float32Array(w * h);
+    const gxArr = new Float32Array(w * h);
+    const gyArr = new Float32Array(w * h);
+    let maxEdge = 0;
+    for (let y = 1; y < h - 1; y++) {
+      for (let x = 1; x < w - 1; x++) {
+        if (data[(y * w + x) * 4 + 3] < 128) continue;
+        const gx =
+          -gray[(y-1)*w+(x-1)] + gray[(y-1)*w+(x+1)]
+          - 2*gray[y*w+(x-1)] + 2*gray[y*w+(x+1)]
+          - gray[(y+1)*w+(x-1)] + gray[(y+1)*w+(x+1)];
+        const gy =
+          -gray[(y-1)*w+(x-1)] - 2*gray[(y-1)*w+x] - gray[(y-1)*w+(x+1)]
+          + gray[(y+1)*w+(x-1)] + 2*gray[(y+1)*w+x] + gray[(y+1)*w+(x+1)];
+        const e = Math.sqrt(gx * gx + gy * gy);
+        gxArr[y*w+x] = gx;
+        gyArr[y*w+x] = gy;
+        magn[y*w+x] = e;
+        if (e > maxEdge) maxEdge = e;
+      }
+    }
+
+    // Non-maximum suppression: keep only pixels that are the local maximum
+    // along their gradient direction. This thins edges to exactly 1px.
+    const edges = new Float32Array(w * h);
+    for (let y = 1; y < h - 1; y++) {
+      for (let x = 1; x < w - 1; x++) {
+        const e = magn[y*w+x];
+        if (e === 0) continue;
+        const ax = Math.abs(gxArr[y*w+x]), ay = Math.abs(gyArr[y*w+x]);
+        const gx = gxArr[y*w+x], gy = gyArr[y*w+x];
+        // Quantise gradient angle to nearest 45° and pick the two neighbours
+        let dx: number, dy: number;
+        if      (ax > ay * 2.414)              { dx = 1;  dy = 0; }  // ~0°
+        else if (ay > ax * 2.414)              { dx = 0;  dy = 1; }  // ~90°
+        else if ((gx > 0) === (gy > 0))        { dx = 1;  dy = 1; }  // ~45°
+        else                                   { dx = 1;  dy = -1; } // ~135°
+        const n1 = magn[(y + dy) * w + (x + dx)];
+        const n2 = magn[(y - dy) * w + (x - dx)];
+        if (e >= n1 && e >= n2) edges[y*w+x] = e;
+      }
+    }
+
+    // Hysteresis thresholding (Canny-style):
+    // Strong edges are kept unconditionally.
+    // Weak edges are kept only if they connect (8-connectivity) to a strong edge.
+    // This preserves faint but structurally continuous lines while dropping isolated noise.
+    const highThresh = maxEdge * 0.20;
+    const lowThresh  = maxEdge * 0.07;
+    const STRONG = 2, WEAK = 1;
+    const edgeState = new Uint8Array(w * h);
+    for (let i = 0; i < w * h; i++) {
+      if      (edges[i] >= highThresh) edgeState[i] = STRONG;
+      else if (edges[i] >= lowThresh)  edgeState[i] = WEAK;
+    }
+
+    // Flood-fill from every strong pixel through connected weak pixels
+    const finalEdges = new Uint8Array(w * h);
+    const queue: number[] = [];
+    for (let i = 0; i < w * h; i++) {
+      if (edgeState[i] === STRONG) queue.push(i);
+    }
+    while (queue.length > 0) {
+      const idx = queue.pop()!;
+      if (finalEdges[idx]) continue;
+      finalEdges[idx] = 1;
+      const y = Math.floor(idx / w), x = idx % w;
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          if (dy === 0 && dx === 0) continue;
+          const ny = y + dy, nx = x + dx;
+          if (ny >= 0 && ny < h && nx >= 0 && nx < w) {
+            const nidx = ny * w + nx;
+            if (!finalEdges[nidx] && edgeState[nidx] >= WEAK) queue.push(nidx);
+          }
+        }
+      }
+    }
+
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        if (finalEdges[y * w + x]) {
+          outlineCtx.fillStyle = '#000000';
+          outlineCtx.fillRect(x * scale, y * scale, scale, scale);
+        }
+      }
+    }
+
+    // Color region labels: use a heavy blur + smooth color map so label centroids
+    // land cleanly inside large regions rather than scattered across tiny blobs
+    const heavyBlurEl = document.createElement('canvas');
+    heavyBlurEl.width = w; heavyBlurEl.height = h;
+    const hbCtx = heavyBlurEl.getContext('2d', { willReadFrequently: true })!;
+    const heavyBlurRadius = Math.max(8, Math.round(Math.min(w, h) / 40));
+    hbCtx.filter = `blur(${heavyBlurRadius}px)`;
+    hbCtx.drawImage(bgRemovedCanvas, 0, 0);
+    const hbp = hbCtx.getImageData(0, 0, w, h).data;
+
+    let colorMap: number[][] = [];
+    for (let y = 0; y < h; y++) {
+      colorMap[y] = [];
+      for (let x = 0; x < w; x++) {
+        const i = (y * w + x) * 4;
+        if (data[i + 3] < 128) {
+          colorMap[y][x] = -1;
+        } else {
+          const nearest = getNearestPaletteColor(hbp[i], hbp[i + 1], hbp[i + 2], palette);
+          colorMap[y][x] = palette.findIndex(c => c[0] === nearest[0] && c[1] === nearest[1] && c[2] === nearest[2]);
+        }
+      }
+    }
+    colorMap = smoothColorMap(colorMap, w, h, 2, 3);
+
+    const centroids = palette.map(() => ({ x: 0, y: 0, count: 0 }));
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const c = colorMap[y][x];
+        if (c >= 0) { centroids[c].x += x; centroids[c].y += y; centroids[c].count++; }
+      }
+    }
+
+    const fontSize = Math.max(10, Math.min(16, w / 18)) * scale;
+    outlineCtx.font = `bold ${fontSize}px sans-serif`;
+    outlineCtx.textAlign = 'center';
+    outlineCtx.textBaseline = 'middle';
+
+    for (let c = 0; c < palette.length; c++) {
+      if (centroids[c].count < 30) continue;
+      const cx = (centroids[c].x / centroids[c].count) * scale;
+      const cy = (centroids[c].y / centroids[c].count) * scale;
+      const radius = fontSize * 0.75;
+
+      outlineCtx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+      outlineCtx.beginPath();
+      outlineCtx.arc(cx, cy, radius, 0, Math.PI * 2);
+      outlineCtx.fill();
+
+      outlineCtx.strokeStyle = '#000000';
+      outlineCtx.lineWidth = scale * 0.5;
+      outlineCtx.beginPath();
+      outlineCtx.arc(cx, cy, radius, 0, Math.PI * 2);
+      outlineCtx.stroke();
+
+      outlineCtx.fillStyle = '#000000';
+      outlineCtx.fillText((c + 1).toString(), cx, cy);
+    }
+  }
+
   // Generate stitch pattern
   function generateStitchPattern(
     imageData: ImageData,
@@ -597,9 +844,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     const numColors = parseInt(colorCountSelect.value);
     currentPalette = quantizeColors(imageData, numColors);
 
-    // Generate stitch pattern
+    // Generate outline guide and finished stitch pattern
     const stitchDensity = parseInt(stitchDensityInput.value);
     const stitchLength = parseInt(stitchLengthInput.value);
+    generateOutlineImage(imageData, currentPalette);
     generateStitchPattern(imageData, currentPalette, stitchDensity, stitchLength);
 
     // Update UI
@@ -607,10 +855,13 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
     originalPlaceholder?.classList.add('hidden');
     originalCanvas.classList.remove('hidden');
+    outlinePlaceholder?.classList.add('hidden');
+    outlineCanvas.classList.remove('hidden');
     patternPlaceholder?.classList.add('hidden');
     patternCanvas.classList.remove('hidden');
     paletteSection?.classList.remove('hidden');
-    downloadBtn.disabled = false;
+    downloadOutlineBtn.disabled = false;
+    downloadFinishedBtn.disabled = false;
   }
 
   function clearImage(): void {
@@ -620,12 +871,15 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
     originalPlaceholder?.classList.remove('hidden');
     originalCanvas.classList.add('hidden');
+    outlinePlaceholder?.classList.remove('hidden');
+    outlineCanvas.classList.add('hidden');
     patternPlaceholder?.classList.remove('hidden');
     patternCanvas.classList.add('hidden');
     paletteSection?.classList.add('hidden');
     clearImageBtn?.classList.add('hidden');
     generateBtn.disabled = true;
-    downloadBtn.disabled = true;
+    downloadOutlineBtn.disabled = true;
+    downloadFinishedBtn.disabled = true;
   }
 
   imageInput.addEventListener('change', (e) => {
@@ -689,24 +943,31 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     });
   });
 
-  downloadBtn.addEventListener('click', () => {
-    patternCanvas.toBlob((blob) => {
+  function downloadCanvas(canvas: HTMLCanvasElement, filename: string): void {
+    canvas.toBlob((blob) => {
       if (!blob) {
         alert('Could not generate image.');
         return;
       }
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.download = 'embroidery-pattern.png';
+      link.download = filename;
       link.href = url;
       document.body.appendChild(link);
       link.click();
-
       setTimeout(() => {
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
       }, 100);
     }, 'image/png');
+  }
+
+  downloadOutlineBtn.addEventListener('click', () => {
+    downloadCanvas(outlineCanvas, 'embroidery-stitch-guide.png');
+  });
+
+  downloadFinishedBtn.addEventListener('click', () => {
+    downloadCanvas(patternCanvas, 'embroidery-finished-preview.png');
   });
 </script>
 
