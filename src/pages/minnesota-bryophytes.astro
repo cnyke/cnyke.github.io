@@ -3,8 +3,8 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 ---
 
 <BaseLayout
-  title="Minnesota Bryophyta | Claire Nyquist"
-  description="An interactive 3D visualization of bryophyte (moss) observations across Minnesota, using GBIF data. Height represents observation density, colors indicate taxonomic orders."
+  title="Minnesota Mosses | Claire Nyquist"
+  description="An interactive 3D visualization of moss observations across Minnesota, using GBIF data. Height represents observation density, colors indicate taxonomic orders."
 >
   <div class="min-h-screen bg-white">
     <!-- Legend -->
@@ -28,12 +28,12 @@ import BaseLayout from "../layouts/BaseLayout.astro";
     <!-- Explainer panel -->
     <div id="explainer" class="fixed top-20 left-4 right-4 sm:right-auto sm:max-w-sm z-20 bg-white/95 backdrop-blur-sm rounded-xl p-5 border border-slate-200 shadow-lg">
       <button id="explainer-toggle" class="flex items-center justify-between gap-2 w-full text-left">
-        <h2 class="text-emerald-700 font-semibold text-base">Minnesota Bryophyta</h2>
+        <h2 class="text-emerald-700 font-semibold text-base">Minnesota Mosses</h2>
         <span id="explainer-arrow" class="text-slate-400 text-sm transition-transform">▼</span>
       </button>
       <div id="explainer-content" class="text-slate-600 text-sm mt-3 space-y-3">
         <p>
-          This 3D visualization displays <strong class="text-emerald-700">bryophyte observations</strong> (mosses, liverworts, and hornworts) recorded across Minnesota from 1893 to 2025.
+          This 3D visualization displays <strong class="text-emerald-700">moss observations</strong> recorded across Minnesota from 1893 to 2025.
         </p>
         <p>
           <strong class="text-emerald-700">Bar height</strong> represents the number of observations at each location (logarithmic scale)—taller bars indicate more documented sightings.
@@ -42,10 +42,10 @@ import BaseLayout from "../layouts/BaseLayout.astro";
           <strong class="text-emerald-700">Colors</strong> are stacked within each bar to show all taxonomic orders recorded at that location, with segment heights proportional to observation counts. Hover over a bar to see the breakdown.
         </p>
         <p>
-          <strong class="text-emerald-700">A note on sampling bias:</strong> This map shows where observations were <em>recorded</em>, not necessarily where bryophytes are most abundant. Clusters often reflect researcher activity near cities, universities, and field stations rather than true species distribution.
+          <strong class="text-emerald-700">A note on sampling bias:</strong> This map shows where observations were <em>recorded</em>, not necessarily where mosses are most abundant. Clusters often reflect researcher activity near cities, universities, and field stations rather than true species distribution.
         </p>
         <p>
-          <a href="/bryophyta-sketchbook" class="text-emerald-600 hover:underline font-medium">View the Bryophyta Sketchbook →</a>
+          <a href="/bryophyta-sketchbook" class="text-emerald-600 hover:underline font-medium">View the Mosses Sketchbook →</a>
         </p>
         <p class="text-xs text-slate-500 pt-2 border-t border-slate-100">
           GBIF.org (21 January 2026) GBIF Occurrence Download <a href="https://doi.org/10.15468/dl.xkqqbg" target="_blank" rel="noopener" class="text-emerald-600 hover:underline">https://doi.org/10.15468/dl.xkqqbg</a>
@@ -76,7 +76,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
           <div class="absolute inset-3 border-4 border-teal-200 rounded-full"></div>
           <div class="absolute inset-3 border-4 border-teal-500 rounded-full animate-spin border-b-transparent" style="animation-direction: reverse;"></div>
         </div>
-        <p class="text-emerald-700 text-lg font-medium">Loading Bryophyte Data...</p>
+        <p class="text-emerald-700 text-lg font-medium">Loading Moss Data...</p>
         <p id="loading-status" class="text-slate-500 text-sm mt-2">Initializing...</p>
       </div>
     </div>
@@ -139,7 +139,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       }
     });
 
-    // Order color mapping - greens and browns for bryophytes
+    // Order color mapping - greens and browns for mosses
     const orderColors = {
       'Hypnales': '#2d6a4f',
       'Dicranales': '#40916c',

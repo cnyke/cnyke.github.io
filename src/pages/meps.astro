@@ -25,6 +25,43 @@ import BaseLayout from "../layouts/BaseLayout.astro";
         <!-- Heatmap Visualization -->
         <div class="mb-6">
             <div class="bg-white rounded-lg shadow-sm border overflow-hidden">
+                <!-- Year Slider -->
+                <div
+                    class="flex items-center justify-center gap-3 py-3 px-4 border-b bg-gray-50"
+                >
+                    <label
+                        for="year-slider"
+                        class="text-sm font-medium text-gray-600">Year</label
+                    >
+                    <button
+                        id="year-play"
+                        type="button"
+                        class="w-8 h-8 flex items-center justify-center rounded-full border border-gray-300 bg-white hover:bg-gray-100 text-gray-600 transition-colors"
+                        aria-label="Play through years"
+                    >
+                        <svg id="play-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
+                            <path d="M6.3 2.84A1.5 1.5 0 004 4.11v11.78a1.5 1.5 0 002.3 1.27l9.344-5.891a1.5 1.5 0 000-2.538L6.3 2.84z" />
+                        </svg>
+                        <svg id="pause-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 hidden">
+                            <path d="M5.75 3a.75.75 0 00-.75.75v12.5c0 .414.336.75.75.75h1.5a.75.75 0 00.75-.75V3.75A.75.75 0 007.25 3h-1.5zM12.75 3a.75.75 0 00-.75.75v12.5c0 .414.336.75.75.75h1.5a.75.75 0 00.75-.75V3.75a.75.75 0 00-.75-.75h-1.5z" />
+                        </svg>
+                    </button>
+                    <input
+                        type="range"
+                        id="year-slider"
+                        min="0"
+                        max="4"
+                        value="4"
+                        step="1"
+                        class="w-40 sm:w-56 accent-indigo-600 cursor-pointer"
+                    />
+                    <span
+                        id="year-display"
+                        class="text-lg font-bold text-indigo-700 tabular-nums w-12 text-center"
+                        >2022</span
+                    >
+                </div>
+
                 <!-- Plotly Heatmap Container -->
                 <div class="p-2 sm:p-4">
                     <div id="meps-heatmap" style="width:100%;"></div>
@@ -36,7 +73,9 @@ import BaseLayout from "../layouts/BaseLayout.astro";
                 >
                     <p class="mt-2">
                         <strong>Data Source:</strong> Agency for Healthcare Research
-                        and Quality. Medical Expenditure Panel Survey 2022.
+                        and Quality. Medical Expenditure Panel Survey <span
+                            id="citation-year">2022</span
+                        >.
                         <a
                             href="https://meps.ahrq.gov/mepsweb/"
                             class="text-blue-600 hover:text-blue-800 break-words"
@@ -82,6 +121,102 @@ import BaseLayout from "../layouts/BaseLayout.astro";
             </p>
         </div>
 
+        <!-- Methodology -->
+        <div class="mt-12 bg-white rounded-lg shadow-sm border p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-3">
+                Methodology
+            </h3>
+            <p class="text-sm text-gray-600 mb-3">
+                All estimates are produced using the
+                <a href="https://cran.r-project.org/web/packages/survey/"
+                   class="text-blue-600 hover:text-blue-800"
+                   target="_blank" rel="noopener">R survey package</a>
+                following
+                <a href="https://meps.ahrq.gov/mepsweb/survey_comp/standard_errors.jsp"
+                   class="text-blue-600 hover:text-blue-800"
+                   target="_blank" rel="noopener">AHRQ-recommended methods</a>
+                for complex survey data. Each year is analyzed independently
+                as a cross-sectional snapshot of the U.S. civilian noninstitutionalized
+                population.
+            </p>
+
+            <h4 class="text-sm font-semibold text-gray-800 mt-4 mb-1">Survey Weights</h4>
+            <p class="text-sm text-gray-600 mb-3">
+                MEPS oversamples certain populations&mdash;including low-income
+                families, racial and ethnic minorities, and the elderly&mdash;to
+                ensure they are adequately represented. Each observation carries
+                a person-level final weight (e.g., PERWT22F for 2022) that
+                adjusts for this oversampling as well as survey nonresponse and
+                post-stratification to Census population totals. All means shown
+                in the heatmap are weighted, so they represent the full
+                U.S. population, not just the ~30,000 survey respondents.
+            </p>
+
+            <h4 class="text-sm font-semibold text-gray-800 mt-4 mb-1">Variance Estimation</h4>
+            <p class="text-sm text-gray-600 mb-3">
+                Because MEPS uses a stratified, multi-stage cluster design,
+                standard formulas for simple random samples would understate
+                the true uncertainty. This analysis specifies the stratum
+                (VARSTR) and primary sampling unit (VARPSU) variables and uses
+                Taylor-series linearization to produce correct standard errors.
+                In practical terms, this means the confidence intervals properly
+                reflect the fact that people within the same geographic cluster
+                tend to be more similar to each other than to the population at
+                large.
+            </p>
+
+            <h4 class="text-sm font-semibold text-gray-800 mt-4 mb-1">Domain (Subgroup) Analysis</h4>
+            <p class="text-sm text-gray-600 mb-3">
+                When computing estimates for subgroups (e.g., adults age 45&ndash;64
+                in the South), the full survey design is preserved rather than
+                subsetting the data first. This is critical: dropping
+                observations outside the subgroup would remove information the
+                variance estimator needs, producing standard errors that are
+                too small. The R survey package&rsquo;s <code class="text-xs bg-gray-100 px-1 rounded">subset()</code>
+                method on a <code class="text-xs bg-gray-100 px-1 rounded">svydesign</code>
+                object handles this correctly by zeroing out weights for
+                out-of-domain observations while retaining them in the
+                design structure.
+            </p>
+
+            <h4 class="text-sm font-semibold text-gray-800 mt-4 mb-1">Expenditures Are in Nominal Dollars</h4>
+            <p class="text-sm text-gray-600 mb-3">
+                Dollar amounts shown in the heatmap (Mean Total Expenditure
+                and Mean Out-of-Pocket) are reported in nominal
+                dollars for each survey year&mdash;that is, they
+                reflect the prices that prevailed in that year without
+                adjustment for inflation. Between 2018 and 2022, the
+                <a href="https://data.bls.gov/timeseries/CUUR0000SAM"
+                   class="text-blue-600 hover:text-blue-800"
+                   target="_blank" rel="noopener">CPI for Medical Care</a>
+                rose roughly 10&ndash;12%, meaning that a portion of any
+                increase in expenditures across years reflects higher prices
+                rather than greater utilization of services. Because of this,
+                direct year-over-year comparison of the raw dollar values in
+                the tooltip can overstate real spending growth. To make
+                expenditures comparable across time, they would need to be
+                deflated to a common base year using an appropriate price
+                index such as the CPI for Medical Care or the Personal
+                Consumption Expenditures (PCE) Health price index. The
+                heatmap&rsquo;s color scale is not affected by this issue:
+                normalization is performed independently within each year,
+                so the color pattern shows relative differences between
+                region-age groups for a given year, not absolute dollar
+                comparisons across years.
+            </p>
+
+            <h4 class="text-sm font-semibold text-gray-800 mt-4 mb-1">No Pooling Across Years</h4>
+            <p class="text-sm text-gray-600">
+                Each survey year is analyzed as a standalone cross-section.
+                The data are not pooled across years, so no weight adjustment
+                (dividing by the number of pooled years) is necessary. This
+                approach is appropriate for examining how population-level
+                estimates change over time but means that rarer conditions or
+                smaller subgroups may exhibit more year-to-year volatility
+                than they would in a pooled multi-year analysis.
+            </p>
+        </div>
+
         <!-- Data Sources -->
         <div class="mt-12 bg-white rounded-lg shadow-sm border p-6">
             <h3 class="text-lg font-semibold text-gray-900 mb-3">
@@ -97,13 +232,31 @@ import BaseLayout from "../layouts/BaseLayout.astro";
                     rel="noopener">https://meps.ahrq.gov/mepsweb/</a
                 >
             </p>
-            <p class="text-sm text-gray-600">
+            <p class="text-sm text-gray-600 mb-3">
                 For accessing MEPS data in R, see the <a
                     href="https://github.com/e-mitchell/meps_r_pkg"
                     class="text-blue-600 hover:text-blue-800"
                     target="_blank"
                     rel="noopener">MEPS R Package</a
                 > maintained by AHRQ.
+            </p>
+            <p class="text-sm text-gray-600 mb-3">
+                R Core Team. (2024). R: A Language and Environment for
+                Statistical Computing. R Foundation for Statistical Computing,
+                Vienna, Austria. <a
+                    href="https://www.R-project.org/"
+                    class="text-blue-600 hover:text-blue-800 break-words"
+                    target="_blank"
+                    rel="noopener">https://www.R-project.org/</a>
+            </p>
+            <p class="text-sm text-gray-600">
+                Lumley, T. (2004). Analysis of Complex Survey Samples.
+                <em>Journal of Statistical Software</em>, 9(8), 1&ndash;19.
+                R package version 4.4. <a
+                    href="https://cran.r-project.org/package=survey"
+                    class="text-blue-600 hover:text-blue-800 break-words"
+                    target="_blank"
+                    rel="noopener">https://cran.r-project.org/package=survey</a>
             </p>
         </div>
     </div>
@@ -200,82 +353,481 @@ import BaseLayout from "../layouts/BaseLayout.astro";
                 "Percentage living at or below 125% of the federal poverty level (includes MEPS categories 'Poor' and 'Near Poor').",
         };
 
-        const rawData = [
-            [
-                3470.5, 5171.02, 7852.15, 15926.67, 2116.62, 5013.09, 9676.14,
-                12595.46, 2207.23, 4322.43, 8168.23, 12939.4, 3033.06, 4919.22,
-                7586.97, 11689.31,
+        // Multi-year data — each key is a year, value is the 18×16 rawData matrix
+        // After running meps.R for all years, paste the full dataByYear output here.
+        // For now, only 2022 is populated. Other years will show as empty until R output is pasted.
+        const dataByYear: Record<number, (number | null)[][]> = {
+            2018: [
+                // Mean Total Expenditure
+                [
+                    2955.12, 3853.45, 8259.61, 13510.05, 2695.78, 5198.68,
+                    9321.45, 12590.61, 2284.99, 3381.43, 7604.9, 11662.3,
+                    2298.53, 3418.13, 7177.48, 11736.34,
+                ],
+                // Mean Out-of-Pocket
+                [
+                    352.29, 504.48, 980.36, 1519.95, 481.55, 679.6, 1234,
+                    1659.39, 353.72, 505.06, 1113.05, 1426.23, 339.34, 512.73,
+                    940.23, 1855.08,
+                ],
+                // Mean Office Visits
+                [
+                    5, 5.38, 8.31, 12.56, 4.15, 5.16, 8.13, 11.93, 4.06, 3.81,
+                    6.84, 11.64, 3.63, 4.65, 7.37, 11.62,
+                ],
+                // Mean ER Visits
+                [
+                    0.14, 0.15, 0.24, 0.36, 0.19, 0.22, 0.23, 0.33, 0.13, 0.19,
+                    0.22, 0.33, 0.12, 0.15, 0.17, 0.3,
+                ],
+                // Mean Inpatient Days
+                [
+                    0.11, 0.17, 0.46, 1.34, 0.14, 0.29, 0.52, 1.01, 0.17, 0.22,
+                    0.5, 1.12, 0.06, 0.14, 0.25, 0.79,
+                ],
+                // Mean Rx Fills
+                [
+                    2.96, 4.96, 14.54, 24.39, 2.8, 6.34, 17.59, 23.24, 2.48,
+                    5.15, 16.39, 24.94, 1.79, 3.82, 11.65, 19.17,
+                ],
+                // Private Insurance Rate
+                [
+                    68.1, 75.19, 79.16, 51.36, 65.17, 77.18, 80.41, 57.22,
+                    58.92, 71.29, 75.11, 48.61, 58.23, 70.98, 75.59, 46.72,
+                ],
+                // Medicare Rate
+                [
+                    0.05, 1.38, 7.62, 98.28, 0.51, 1.81, 7.58, 99.06, 0.41,
+                    1.17, 9.12, 98.36, 0.35, 0.94, 4.66, 97.88,
+                ],
+                // Medicaid Rate
+                [
+                    40.18, 22.8, 18.06, 14.75, 40.15, 18.81, 13.48, 9.02, 44.34,
+                    15.72, 10.2, 10.26, 48.2, 25.18, 16.33, 13.1,
+                ],
+                // Uninsured Rate
+                [
+                    0.9, 6.33, 3.18, 0.19, 2.56, 8.46, 5.5, 0.2, 4.11, 15.87,
+                    10.69, 0.48, 1.32, 9.27, 7.83, 0.4,
+                ],
+                // Excellent/VG Health
+                [
+                    81.84, 69.93, 56.24, 48.66, 81.75, 63.23, 53.58, 50.88,
+                    83.17, 65.04, 51.96, 47.62, 82.86, 65.72, 54.19, 52.73,
+                ],
+                // Fair/Poor Health
+                [
+                    3.29, 6.46, 12.93, 18.29, 2.45, 7.71, 15.74, 15.76, 1.25,
+                    7.33, 16.26, 20.45, 1.77, 7.72, 12.62, 18.84,
+                ],
+                // Has Diabetes
+                [
+                    null, 2.21, 12.15, 23.6, null, 3.46, 12.31, 22.77, null, 2.84, 16.02,
+                    25.69, null, 2.44, 11.64, 20.38,
+                ],
+                // Has Hypertension
+                [
+                    null, 10.06, 37.46, 64.31, null, 13.11, 38.34, 60.85, null, 13.33,
+                    43.38, 65.89, null, 8.85, 34.15, 60.32,
+                ],
+                // Has Coronary Heart Disease
+                [
+                    null, 0.31, 5.28, 14.79, null, 0.29, 3.98, 16.93, null, 0.38, 5.19,
+                    15.78, null, 0.28, 2.58, 11.94,
+                ],
+                // Has Asthma
+                [
+                    14.99, 17.83, 12.86, 12.97, 12.11, 16.93, 13.01, 10.59,
+                    11.16, 13.4, 12.53, 12.21, 11.39, 15.57, 12.66, 13.16,
+                ],
+                // Employed
+                [
+                    null, 76.39, 75.33, 22.59, null, 80.89, 74.74, 23.48, null, 74.9,
+                    71.33, 20.94, null, 75.38, 75.03, 19.91,
+                ],
+                // Poor or Near Poor
+                [
+                    20.06, 13.53, 11.8, 13.5, 20.58, 15.29, 11.11, 9.72, 23.57,
+                    17.36, 14.15, 17.58, 23.48, 14.46, 12.12, 12.23,
+                ],
             ],
-            [
-                437.32, 733.26, 882.65, 1989.71, 321.95, 890.97, 1220.9,
-                1513.18, 313.61, 685.15, 1094.28, 1519.35, 416.91, 905.99,
-                1235.79, 1588.26,
+            2019: [
+                // Mean Total Expenditure
+                [
+                    3096.14, 3834.8, 8579.43, 13440.98, 2668.9, 4768.59,
+                    9193.71, 15088.39, 2188.59, 3325.51, 7982.3, 11351.38,
+                    2012.76, 4057.47, 8367.73, 12728.81,
+                ],
+                // Mean Out-of-Pocket
+                [
+                    345.32, 548.4, 1010.94, 1909.88, 454.01, 820.73, 1105.04,
+                    1947.75, 285.83, 559.47, 1109.19, 1291.01, 304.37, 521.24,
+                    1053.1, 1630.98,
+                ],
+                // Mean Office Visits
+                [
+                    4.36, 5.96, 8.15, 13.14, 4.1, 5.39, 7.94, 12.16, 4.02, 4,
+                    7.12, 11.65, 3.63, 5.05, 7.17, 12.21,
+                ],
+                // Mean ER Visits
+                [
+                    0.14, 0.16, 0.2, 0.39, 0.16, 0.21, 0.22, 0.4, 0.15, 0.19,
+                    0.23, 0.34, 0.13, 0.16, 0.18, 0.32,
+                ],
+                // Mean Inpatient Days
+                [
+                    0.19, 0.16, 0.38, 1.05, 0.18, 0.28, 0.51, 1.39, 0.2, 0.21,
+                    0.36, 1.09, 0.07, 0.18, 0.3, 0.9,
+                ],
+                // Mean Rx Fills
+                [
+                    2.46, 4.56, 14.51, 23.64, 2.33, 6.16, 15.74, 24.01, 2.05,
+                    4.8, 15.19, 22.23, 1.57, 4.06, 11.19, 18.67,
+                ],
+                // Private Insurance Rate
+                [
+                    64.59, 72.71, 76.9, 46.83, 65.19, 77.76, 80.59, 54.24,
+                    58.15, 70.36, 75.5, 48.65, 58.4, 71.63, 75.63, 43.72,
+                ],
+                // Medicare Rate
+                [
+                    0.1, 1.84, 9.13, 97.95, 0.44, 1.28, 6.85, 98.87, 0.52, 0.94,
+                    8.91, 98.77, 0.64, 0.81, 4.87, 98.78,
+                ],
+                // Medicaid Rate
+                [
+                    40.1, 23.85, 20.14, 14.8, 38.41, 17.87, 12.8, 6.5, 44.65,
+                    15.68, 10.35, 9.55, 46.88, 25.58, 17.36, 12.8,
+                ],
+                // Uninsured Rate
+                [
+                    0.7, 6.57, 3.42, 0.4, 2.95, 7.56, 4.55, 0.07, 3.09, 16.4,
+                    10.08, 0.3, 1.93, 8.65, 7.17, 0.46,
+                ],
+                // Excellent/VG Health
+                [
+                    83.02, 72.98, 55.65, 40.95, 83.83, 64.46, 55.5, 51.08,
+                    85.39, 68.78, 54.27, 47.06, 85.13, 67.64, 54.78, 49.41,
+                ],
+                // Fair/Poor Health
+                [
+                    2.05, 6.5, 14.73, 20.22, 2.34, 8.17, 14.18, 17.32, 1.49,
+                    6.93, 15.18, 19.46, 1.99, 7.2, 12.8, 17.39,
+                ],
+                // Has Diabetes
+                [
+                    null, 2.37, 12.16, 23.09, null, 3.27, 11.43, 21.7, null, 3.05, 14.41,
+                    25.2, null, 2.59, 12.63, 22.24,
+                ],
+                // Has Hypertension
+                [
+                    null, 7.23, 37.08, 64.62, null, 11.17, 38.64, 63.76, null, 12.77,
+                    43.9, 67.47, null, 8.99, 32.97, 63.84,
+                ],
+                // Has Coronary Heart Disease
+                [
+                    null, 0.14, 4.61, 17.23, null, 0.33, 3.69, 16.44, null, 0.46, 4.61,
+                    13.65, null, 0.19, 1.52, 14.35,
+                ],
+                // Has Asthma
+                [
+                    12.29, 15, 13.29, 11.12, 9.55, 14.31, 11.95, 10.77, 10.52,
+                    12.71, 12.89, 10.48, 11.64, 15.73, 13.08, 12.84,
+                ],
+                // Employed
+                [
+                    null, 76.17, 74.43, 20.21, null, 80.1, 74.61, 22.85, null, 74.46,
+                    71.68, 18.97, null, 76.24, 73.47, 20.56,
+                ],
+                // Poor or Near Poor
+                [
+                    18.21, 12.85, 11.26, 12.86, 19.83, 13.72, 10.92, 9.83,
+                    26.52, 17.55, 13.75, 17.32, 21.34, 14.93, 11.31, 13.66,
+                ],
             ],
-            [
-                6.23, 5.12, 7.81, 13.94, 3.93, 5.02, 7.67, 9.83, 4.16, 3.9,
-                6.58, 10.1, 3.99, 5.23, 6.97, 10.1,
+            2020: [
+                // Mean Total Expenditure
+                [
+                    2574.33, 3950.44, 8086.82, 13630.43, 2886.58, 4195.46,
+                    8758.99, 13926.38, 2181.9, 3564.53, 8977.37, 10855.35,
+                    1937.59, 4107.26, 8005.8, 11810.11,
+                ],
+                // Mean Out-of-Pocket
+                [
+                    294.89, 545.21, 938.81, 1624.3, 294.07, 693.06, 1108.49,
+                    1598, 246.28, 644.34, 1212.78, 1352.34, 353.23, 547.21,
+                    861.9, 1673.38,
+                ],
+                // Mean Office Visits
+                [
+                    4.51, 6.17, 7.48, 11.24, 3.77, 5.56, 7.73, 10.33, 3.34,
+                    4.22, 6.7, 9.85, 2.88, 4.77, 6.57, 10.36,
+                ],
+                // Mean ER Visits
+                [
+                    0.09, 0.09, 0.15, 0.28, 0.11, 0.14, 0.24, 0.3, 0.09, 0.15,
+                    0.19, 0.28, 0.09, 0.13, 0.13, 0.25,
+                ],
+                // Mean Inpatient Days
+                [
+                    0.15, 0.11, 0.44, 1.05, 0.1, 0.15, 0.48, 0.92, 0.2, 0.16,
+                    0.53, 1.09, 0.06, 0.12, 0.28, 0.66,
+                ],
+                // Mean Rx Fills
+                [
+                    1.86, 4.38, 14.41, 23.12, 2.26, 5.46, 16.63, 23.81, 1.64,
+                    4.8, 14.42, 21.46, 1.31, 3.48, 10.02, 17.57,
+                ],
+                // Private Insurance Rate
+                [
+                    65.68, 73.9, 78.08, 49.49, 65.67, 79.02, 79.29, 54.22, 55,
+                    69.66, 74.62, 46.62, 59.83, 70.63, 76.29, 40.79,
+                ],
+                // Medicare Rate
+                [
+                    0.21, 1.83, 7.91, 97.94, 0.9, 1.37, 7.56, 97.57, 0.83, 1.15,
+                    9.36, 98.47, 0.55, 0.63, 4.55, 98.66,
+                ],
+                // Medicaid Rate
+                [
+                    42.58, 23.03, 19.15, 11.62, 38.24, 17.42, 14.72, 7.52,
+                    46.84, 15.46, 11.57, 10.12, 44.25, 25.72, 17.86, 14.42,
+                ],
+                // Uninsured Rate
+                [
+                    0.61, 6.99, 2.22, 0.19, 2.29, 7.44, 5.09, 0.43, 4.59, 17.29,
+                    9.79, 0.41, 1.96, 9.52, 6.12, 0.54,
+                ],
+                // Excellent/VG Health
+                [
+                    87.66, 73.3, 57.26, 45.42, 83.7, 63.64, 51.82, 49.18, 85.52,
+                    63.22, 52.3, 46.85, 82.37, 64.78, 54.39, 48.92,
+                ],
+                // Fair/Poor Health
+                [
+                    1.52, 5.97, 13.76, 18.6, 2.35, 7.33, 15.64, 17.19, 1.42,
+                    8.16, 16.17, 18.22, 1.74, 8.1, 14.02, 17.27,
+                ],
+                // Has Diabetes
+                [
+                    null, 2.33, 13.52, 25.9, null, 3.24, 15.28, 22.7, null, 3.58, 15.64,
+                    27.28, null, 2.72, 13.43, 22.59,
+                ],
+                // Has Hypertension
+                [
+                    null, 8.95, 38.68, 65.51, null, 13.14, 43.13, 66.11, null, 14.31,
+                    44.68, 70.25, null, 9.58, 34.06, 64.95,
+                ],
+                // Has Coronary Heart Disease
+                [
+                    null, 0.25, 4.53, 17.81, null, 0.24, 4.47, 19.04, null, 0.33, 4.79,
+                    15.41, null, 0.42, 2.27, 14.54,
+                ],
+                // Has Asthma
+                [
+                    10.87, 17.79, 14.5, 12.98, 10.92, 15.86, 14.21, 13.46, 10.3,
+                    14.46, 13.31, 11.6, 10.98, 15.33, 14.54, 13.32,
+                ],
+                // Employed
+                [
+                    null, 72.8, 75.62, 18.94, null, 79.36, 70.68, 19.92, null, 74.81,
+                    68.75, 17.33, null, 71.43, 72.98, 18.62,
+                ],
+                // Poor or Near Poor
+                [
+                    18.93, 14.85, 8.35, 13.25, 20.02, 12.86, 11.15, 10.2, 25.17,
+                    15.78, 14.43, 15.35, 18.01, 13.13, 11.66, 12.83,
+                ],
             ],
-            [
-                0.09, 0.12, 0.15, 0.3, 0.12, 0.14, 0.22, 0.34, 0.11, 0.17, 0.18,
-                0.34, 0.13, 0.13, 0.16, 0.29,
+            2021: [
+                // Mean Total Expenditure
+                [
+                    2519.99, 5821.09, 10091.67, 15781.95, 2909.88, 5053.09,
+                    9708.34, 15642.32, 2203.06, 3677.26, 8592.76, 13164.44,
+                    2408.63, 5018.49, 7680.14, 11640.65,
+                ],
+                // Mean Out-of-Pocket
+                [
+                    388.44, 637.87, 922.97, 2049.19, 362.77, 823.8, 1166.36,
+                    1734.89, 307.64, 628.47, 1332.6, 1465.55, 436.74, 855.83,
+                    964.71, 1506.03,
+                ],
+                // Mean Office Visits
+                [
+                    4.51, 6.89, 9.48, 13.04, 4.03, 6.34, 8.02, 11.82, 4.36,
+                    4.54, 7.07, 10.95, 3.6, 6.17, 7.21, 11.37,
+                ],
+                // Mean ER Visits
+                [
+                    0.07, 0.1, 0.19, 0.28, 0.12, 0.19, 0.17, 0.3, 0.11, 0.14,
+                    0.19, 0.29, 0.1, 0.13, 0.13, 0.23,
+                ],
+                // Mean Inpatient Days
+                [
+                    0.1, 0.15, 0.36, 1.26, 0.09, 0.24, 0.37, 0.88, 0.11, 0.15,
+                    0.5, 0.86, 0.07, 0.15, 0.41, 0.58,
+                ],
+                // Mean Rx Fills
+                [
+                    1.72, 4.33, 13.21, 23.92, 2.01, 5.89, 16.52, 23.08, 1.63,
+                    4.43, 13.05, 20.43, 1.15, 3.62, 10.3, 17.98,
+                ],
+                // Private Insurance Rate
+                [
+                    67.03, 73.31, 77.87, 50.98, 67.47, 77.99, 77.03, 50.29,
+                    53.96, 69.66, 76.07, 47.84, 59.17, 70.37, 74.21, 44.08,
+                ],
+                // Medicare Rate
+                [
+                    0.46, 2.12, 6.48, 97.81, 0.62, 1.74, 8.12, 97.45, 0.38,
+                    1.06, 7.82, 96.85, 0.5, 0.6, 4.16, 99.08,
+                ],
+                // Medicaid Rate
+                [
+                    42.3, 26.25, 21.36, 12.93, 38.32, 19.79, 16.71, 8.46, 45.62,
+                    17.19, 11.77, 12.56, 43.66, 24.93, 19.36, 16.01,
+                ],
+                // Uninsured Rate
+                [
+                    0.06, 6.61, 2.15, 0, 1.68, 6.03, 4.84, 0.28, 4.23, 16.29,
+                    9.54, 0.31, 1.78, 8.81, 7.24, 0.22,
+                ],
+                // Excellent/VG Health
+                [
+                    81.53, 70.4, 57.59, 46.61, 82.4, 63.69, 52.06, 49.5, 83.79,
+                    63.53, 49.76, 48.46, 79.03, 61.41, 51.89, 47.57,
+                ],
+                // Fair/Poor Health
+                [
+                    1.55, 5.43, 12.69, 17.22, 2.57, 8.16, 16.22, 17.1, 1.46,
+                    8.58, 14.89, 20.37, 1.54, 9.09, 12.3, 16.32,
+                ],
+                // Has Diabetes
+                [
+                    null, 2.43, 11.95, 23.51, null, 3.67, 16.2, 23.47, null, 3.69, 14.99,
+                    26.65, null, 2.21, 13.06, 20.92,
+                ],
+                // Has Hypertension
+                [
+                    null, 9.33, 36.46, 63.23, null, 11.34, 41.04, 62.14, null, 14.6,
+                    43.03, 68.42, null, 8.95, 34.74, 61.54,
+                ],
+                // Has Coronary Heart Disease
+                [
+                    null, 0.27, 2.92, 16.49, null, 0.27, 5.21, 16.46, null, 0.38, 4.37,
+                    15.77, null, 0.79, 2.62, 13.32,
+                ],
+                // Has Asthma
+                [
+                    11.06, 17.65, 13.85, 12.88, 9.67, 16.31, 12.97, 13.24, 9.7,
+                    15.01, 13.52, 11.52, 8.97, 15.21, 15.61, 14.58,
+                ],
+                // Employed
+                [
+                    null, 76.38, 77.02, 22.77, null, 78.17, 71.13, 21.31, null, 75.53,
+                    73.21, 19.06, null, 76.49, 75.58, 20.22,
+                ],
+                // Poor or Near Poor
+                [
+                    15.32, 14.69, 9.45, 15.04, 15.45, 13.13, 12.55, 10.73,
+                    24.96, 15.55, 13.48, 17.18, 19.01, 14.37, 13.13, 15.19,
+                ],
             ],
-            [
-                0.14, 0.18, 0.24, 1.72, 0.11, 0.28, 0.38, 0.76, 0.11, 0.18,
-                0.33, 1, 0.05, 0.12, 0.19, 0.8,
+            2022: [
+                // Mean Total Expenditure
+                [
+                    3470.5, 5171.02, 7852.15, 15926.67, 2116.62, 5013.09,
+                    9676.14, 12595.46, 2207.23, 4322.43, 8168.23, 12939.4,
+                    3033.06, 4919.22, 7586.97, 11689.31,
+                ],
+                // Mean Out-of-Pocket
+                [
+                    437.32, 733.26, 882.65, 1989.71, 321.95, 890.97, 1220.9,
+                    1513.18, 313.61, 685.15, 1094.28, 1519.35, 416.91, 905.99,
+                    1235.79, 1588.26,
+                ],
+                // Mean Office Visits
+                [
+                    6.23, 5.12, 7.81, 13.94, 3.93, 5.02, 7.67, 9.83, 4.16, 3.9,
+                    6.58, 10.1, 3.99, 5.23, 6.97, 10.1,
+                ],
+                // Mean ER Visits
+                [
+                    0.09, 0.12, 0.15, 0.3, 0.12, 0.14, 0.22, 0.34, 0.11, 0.17,
+                    0.18, 0.34, 0.13, 0.13, 0.16, 0.29,
+                ],
+                // Mean Inpatient Days
+                [
+                    0.14, 0.18, 0.24, 1.72, 0.11, 0.28, 0.38, 0.76, 0.11, 0.18,
+                    0.33, 1, 0.05, 0.12, 0.19, 0.8,
+                ],
+                // Mean Rx Fills
+                [
+                    2.23, 4.52, 11.88, 21.75, 2.18, 5.48, 15.46, 20, 1.88, 4.59,
+                    12.61, 19.56, 1.53, 3.86, 10, 16.7,
+                ],
+                // Private Insurance Rate
+                [
+                    65.47, 75.57, 75.58, 47.26, 68.27, 76.58, 73.81, 49.51,
+                    51.99, 68.75, 75.26, 46.14, 62.67, 72.37, 73.31, 40.48,
+                ],
+                // Medicare Rate
+                [
+                    0.64, 1.75, 4.69, 98.78, 0.18, 1.31, 8.11, 98.7, 0.6, 0.98,
+                    6.51, 97.56, 0.16, 0.57, 4.19, 97.75,
+                ],
+                // Medicaid Rate
+                [
+                    40.91, 26.2, 21.5, 14.39, 37.67, 20.87, 18.02, 8.49, 49.93,
+                    18.54, 11.37, 11.41, 40.82, 24.79, 18.79, 15.72,
+                ],
+                // Uninsured Rate
+                [
+                    1.72, 4.99, 3.58, 0, 1.3, 6.53, 6.58, 0.04, 3.05, 16.21,
+                    11.98, 0.61, 1.71, 8.31, 8.01, 0.8,
+                ],
+                // Excellent/VG Health
+                [
+                    81.93, 67.58, 57.49, 51.37, 81.05, 63.21, 48.33, 51, 82.19,
+                    64.66, 48.18, 48.33, 81.15, 62.16, 51.94, 49.44,
+                ],
+                // Fair/Poor Health
+                [
+                    1.3, 6.14, 12.39, 16.68, 2.99, 8.57, 16.83, 16.96, 1.97,
+                    7.06, 16.75, 17.36, 2.79, 8.14, 13.73, 17.13,
+                ],
+                // Has Diabetes
+                [
+                    null, 1.58, 12.38, 20.34, null, 2.92, 15.27, 22.64, null, 3.77,
+                    16.01, 26.32, null, 2.03, 12.8, 22.89,
+                ],
+                // Has Hypertension
+                [
+                    null, 9.21, 35.39, 60.75, null, 12.37, 39.83, 63.89, null, 13.39,
+                    44.42, 66.66, null, 8.23, 34.05, 61.01,
+                ],
+                // Has Coronary Heart Disease
+                [
+                    null, 0.49, 2.55, 16.93, null, 0.35, 4.03, 13.27, null, 0.37, 4.15,
+                    16.13, null, 0.2, 3.05, 12.97,
+                ],
+                // Has Asthma
+                [
+                    8.77, 18.1, 13.24, 10.5, 7.41, 14.91, 13.85, 11.83, 10.77,
+                    14.84, 12.21, 11.55, 8.47, 16.53, 14.2, 16.14,
+                ],
+                // Employed
+                [
+                    null, 75.28, 75.38, 22.04, null, 80.82, 72.82, 21.25, null, 75.48,
+                    74.2, 19.98, null, 77.48, 74.9, 20.98,
+                ],
+                // Poor or Near Poor
+                [
+                    15.05, 12.52, 13.71, 14.81, 15.79, 13.14, 12.7, 10.22,
+                    25.17, 16.32, 12.13, 17.42, 16.32, 13.16, 13.45, 14.45,
+                ],
             ],
-            [
-                2.23, 4.52, 11.88, 21.75, 2.18, 5.48, 15.46, 20, 1.88, 4.59,
-                12.61, 19.56, 1.53, 3.86, 10, 16.7,
-            ],
-            [
-                65.47, 75.57, 75.58, 47.26, 68.27, 76.58, 73.81, 49.51, 51.99,
-                68.75, 75.26, 46.14, 62.67, 72.37, 73.31, 40.48,
-            ],
-            [
-                0.64, 1.75, 4.69, 98.78, 0.18, 1.31, 8.11, 98.7, 0.6, 0.98,
-                6.51, 97.56, 0.16, 0.57, 4.19, 97.75,
-            ],
-            [
-                40.91, 26.2, 21.5, 14.39, 37.67, 20.87, 18.02, 8.49, 49.93,
-                18.54, 11.37, 11.41, 40.82, 24.79, 18.79, 15.72,
-            ],
-            [
-                1.72, 4.99, 3.58, 0, 1.3, 6.53, 6.58, 0.04, 3.05, 16.21, 11.98,
-                0.61, 1.71, 8.31, 8.01, 0.8,
-            ],
-            [
-                81.93, 67.58, 57.49, 51.37, 81.05, 63.21, 48.33, 51, 82.19,
-                64.66, 48.18, 48.33, 81.15, 62.16, 51.94, 49.44,
-            ],
-            [
-                1.3, 6.14, 12.39, 16.68, 2.99, 8.57, 16.83, 16.96, 1.97, 7.06,
-                16.75, 17.36, 2.79, 8.14, 13.73, 17.13,
-            ],
-            [
-                null, 1.58, 12.38, 20.26, null, 2.92, 15.25, 22.64, null, 3.77,
-                16, 26.31, null, 2.03, 12.8, 22.89,
-            ],
-            [
-                null, 9.08, 35.39, 60.75, null, 12.23, 39.74, 63.77, null, 13.12, 44.34,
-                66.64, null, 8.12, 34.05, 60.95,
-            ],
-            [
-                null, 0.48, 2.55, 16.84, null, 0.35, 4.03, 13.27, null, 0.36, 4.14,
-                16.12, null, 0.2, 3.05, 12.96,
-            ],
-            [
-                8.67, 18.08, 13.24, 10.5, 7.37, 14.9, 13.85, 11.83, 10.66,
-                14.84, 12.2, 11.55, 8.4, 16.53, 14.2, 16.14,
-            ],
-            [
-                null, 74.73, 74.73, 21.77, null, 80.46, 72.66, 21.15, null,
-                74.7, 73.39, 19.81, null, 76.56, 74.25, 20.7,
-            ],
-            [
-                15.05, 12.52, 13.71, 14.81, 15.79, 13.14, 12.7, 10.22, 25.17,
-                16.32, 12.13, 17.42, 16.32, 13.16, 13.45, 14.45,
-            ],
-        ];
+        };
 
         // Group definitions — indices reference allVariables order above
         const groupDefs = [
@@ -289,24 +841,51 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 
         const rowSortOrder = groupDefs.flatMap((g) => g.indices);
         const variables = rowSortOrder.map((i) => allVariables[i]);
-        const rowSortedData = rowSortOrder.map((i) => rawData[i]);
-        const sortedRawData = rowSortedData.map((row) =>
-            sortOrder.map((i) => row[i]),
-        );
 
-        const normalizedData = sortedRawData.map((row: (number | null)[]) => {
-            const validVals = row.filter((v): v is number => v !== null);
-            const min = Math.min(...validVals);
-            const max = Math.max(...validVals);
-            const range = max - min || 1;
-            return row.map((val) => val === null ? null : (val - min) / range);
-        });
+        // Available years (sorted) derived from dataByYear keys
+        const availableYears = Object.keys(dataByYear).map(Number).sort();
+        let currentYear = availableYears[availableYears.length - 1]; // default to latest
+
+        // Compute sorted + normalized data for a given year
+        function computeYearData(year: number) {
+            const rawData = dataByYear[year];
+            const rowSortedData = rowSortOrder.map((i) => rawData[i]);
+            const sortedRawData = rowSortedData.map((row) =>
+                sortOrder.map((i) => row[i]),
+            );
+            const normalizedData = sortedRawData.map(
+                (row: (number | null)[]) => {
+                    const validVals = row.filter(
+                        (v): v is number => v !== null,
+                    );
+                    const min = Math.min(...validVals);
+                    const max = Math.max(...validVals);
+                    const range = max - min || 1;
+                    return row.map((val) =>
+                        val === null ? null : (val - min) / range,
+                    );
+                },
+            );
+            return { sortedRawData, normalizedData };
+        }
 
         // Render with D3
         document.addEventListener("DOMContentLoaded", function () {
             const d3 = (window as any).d3;
             const container = document.getElementById("meps-heatmap");
+            const slider = document.getElementById(
+                "year-slider",
+            ) as HTMLInputElement;
+            const yearDisplay = document.getElementById("year-display");
+            const citationYear = document.getElementById("citation-year");
             if (!container || !d3) return;
+
+            // Initialize slider from available years
+            if (slider) {
+                slider.min = "0";
+                slider.max = String(availableYears.length - 1);
+                slider.value = String(availableYears.length - 1);
+            }
 
             // Tooltip (created once, reused across renders)
             const tooltip = d3
@@ -332,10 +911,12 @@ import BaseLayout from "../layouts/BaseLayout.astro";
                 let left = touch.clientX + 14;
                 let top = touch.clientY - 40;
                 // Clamp to viewport
-                if (left + tipWidth > window.innerWidth) left = touch.clientX - tipWidth - 14;
+                if (left + tipWidth > window.innerWidth)
+                    left = touch.clientX - tipWidth - 14;
                 if (left < 4) left = 4;
                 if (top < 4) top = touch.clientY + 20;
-                if (top + tipHeight > window.innerHeight) top = window.innerHeight - tipHeight - 4;
+                if (top + tipHeight > window.innerHeight)
+                    top = window.innerHeight - tipHeight - 4;
                 tooltip
                     .style("opacity", 1)
                     .style("left", left + "px")
@@ -350,6 +931,10 @@ import BaseLayout from "../layouts/BaseLayout.astro";
             function renderHeatmap() {
                 // Clear previous render
                 d3.select("#meps-heatmap").selectAll("svg").remove();
+
+                // Get data for current year
+                const { sortedRawData, normalizedData } =
+                    computeYearData(currentYear);
 
                 const containerWidth = container!.clientWidth || 900;
                 const isMobile = containerWidth < 640;
@@ -439,16 +1024,18 @@ import BaseLayout from "../layouts/BaseLayout.astro";
                     val: number | null;
                     rawVal: number | null;
                 }[] = [];
-                normalizedData.forEach((row: (number | null)[], varIdx: number) => {
-                    row.forEach((val: number | null, colIdx: number) => {
-                        cells.push({
-                            varIdx,
-                            colIdx,
-                            val,
-                            rawVal: sortedRawData[varIdx][colIdx],
+                normalizedData.forEach(
+                    (row: (number | null)[], varIdx: number) => {
+                        row.forEach((val: number | null, colIdx: number) => {
+                            cells.push({
+                                varIdx,
+                                colIdx,
+                                val,
+                                rawVal: sortedRawData[varIdx][colIdx],
+                            });
                         });
-                    });
-                });
+                    },
+                );
 
                 // Draw heatmap cells
                 g.selectAll("rect.cell")
@@ -461,22 +1048,29 @@ import BaseLayout from "../layouts/BaseLayout.astro";
                     .attr("width", x.bandwidth())
                     .attr("height", y.bandwidth())
                     .attr("rx", 1)
-                    .style("fill", (d: any) => d.val === null ? "#f3f4f6" : colorFn(d.val))
-                    .on("mousemove touchstart", function (event: MouseEvent | TouchEvent, d: any) {
-                        if ("touches" in event) event.preventDefault();
-                        const origColIdx = sortOrder[d.colIdx];
-                        const regionIdx = Math.floor(origColIdx / 4);
-                        const ageIdx = origColIdx % 4;
-                        const valueText = d.rawVal === null
-                            ? "N/A (not measured for this age group)"
-                            : d.rawVal.toLocaleString();
-                        showTooltip(event,
-                            `<strong>${variables[d.varIdx]}</strong><br>` +
-                                `Region: ${regions[regionIdx]}<br>` +
-                                `Age Group: ${ageGroups[ageIdx]}<br>` +
-                                `Value: ${valueText}`,
-                        );
-                    })
+                    .style("fill", (d: any) =>
+                        d.val === null ? "#f3f4f6" : colorFn(d.val),
+                    )
+                    .on(
+                        "mousemove touchstart",
+                        function (event: MouseEvent | TouchEvent, d: any) {
+                            if ("touches" in event) event.preventDefault();
+                            const origColIdx = sortOrder[d.colIdx];
+                            const regionIdx = Math.floor(origColIdx / 4);
+                            const ageIdx = origColIdx % 4;
+                            const valueText =
+                                d.rawVal === null
+                                    ? "N/A (not measured for this age group)"
+                                    : d.rawVal.toLocaleString();
+                            showTooltip(
+                                event,
+                                `<strong>${variables[d.varIdx]}</strong><br>` +
+                                    `Region: ${regions[regionIdx]}<br>` +
+                                    `Age Group: ${ageGroups[ageIdx]}<br>` +
+                                    `Value: ${valueText}`,
+                            );
+                        },
+                    )
                     .on("mouseleave touchend", function () {
                         hideTooltip();
                     });
@@ -554,7 +1148,9 @@ import BaseLayout from "../layouts/BaseLayout.astro";
                                 .attr("dx", "-6")
                                 .attr("dy", "1.1em")
                                 .text("Expenditure");
-                        } else if (variables[i] === "Has Coronary Heart Disease") {
+                        } else if (
+                            variables[i] === "Has Coronary Heart Disease"
+                        ) {
                             el.text(null);
                             el.append("tspan")
                                 .attr("x", 0)
@@ -568,14 +1164,20 @@ import BaseLayout from "../layouts/BaseLayout.astro";
                                 .text("Heart Disease");
                         }
                     })
-                    .on("mousemove touchstart", function (event: MouseEvent | TouchEvent, i: any) {
-                        if ("touches" in event) event.preventDefault();
-                        const varName = variables[i];
-                        const desc = variableDescriptions[varName] || "";
-                        if (desc) {
-                            showTooltip(event, `<strong>${varName}</strong><br>${desc}`);
-                        }
-                    })
+                    .on(
+                        "mousemove touchstart",
+                        function (event: MouseEvent | TouchEvent, i: any) {
+                            if ("touches" in event) event.preventDefault();
+                            const varName = variables[i];
+                            const desc = variableDescriptions[varName] || "";
+                            if (desc) {
+                                showTooltip(
+                                    event,
+                                    `<strong>${varName}</strong><br>${desc}`,
+                                );
+                            }
+                        },
+                    )
                     .on("mouseleave touchend", function () {
                         hideTooltip();
                     });
@@ -709,7 +1311,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
                         .text(`Age ${age}`);
                 });
 
-                // Chart title (centered on full page width)
+                // Chart title — includes current year
                 svg.append("text")
                     .attr("x", totalWidth / 2)
                     .attr("y", isMobile ? 18 : 24)
@@ -720,8 +1322,8 @@ import BaseLayout from "../layouts/BaseLayout.astro";
                     .style("fill", "#111827")
                     .text(
                         isMobile
-                            ? "MEPS 2022: Healthcare by Region & Age"
-                            : "MEPS 2022: Healthcare Variables by Region and Age Group",
+                            ? `MEPS ${currentYear}: Healthcare by Region & Age`
+                            : `MEPS ${currentYear}: Healthcare Variables by Region and Age Group`,
                     );
 
                 svg.append("text")
@@ -880,6 +1482,73 @@ import BaseLayout from "../layouts/BaseLayout.astro";
                         .style("fill", "#374151")
                         .text("Value");
                 }
+            }
+
+            // Slider wiring
+            function setYear(idx: number) {
+                currentYear = availableYears[idx];
+                if (slider) slider.value = String(idx);
+                if (yearDisplay) yearDisplay.textContent = String(currentYear);
+                if (citationYear) citationYear.textContent = String(currentYear);
+                renderHeatmap();
+            }
+
+            if (slider) {
+                slider.addEventListener("input", function () {
+                    const idx = parseInt(slider.value, 10);
+                    setYear(idx);
+                });
+            }
+
+            // Play button wiring
+            const playBtn = document.getElementById("year-play");
+            const playIcon = document.getElementById("play-icon");
+            const pauseIcon = document.getElementById("pause-icon");
+            let playTimer: ReturnType<typeof setInterval> | null = null;
+
+            function stopPlayback() {
+                if (playTimer !== null) {
+                    clearInterval(playTimer);
+                    playTimer = null;
+                }
+                if (playIcon) playIcon.classList.remove("hidden");
+                if (pauseIcon) pauseIcon.classList.add("hidden");
+            }
+
+            function startPlayback() {
+                // Start from the beginning if at the end
+                let idx = parseInt(slider?.value || "0", 10);
+                if (idx >= availableYears.length - 1) {
+                    idx = 0;
+                    setYear(idx);
+                }
+
+                if (playIcon) playIcon.classList.add("hidden");
+                if (pauseIcon) pauseIcon.classList.remove("hidden");
+
+                playTimer = setInterval(() => {
+                    idx++;
+                    if (idx >= availableYears.length) {
+                        idx = 0;
+                    }
+                    setYear(idx);
+                }, 500);
+            }
+
+            if (playBtn) {
+                playBtn.addEventListener("click", function () {
+                    if (playTimer !== null) {
+                        stopPlayback();
+                    } else {
+                        startPlayback();
+                    }
+                });
+            }
+
+            // Stop playback if user manually moves slider
+            if (slider) {
+                slider.addEventListener("mousedown", stopPlayback);
+                slider.addEventListener("touchstart", stopPlayback);
             }
 
             // Initial render
