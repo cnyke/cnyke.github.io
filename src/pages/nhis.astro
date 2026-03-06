@@ -330,10 +330,12 @@ import BaseLayout from "../layouts/BaseLayout.astro";
                 setTimeout(() => {
                     document.getElementById("chart-loading")?.classList.add("hidden");
                     document.getElementById("chart-area")?.classList.remove("hidden");
+                    shouldAnimate = true;
                     drawCurrentChart();
                     document.getElementById("chart-select")?.addEventListener("change", () => {
                         isZoomed = false;
                         updateZoomButton();
+                        shouldAnimate = true;
                         drawCurrentChart();
                     });
                     document.getElementById("zoom-btn")?.addEventListener("click", () => {
@@ -367,6 +369,8 @@ import BaseLayout from "../layouts/BaseLayout.astro";
                 iconOut.classList.add("hidden");
             }
         }
+
+        let shouldAnimate = false;
 
         function drawCurrentChart() {
             const select = document.getElementById("chart-select") as HTMLSelectElement;
@@ -469,13 +473,28 @@ import BaseLayout from "../layouts/BaseLayout.astro";
                 .style("fill", "#6B7280")
                 .text("Percent (%)");
 
+            // Clip path for data reveal animation
+            const clipId = "clip-reveal-" + Date.now();
+            const clipRect = svg.append("defs").append("clipPath").attr("id", clipId)
+                .append("rect").attr("x", 0).attr("y", -margin.top).attr("height", height + margin.top + margin.bottom);
+
+            if (shouldAnimate) {
+                clipRect.attr("width", 0);
+                clipRect.transition().duration(600).ease(d3.easeCubicOut).attr("width", width);
+                shouldAnimate = false;
+            } else {
+                clipRect.attr("width", width);
+            }
+
+            const dataGroup = svg.append("g").attr("clip-path", `url(#${clipId})`);
+
             // CI area
             const area = d3.area()
                 .x((d: any) => x(d.year))
                 .y0((d: any) => y(Math.max(0, d.pct - d.se * 1.96)))
                 .y1((d: any) => y(d.pct + d.se * 1.96));
 
-            svg.append("path").datum(filtered)
+            dataGroup.append("path").datum(filtered)
                 .attr("fill", color).attr("opacity", 0.15).attr("d", area);
 
             // Line
@@ -483,12 +502,12 @@ import BaseLayout from "../layouts/BaseLayout.astro";
                 .x((d: any) => x(d.year))
                 .y((d: any) => y(d.pct));
 
-            svg.append("path").datum(filtered)
+            dataGroup.append("path").datum(filtered)
                 .attr("fill", "none").attr("stroke", color)
                 .attr("stroke-width", 2.5).attr("d", line);
 
             // Points
-            svg.selectAll(".dot").data(filtered).join("circle")
+            dataGroup.selectAll(".dot").data(filtered).join("circle")
                 .attr("cx", (d: any) => x(d.year))
                 .attr("cy", (d: any) => y(d.pct))
                 .attr("r", 5).attr("fill", color)
@@ -642,6 +661,21 @@ import BaseLayout from "../layouts/BaseLayout.astro";
                 .style("fill", "#6B7280")
                 .text("Percent (%)");
 
+            // Clip path for data reveal animation
+            const clipId = "clip-reveal-" + Date.now();
+            const clipRect = svg.append("defs").append("clipPath").attr("id", clipId)
+                .append("rect").attr("x", 0).attr("y", -margin.top).attr("height", height + margin.top + margin.bottom);
+
+            if (shouldAnimate) {
+                clipRect.attr("width", 0);
+                clipRect.transition().duration(600).ease(d3.easeCubicOut).attr("width", width);
+                shouldAnimate = false;
+            } else {
+                clipRect.attr("width", width);
+            }
+
+            const dataGroup = svg.append("g").attr("clip-path", `url(#${clipId})`);
+
             const line = d3.line()
                 .x((d: any) => x(d.year))
                 .y((d: any) => y(d.pct));
@@ -657,16 +691,16 @@ import BaseLayout from "../layouts/BaseLayout.astro";
                     .x((d: any) => x(d.year))
                     .y0((d: any) => y(Math.max(0, d.pct - d.se * 1.96)))
                     .y1((d: any) => y(d.pct + d.se * 1.96));
-                svg.append("path").datum(groupData)
+                dataGroup.append("path").datum(groupData)
                     .attr("fill", color).attr("opacity", 0.08).attr("d", area);
 
                 // Line
-                svg.append("path").datum(groupData)
+                dataGroup.append("path").datum(groupData)
                     .attr("fill", "none").attr("stroke", color)
                     .attr("stroke-width", 2).attr("d", line);
 
                 // Points
-                svg.selectAll(null).data(groupData).join("circle")
+                dataGroup.selectAll(null).data(groupData).join("circle")
                     .attr("cx", (d: any) => x(d.year))
                     .attr("cy", (d: any) => y(d.pct))
                     .attr("r", 4).attr("fill", color)
