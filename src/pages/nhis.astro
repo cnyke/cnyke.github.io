@@ -83,7 +83,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
                 </div>
                 <div id="chart-area" class="hidden">
                     <div class="p-2 sm:p-4">
-                        <div id="chart-container" class="w-full"></div>
+                        <div id="chart-container" class="w-full overflow-hidden"></div>
                     </div>
                 </div>
             </div>
@@ -536,22 +536,26 @@ import BaseLayout from "../layouts/BaseLayout.astro";
                     crosshair.attr("x1", x(hoveredYear)).attr("x2", x(hoveredYear)).style("opacity", 1);
                     hoverDot.attr("cx", x(hoveredYear)).attr("cy", y(closest.pct)).style("opacity", 1);
 
-                    const tooltipX = x(hoveredYear) + margin.left;
-                    const tooltipY = y(closest.pct) + margin.top;
-                    const tooltipNode = tooltip.node() as HTMLElement;
-                    const tooltipWidth = tooltipNode.offsetWidth || 100;
-                    const containerWidth = container.clientWidth;
-
-                    // Flip tooltip to left side if too close to right edge
-                    const leftPos = tooltipX + 14 + tooltipWidth > containerWidth
-                        ? tooltipX - tooltipWidth - 14
-                        : tooltipX + 14;
-
                     tooltip
                         .html(`<div style="font-weight:600;margin-bottom:2px">${hoveredYear}</div><div style="color:${color};font-size:16px;font-weight:700">${closest.pct.toFixed(1)}%</div>${tooltipLabel ? `<div style="color:#6B7280;font-size:11px">${tooltipLabel}</div>` : ""}`)
-                        .style("opacity", 1)
-                        .style("left", leftPos + "px")
-                        .style("top", (tooltipY - 24) + "px");
+                        .style("opacity", 1);
+
+                    const tooltipNode = tooltip.node() as HTMLElement;
+                    const tw = tooltipNode.offsetWidth;
+                    const th = tooltipNode.offsetHeight;
+                    const containerWidth = container.clientWidth;
+                    const containerHeight = container.clientHeight;
+                    const tooltipX = x(hoveredYear) + margin.left;
+                    const tooltipY = y(closest.pct) + margin.top;
+
+                    let left = tooltipX + 14;
+                    if (left + tw > containerWidth) left = tooltipX - tw - 14;
+                    left = Math.max(4, Math.min(left, containerWidth - tw - 4));
+
+                    let top = tooltipY - 24;
+                    top = Math.max(4, Math.min(top, containerHeight - th - 4));
+
+                    tooltip.style("left", left + "px").style("top", top + "px");
                 })
                 .on("mouseleave", () => {
                     crosshair.style("opacity", 0);
@@ -733,18 +737,23 @@ import BaseLayout from "../layouts/BaseLayout.astro";
                         html += `<div style="display:flex;align-items:center;gap:6px"><svg width="20" height="14" style="flex-shrink:0"><line x1="0" y1="7" x2="20" y2="7" stroke="${color}" stroke-width="2"/><circle cx="10" cy="7" r="4" fill="${color}" stroke="#fff" stroke-width="1.5"/></svg><span>${label}</span><span style="margin-left:auto;padding-left:12px"><span style="font-weight:700;color:${color}">${d.pct.toFixed(1)}%</span>${tooltipLabel ? ` <span style="color:#6B7280;font-weight:400">${tooltipLabel}</span>` : ""}</span></div>`;
                     });
 
-                    const tooltipX = x(hoveredYear) + margin.left;
-                    const tooltipNode = tooltip.html(html).node() as HTMLElement;
-                    const tooltipWidth = tooltipNode.offsetWidth || 200;
+                    tooltip.html(html).style("opacity", 1);
+
+                    const tooltipNode = tooltip.node() as HTMLElement;
+                    const tw = tooltipNode.offsetWidth;
+                    const th = tooltipNode.offsetHeight;
                     const containerWidth = container.clientWidth;
+                    const containerHeight = container.clientHeight;
+                    const tooltipX = x(hoveredYear) + margin.left;
 
-                    const leftPos = tooltipX + 14 + tooltipWidth > containerWidth
-                        ? tooltipX - tooltipWidth - 14
-                        : tooltipX + 14;
+                    let left = tooltipX + 14;
+                    if (left + tw > containerWidth) left = tooltipX - tw - 14;
+                    left = Math.max(4, Math.min(left, containerWidth - tw - 4));
 
-                    tooltip.style("opacity", 1)
-                        .style("left", leftPos + "px")
-                        .style("top", (margin.top + 20) + "px");
+                    let top = margin.top + 20;
+                    top = Math.max(4, Math.min(top, containerHeight - th - 4));
+
+                    tooltip.style("left", left + "px").style("top", top + "px");
                 })
                 .on("mouseleave", () => {
                     crosshair.style("opacity", 0);
