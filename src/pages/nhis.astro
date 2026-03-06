@@ -336,11 +336,13 @@ import BaseLayout from "../layouts/BaseLayout.astro";
                         isZoomed = false;
                         updateZoomButton();
                         shouldAnimate = true;
+                        currentChartState = null;
                         drawCurrentChart();
                     });
                     document.getElementById("zoom-btn")?.addEventListener("click", () => {
                         isZoomed = !isZoomed;
                         updateZoomButton();
+                        shouldZoomTransition = true;
                         drawCurrentChart();
                     });
                     window.addEventListener("resize", drawCurrentChart);
@@ -371,6 +373,28 @@ import BaseLayout from "../layouts/BaseLayout.astro";
         }
 
         let shouldAnimate = false;
+        let shouldZoomTransition = false;
+        // Stored chart state for zoom transitions
+        let currentChartState: {
+            svg: any;
+            x: any;
+            y: any;
+            width: number;
+            height: number;
+            margin: any;
+            filtered: any[];
+            groupKey?: string;
+            groups?: string[];
+            colors?: Record<string, string>;
+            labels?: Record<string, string>;
+            tooltipLabel?: string;
+            // D3 selections for transitioning
+            yAxisGroup: any;
+            gridGroup: any;
+            dataElements: { ciPath: any; linePath: any; points: any; color: string; groupData: any[] }[];
+            hoverDots?: { group: string; dot: any }[];
+            isMobile: boolean;
+        } | null = null;
 
         function drawCurrentChart() {
             const select = document.getElementById("chart-select") as HTMLSelectElement;
@@ -416,6 +440,8 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 
         // ---- Single trend line chart ----
         function drawSingleTrendLine(variable: string, tooltipLabel: string = "", color: string = "#003688") {
+            currentChartState = null;
+            shouldZoomTransition = false;
             const filtered = byYearData.filter(
                 (d) => d.variable === variable && d.category === "Yes" && !d.suppress,
             );
@@ -584,6 +610,53 @@ import BaseLayout from "../layouts/BaseLayout.astro";
         }
 
         // ---- Multi-line chart ----
+        function computeYDomain(filtered: any[]): [number, number] {
+            if (!isZoomed) return [0, 100];
+            const allPcts = filtered.map((d: any) => d.pct);
+            const allCILow = filtered.map((d: any) => d.pct - d.se * 1.96);
+            const allCIHigh = filtered.map((d: any) => d.pct + d.se * 1.96);
+            const dataMin = Math.min(...allPcts, ...allCILow);
+            const dataMax = Math.max(...allPcts, ...allCIHigh);
+            const padding = (dataMax - dataMin) * 0.25 || 2;
+            return [
+                Math.max(0, Math.floor(dataMin - padding)),
+                Math.min(100, Math.ceil(dataMax + padding)),
+            ];
+        }
+
+        function zoomTransitionMultiLine() {
+            if (!currentChartState) return;
+            const { svg, x, y, width, height, margin, filtered, groupKey, groups, colors, labels, tooltipLabel, dataElements, yAxisGroup, gridGroup, hoverDots, isMobile } = currentChartState;
+            const t = d3.transition().duration(500).ease(d3.easeCubicInOut);
+            const yDomain = computeYDomain(filtered);
+            y.domain(yDomain);
+
+            // Transition y-axis
+            yAxisGroup.transition(t).call(d3.axisLeft(y).tickFormat((d: any) => d + "%"))
+                .selectAll("text").style("font-size", isMobile ? "11px" : "12px");
+
+            // Transition grid
+            gridGroup.transition(t).call(d3.axisLeft(y).tickSize(-width).tickFormat(() => ""));
+            gridGroup.selectAll("line").attr("stroke", "#e5e7eb");
+            gridGroup.selectAll(".domain").remove();
+
+            // Transition data elements
+            dataElements.forEach(({ ciPath, linePath, points, groupData }) => {
+                const area = d3.area()
+                    .x((d: any) => x(d.year))
+                    .y0((d: any) => y(Math.max(0, d.pct - d.se * 1.96)))
+                    .y1((d: any) => y(d.pct + d.se * 1.96));
+                ciPath.datum(groupData).transition(t).attr("d", area);
+
+                const line = d3.line()
+                    .x((d: any) => x(d.year))
+                    .y((d: any) => y(d.pct));
+                linePath.datum(groupData).transition(t).attr("d", line);
+
+                points.transition(t).attr("cy", (d: any) => y(d.pct));
+            });
+        }
+
         function drawMultiLine(
             data: any[],
             variable: string,
@@ -592,6 +665,14 @@ import BaseLayout from "../layouts/BaseLayout.astro";
             labels?: Record<string, string>,
             tooltipLabel: string = "",
         ) {
+            // If zoom transition, update in place
+            if (shouldZoomTransition && currentChartState) {
+                shouldZoomTransition = false;
+                zoomTransitionMultiLine();
+                return;
+            }
+            shouldZoomTransition = false;
+
             const filtered = data.filter(
                 (d) => d.variable === variable && d.category === "Yes" && !d.suppress,
             );
@@ -620,37 +701,23 @@ import BaseLayout from "../layouts/BaseLayout.astro";
             const groups = [...new Set(filtered.map((d: any) => d[groupKey]))];
 
             const x = d3.scaleLinear().domain(d3.extent(years)).range([0, width]);
-
-            // Compute y domain: full 0–100 or zoomed to data range with padding
-            let yDomain: [number, number] = [0, 100];
-            if (isZoomed) {
-                const allPcts = filtered.map((d: any) => d.pct);
-                const allCILow = filtered.map((d: any) => d.pct - d.se * 1.96);
-                const allCIHigh = filtered.map((d: any) => d.pct + d.se * 1.96);
-                const dataMin = Math.min(...allPcts, ...allCILow);
-                const dataMax = Math.max(...allPcts, ...allCIHigh);
-                const padding = (dataMax - dataMin) * 0.25 || 2;
-                yDomain = [
-                    Math.max(0, Math.floor(dataMin - padding)),
-                    Math.min(100, Math.ceil(dataMax + padding)),
-                ];
-            }
+            const yDomain = computeYDomain(filtered);
             const y = d3.scaleLinear().domain(yDomain).range([height, 0]);
 
             // Grid
-            svg.append("g").attr("class", "grid")
-                .call(d3.axisLeft(y).tickSize(-width).tickFormat(() => ""))
-                .selectAll("line").attr("stroke", "#e5e7eb");
-            svg.selectAll(".grid .domain").remove();
+            const gridGroup = svg.append("g").attr("class", "grid")
+                .call(d3.axisLeft(y).tickSize(-width).tickFormat(() => ""));
+            gridGroup.selectAll("line").attr("stroke", "#e5e7eb");
+            gridGroup.selectAll(".domain").remove();
 
             // Axes
             svg.append("g").attr("transform", `translate(0,${height})`)
                 .call(d3.axisBottom(x).tickFormat(d3.format("d")).ticks(years.length))
                 .selectAll("text").style("font-size", isMobile ? "11px" : "12px");
 
-            svg.append("g")
-                .call(d3.axisLeft(y).tickFormat((d: any) => d + "%"))
-                .selectAll("text").style("font-size", isMobile ? "11px" : "12px");
+            const yAxisGroup = svg.append("g")
+                .call(d3.axisLeft(y).tickFormat((d: any) => d + "%"));
+            yAxisGroup.selectAll("text").style("font-size", isMobile ? "11px" : "12px");
 
             svg.append("text")
                 .attr("transform", "rotate(-90)")
@@ -680,6 +747,8 @@ import BaseLayout from "../layouts/BaseLayout.astro";
                 .x((d: any) => x(d.year))
                 .y((d: any) => y(d.pct));
 
+            const dataElements: { ciPath: any; linePath: any; points: any; color: string; groupData: any[] }[] = [];
+
             groups.forEach((group) => {
                 const groupData = filtered
                     .filter((d: any) => d[groupKey] === group)
@@ -691,20 +760,22 @@ import BaseLayout from "../layouts/BaseLayout.astro";
                     .x((d: any) => x(d.year))
                     .y0((d: any) => y(Math.max(0, d.pct - d.se * 1.96)))
                     .y1((d: any) => y(d.pct + d.se * 1.96));
-                dataGroup.append("path").datum(groupData)
+                const ciPath = dataGroup.append("path").datum(groupData)
                     .attr("fill", color).attr("opacity", 0.08).attr("d", area);
 
                 // Line
-                dataGroup.append("path").datum(groupData)
+                const linePath = dataGroup.append("path").datum(groupData)
                     .attr("fill", "none").attr("stroke", color)
                     .attr("stroke-width", 2).attr("d", line);
 
                 // Points
-                dataGroup.selectAll(null).data(groupData).join("circle")
+                const points = dataGroup.selectAll(null).data(groupData).join("circle")
                     .attr("cx", (d: any) => x(d.year))
                     .attr("cy", (d: any) => y(d.pct))
                     .attr("r", 4).attr("fill", color)
                     .attr("stroke", "#fff").attr("stroke-width", 1.5);
+
+                dataElements.push({ ciPath, linePath, points, color, groupData });
             });
 
             // Vertical crosshair + tooltip showing all groups for hovered year
@@ -722,6 +793,9 @@ import BaseLayout from "../layouts/BaseLayout.astro";
                         .attr("stroke", "#fff").attr("stroke-width", 2).style("opacity", 0),
                 };
             });
+
+            // Store chart state for zoom transitions
+            currentChartState = { svg, x, y, width, height, margin, filtered, groupKey, groups, colors, labels, tooltipLabel, dataElements, yAxisGroup, gridGroup, hoverDots, isMobile };
 
             // Ensure container is positioned for tooltip
             d3.select(container).style("position", "relative");
@@ -753,11 +827,12 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 
                     crosshair.attr("x1", x(hoveredYear)).attr("x2", x(hoveredYear)).style("opacity", 1);
 
-                    // Position hover dots
+                    // Position hover dots - use currentChartState.y for latest scale
+                    const currentY = currentChartState ? currentChartState.y : y;
                     hoverDots.forEach(({ group, dot }) => {
                         const d = yearData.find((dd: any) => dd[groupKey] === group);
                         if (d) {
-                            dot.attr("cx", x(hoveredYear)).attr("cy", y(d.pct)).style("opacity", 1);
+                            dot.attr("cx", x(hoveredYear)).attr("cy", currentY(d.pct)).style("opacity", 1);
                         } else {
                             dot.style("opacity", 0);
                         }
