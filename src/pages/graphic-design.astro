@@ -1,222 +1,311 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
+import BaseLayout from "../layouts/BaseLayout.astro";
 ---
 
-<BaseLayout title="Graphic Design Portfolio - Claire Nyquist" description="Science communication and graphic design portfolio by Claire Nyquist. Explore visual storytelling through scientific illustration, public health graphics, and creative design projects combining art and science.">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <!-- Hero Section -->
-    <div class="text-center mb-12">
-      <h1 class="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-        Graphic Design
-      </h1>
-      <p class="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-        I bridge the gap between information design and storytelling. From public health to the natural world, I transform complex data into visual experiences that tell a clear, human story.
+<BaseLayout
+    title="Graphic Design Portfolio - Claire Nyquist"
+    description="Science communication and graphic design portfolio by Claire Nyquist. Explore visual storytelling through scientific illustration, public health graphics, and creative design projects combining art and science."
+>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Hero Section -->
+        <div class="text-center mb-12">
+            <h1 class="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
+                Graphic Design
+            </h1>
+            <p class="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+                I bridge the gap between information design and storytelling.
+                From public health to the natural world, I transform complex
+                data into visual experiences that tell a clear, human story.
+            </p>
+        </div>
 
-      </p>
+        <!-- Gallery Section -->
+        <div class="mb-16">
+            <div class="masonry-container">
+                <!-- Gallery Item: Brick Designer -->
+                <a
+                    href="/brick-designer"
+                    class="masonry-item bg-white rounded-lg overflow-hidden mb-6 block"
+                >
+                    <div class="relative">
+                        <img
+                            src="/images/venus2.png"
+                            alt="Brick Designer Tool"
+                            class="w-full h-auto object-contain"
+                        />
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">
+                            Brick Designer
+                        </h3>
+                        <p class="text-gray-600 text-sm mb-4">
+                            An interactive tool that transforms your images into
+                            32x32 brick mosaic patterns using a classic color
+                            palette.
+                        </p>
+                    </div>
+                </a>
+
+                <!-- Gallery Item: Mars Society Poster -->
+                <a
+                    href="/mars-society-poster"
+                    class="masonry-item bg-white rounded-lg overflow-hidden mb-6 block"
+                >
+                    <div class="relative">
+                        <img
+                            src="/images/MarsSocietyPoster3.16.25.jpg"
+                            alt="Mars Society Poster"
+                            class="w-full h-auto object-contain"
+                        />
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">
+                            Mars Society Poster
+                        </h3>
+                        <p class="text-gray-600 text-sm mb-4">
+                            This poster was submitted to the Mars Society's
+                            poster competition.
+                        </p>
+                    </div>
+                </a>
+
+                <!-- Gallery Item 1 -->
+                <a
+                    href="/public-health-review-cover"
+                    class="masonry-item bg-white rounded-lg overflow-hidden mb-6 block"
+                >
+                    <div class="relative">
+                        <img
+                            src="/images/phr4.png"
+                            alt="PHR Design Project"
+                            class="w-full h-auto object-contain"
+                        />
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">
+                            Public Health Review Cover
+                        </h3>
+                        <p class="text-gray-600 text-sm mb-4">
+                            This cover won a competition for the student-led
+                            public health journal, the Public Health Review.
+                        </p>
+                    </div>
+                </a>
+
+                <!-- Gallery Item 3 -->
+                <a
+                    href="/skull-and-flies-painting"
+                    class="masonry-item bg-white rounded-lg overflow-hidden mb-6 block"
+                >
+                    <div class="relative">
+                        <img
+                            src="/images/skullandflies.jpg"
+                            alt="Skull and Flies Artistic Design"
+                            class="w-full h-auto object-contain"
+                        />
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">
+                            Skull and Flies Painting
+                        </h3>
+                        <p class="text-gray-600 text-sm mb-4">
+                            A human skull surrounded by larger than life flies
+                            aims to explore the recycling of nutrients and
+                            energy in an ecosystem.
+                        </p>
+                    </div>
+                </a>
+
+                <!-- Gallery Item 4 -->
+                <a
+                    href="/whale-painting"
+                    class="masonry-item bg-white rounded-lg overflow-hidden mb-6 block"
+                >
+                    <div class="relative">
+                        <img
+                            src="/images/whale.jpg"
+                            alt="Whale Artistic Design"
+                            class="w-full h-auto object-contain whale-image"
+                        />
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">
+                            Whale Painting
+                        </h3>
+                        <p class="text-gray-600 text-sm mb-4">
+                            The whale is inspired by the small colored pencil
+                            drawings of Frank Lloyd Wright.
+                        </p>
+                    </div>
+                </a>
+
+                <!-- Gallery Item 5 -->
+                <a
+                    href="/adaptator-evolution-game"
+                    class="masonry-item bg-white rounded-lg overflow-hidden mb-6 block"
+                >
+                    <div class="relative">
+                        <img
+                            src="/images/adaptatorcreatures.png"
+                            alt="Adaptator An Evolution Game"
+                            class="w-full h-auto object-contain"
+                        />
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">
+                            Adaptator: An Evolution Game
+                        </h3>
+                        <p class="text-gray-600 text-sm mb-4">
+                            This game concept explores evolution by introducing
+                            random chance into the creation of animal body
+                            plans.
+                        </p>
+                    </div>
+                </a>
+
+                <!-- Gallery Item 6 -->
+                <a
+                    href="/gene-editing-perspectives"
+                    class="masonry-item bg-white rounded-lg overflow-hidden mb-6 block"
+                >
+                    <div class="relative">
+                        <img
+                            src="/images/child.png"
+                            alt="Child Anatomical Illustration"
+                            class="w-full h-auto object-contain"
+                        />
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">
+                            Gene Editing Perspectives
+                        </h3>
+                        <p class="text-gray-600 text-sm mb-4">
+                            A gallery installation explores what people think
+                            about gene editing technologies.
+                        </p>
+                    </div>
+                </a>
+
+                <!-- Gallery Item 7 -->
+                <a
+                    href="/rainbow-bricks"
+                    class="masonry-item bg-white rounded-lg overflow-hidden mb-6 block"
+                >
+                    <div class="relative">
+                        <img
+                            src="/images/lego.jpeg"
+                            alt="LEGO Creative Design"
+                            class="w-full h-auto object-contain"
+                        />
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">
+                            Rainbow Bricks
+                        </h3>
+                        <p class="text-gray-600 text-sm mb-4">
+                            Each toy brick is like a brush stroke in this color
+                            composition.
+                        </p>
+                    </div>
+                </a>
+
+                <!-- Gallery Item 8 -->
+                <a
+                    href="/ppe-instructions"
+                    class="masonry-item bg-white rounded-lg overflow-hidden mb-6 block"
+                >
+                    <div class="relative">
+                        <img
+                            src="/images/ppemask.png"
+                            alt="PPE Graphic Design"
+                            class="w-full h-auto object-contain"
+                        />
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">
+                            Personal Protective Equipment Instructions
+                        </h3>
+                        <p class="text-gray-600 text-sm mb-4">
+                            How do you correctly put on personal protective
+                            equipment in a hospital?
+                        </p>
+                    </div>
+                </a>
+            </div>
+        </div>
     </div>
 
-    <!-- Gallery Section -->
-    <div class="mb-16">
-      <div class="masonry-container">
-        <!-- Gallery Item: Brick Designer -->
-        <a href="/brick-designer" class="masonry-item bg-white rounded-lg overflow-hidden mb-6 block">
-          <div class="relative">
-            <img 
-              src="/images/venus2.png" 
-              alt="Brick Designer Tool"
-              class="w-full h-auto object-contain"
-            />
-          </div>
-          <div class="p-6">
-            <h3 class="text-xl font-semibold text-gray-900 mb-2">Brick Designer</h3>
-            <p class="text-gray-600 text-sm mb-4">An interactive tool that transforms your images into 32x32 brick mosaic patterns using a classic color palette.</p>
-          </div>
-        </a>
+    <style>
+        /* Masonry layout using CSS columns */
+        .masonry-container {
+            /* Use column-width for more natural responsiveness in Chrome */
+            column-width: 320px;
+            column-gap: 2rem;
+            width: 100%;
+            max-width: 100%;
+        }
 
-        <!-- Gallery Item 1 -->
-        <a href="/public-health-review-cover" class="masonry-item bg-white rounded-lg overflow-hidden mb-6 block">
-          <div class="relative">
-            <img 
-              src="/images/phr4.png" 
-              alt="PHR Design Project"
-              class="w-full h-auto object-contain"
-            />
-          </div>
-          <div class="p-6">
-            <h3 class="text-xl font-semibold text-gray-900 mb-2">Public Health Review Cover</h3>
-            <p class="text-gray-600 text-sm mb-4">This cover won a competition for the student-led public health journal, the Public Health Review.</p>
-          </div>
-        </a>
+        /* Ensure no more than 3 columns on large screens */
+        @media (min-width: 1200px) {
+            .masonry-container {
+                column-count: 3;
+            }
+        }
 
-        <!-- Gallery Item 3 -->
-        <a href="/skull-and-flies-painting" class="masonry-item bg-white rounded-lg overflow-hidden mb-6 block">
-          <div class="relative">
-            <img 
-              src="/images/skullandflies.jpg" 
-              alt="Skull and Flies Artistic Design"
-              class="w-full h-auto object-contain"
-            />
-          </div>
-          <div class="p-6">
-            <h3 class="text-xl font-semibold text-gray-900 mb-2">Skull and Flies Painting</h3>
-            <p class="text-gray-600 text-sm mb-4">A human skull surrounded by larger than life flies aims to explore the recycling of nutrients and energy in an ecosystem. 
-            </p>
-          </div>
-        </a>
+        /* Masonry items */
+        .masonry-item {
+            display: block;
+            /* break-inside is the key for columns */
+            break-inside: avoid;
+            -webkit-column-break-inside: avoid;
+            page-break-inside: avoid;
 
-        <!-- Gallery Item 4 -->
-        <a href="/whale-painting" class="masonry-item bg-white rounded-lg overflow-hidden mb-6 block">
-          <div class="relative">
-            <img 
-              src="/images/whale.jpg" 
-              alt="Whale Artistic Design"
-              class="w-full h-auto object-contain whale-image"
-            />
-          </div>
-          <div class="p-6">
-            <h3 class="text-xl font-semibold text-gray-900 mb-2">Whale Painting</h3>
-            <p class="text-gray-600 text-sm mb-4">The whale is inspired by the small colored pencil drawings of Frank Lloyd Wright. 
-            </p>
-          </div>
-        </a>
+            width: 100%;
+            margin-bottom: 0.1rem;
+            background: white;
+            border-radius: 0.5rem;
+            overflow: hidden;
 
-        <!-- Gallery Item 5 -->
-        <a href="/adaptator-evolution-game" class="masonry-item bg-white rounded-lg overflow-hidden mb-6 block">
-          <div class="relative">
-            <img 
-              src="/images/adaptatorcreatures.png" 
-              alt="Adaptator An Evolution Game"
-              class="w-full h-auto object-contain"
-            />
-          </div>
-          <div class="p-6">
-            <h3 class="text-xl font-semibold text-gray-900 mb-2">Adaptator: An Evolution Game</h3>
-            <p class="text-gray-600 text-sm mb-4">This game concept explores evolution by introducing random chance into the creation of animal body plans.</p>
-          </div>
-        </a>
+            /* Simplify stacking to avoid Chrome rendering bugs in columns */
+            position: relative;
+        }
 
-        <!-- Gallery Item 6 -->
-        <a href="/gene-editing-perspectives" class="masonry-item bg-white rounded-lg overflow-hidden mb-6 block">
-          <div class="relative">
-            <img 
-              src="/images/child.png" 
-              alt="Child Anatomical Illustration"
-              class="w-full h-auto object-contain"
-            />
-          </div>
-          <div class="p-6">
-            <h3 class="text-xl font-semibold text-gray-900 mb-2">Gene Editing Perspectives</h3>
-            <p class="text-gray-600 text-sm mb-4">A gallery installation explores what people think about gene editing technologies.</p>
-          </div>
-        </a>
+        /* Natural image sizing - no cropping for masonry */
+        .masonry-item img {
+            display: block;
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+            transition: transform 0.3s ease;
+            will-change: transform;
+        }
 
-        <!-- Gallery Item 7 -->
-        <a href="/rainbow-bricks" class="masonry-item bg-white rounded-lg overflow-hidden mb-6 block">
-          <div class="relative">
-            <img 
-              src="/images/lego.jpeg" 
-              alt="LEGO Creative Design"
-              class="w-full h-auto object-contain"
-            />
-          </div>
-          <div class="p-6">
-            <h3 class="text-xl font-semibold text-gray-900 mb-2">Rainbow Bricks</h3>
-            <p class="text-gray-600 text-sm mb-4">Each toy brick is like a brush stroke in this color composition. 
-            </p>
-          </div>
-        </a>
+        /* Card hover effects */
+        .masonry-item:hover {
+            /* No shadow */
+        }
 
-        <!-- Gallery Item 8 -->
-        <a href="/ppe-instructions" class="masonry-item bg-white rounded-lg overflow-hidden mb-6 block">
-          <div class="relative">
-            <img 
-              src="/images/ppemask.png" 
-              alt="PPE Graphic Design"
-              class="w-full h-auto object-contain"
-            />
-          </div>
-          <div class="p-6">
-            <h3 class="text-xl font-semibold text-gray-900 mb-2">Personal Protective Equipment Instructions</h3>
-            <p class="text-gray-600 text-sm mb-4">How do you correctly put on personal protective equipment in a hospital?</p>
-          </div>
-        </a>
+        /* Image zoom effect on hover */
+        .masonry-item:hover img {
+            transform: scale(1.03);
+        }
 
-      </div>
-    </div>
-  </div>
+        /* Ensure image container doesn't show overflow */
+        .masonry-item .relative {
+            overflow: hidden;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
 
-  <style>
-    /* Masonry layout using CSS columns */
-    .masonry-container {
-      /* Use column-width for more natural responsiveness in Chrome */
-      column-width: 320px;
-      column-gap: 2rem;
-      width: 100%;
-      max-width: 100%;
-    }
-    
-    /* Ensure no more than 3 columns on large screens */
-    @media (min-width: 1200px) {
-      .masonry-container {
-        column-count: 3;
-      }
-    }
-    
-    /* Masonry items */
-    .masonry-item {
-      display: block;
-      /* break-inside is the key for columns */
-      break-inside: avoid;
-      -webkit-column-break-inside: avoid;
-      page-break-inside: avoid;
-      
-      width: 100%;
-      margin-bottom: 0.1rem;
-      background: white;
-      border-radius: 0.5rem;
-      overflow: hidden;
-      
-      /* Simplify stacking to avoid Chrome rendering bugs in columns */
-      position: relative;
-    }
-    
-    /* Natural image sizing - no cropping for masonry */
-    .masonry-item img {
-      display: block;
-      width: 100%;
-      height: auto;
-      object-fit: contain;
-      transition: transform 0.3s ease;
-      will-change: transform;
-    }
-    
-    /* Card hover effects */
-    .masonry-item:hover {
-      /* No shadow */
-    }
-    
-    /* Image zoom effect on hover */
-    .masonry-item:hover img {
-      transform: scale(1.03);
-    }
-    
-    /* Ensure image container doesn't show overflow */
-    .masonry-item .relative {
-      overflow: hidden;
-      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-    }
-    
-    /* Text container stability */
-    .masonry-item .p-6 {
-      background: white;
-      position: relative;
-      z-index: 10;
-    }
-    
-    /* Prevent column breaks within cards */
-    .masonry-item * {
-      break-inside: avoid;
-    }
-  </style>
+        /* Text container stability */
+        .masonry-item .p-6 {
+            background: white;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Prevent column breaks within cards */
+        .masonry-item * {
+            break-inside: avoid;
+        }
+    </style>
 </BaseLayout>
-
